@@ -1,0 +1,39 @@
+{
+  "version": 12,
+  "sim": {
+    "baseAttackChance": 0.235,
+    "baseXg": 0.165,
+    "possessionExponent": 1.35,
+    "possessionClamp": [0.22, 0.78],
+    "homeAdvantageBase": 0.02,
+    "fatigueStartMinute": 60,
+    "fatiguePerMinute": 0.004
+  },
+  "economy": {
+    "facilityCostGrowth": 3.9,
+    "facilityTimeGrowth": 2.7,
+    "maintenanceRate": 0.0085,
+    "wageToValueRatio": 0.0038,
+    "agentFeeRate": 0.08,
+    "targetProfitMargin": [0.14, 0.20]
+  },
+  "growth": {
+    "baseGrowthRate": 0.18,
+    "ageMultipliers": { "15": 1.6, "18": 1.3, "23": 0.6, "27": -0.25, "31": -0.8 },
+    "minutesFullEffect": 1200
+  },
+  "meters": {
+    "warningThreshold": 30,
+    "criticalThreshold": 15,
+    "graceMatches": 3,
+    "boardDecayRate": 1.0
+  },
+  "cards": {
+    "perSession": 2,
+    "maxActiveChains": 3,
+    "recentMemory": 40,
+    "categoryFatigueFactor": 0.35,
+    "categoryRecoveryFactor": 1.25,
+    "noveltyBonus": 1.9
+  }
+}

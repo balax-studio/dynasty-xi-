@@ -1,0 +1,34 @@
+[
+  {
+    "id": "recep_zam_talebi",
+    "characterName": "Recep Vardar",
+    "characterRole": "Kulüp Başkanı",
+    "characterAvatar": "👔",
+    "headline": "Yıldız Oyuncunun Zam Talebi",
+    "storyText": "Kaptan Osman Yalçın sözleşmesine %40 zam istiyor. Başkan: 'Kasada kuruş yok ama giderse taraftar beni asar!'",
+    "category": "board",
+    "options": [
+      {
+        "id": "opt_accept_wage",
+        "text": "Maaşı kabul et (-₣8.000, +Soyunma Odası, +Taraftar)",
+        "resultText": "Kaptan mutlu ve sözleşmeyi imzaladı. Kasa biraz daha zayıfladı.",
+        "deltaCash": -8000,
+        "deltaFans": 6,
+        "deltaLockerRoom": 10,
+        "deltaBoardTrust": -4
+      },
+      {
+        "id": "opt_reject_wage",
+        "text": "Talebi reddet (+Kasa, -Soyunma Odası, -Taraftar)",
+        "resultText": "Kaptan basına üstü kapalı demeç verdi. Soyunma odasında huzursuzluk var.",
+        "deltaCash": 0,
+        "deltaFans": -8,
+        "deltaLockerRoom": -12,
+        "deltaBoardTrust": 4
+      }
+    ],
+    "minTier": 1,
+    "maxTier": 20,
+    "cooldownMatches": 5
+  }
+]
