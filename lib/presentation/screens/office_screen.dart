@@ -15,6 +15,8 @@ import '../widgets/retro_window.dart';
 import '../widgets/stadium_isometric_widget.dart';
 import 'board_room_screen.dart';
 import 'cup_tournament_screen.dart';
+import 'facility_detail_screen.dart';
+import 'facilities_screen.dart';
 import 'match_screen.dart';
 import 'press_conference_screen.dart';
 import 'prestige_screen.dart';
@@ -131,11 +133,20 @@ class OfficeScreen extends ConsumerWidget {
                       ],
 
                       // 1. Stadyum ve Tesisler İzometrik İllüstrasyonu (§21.3, §48)
-                      StadiumIsometricWidget(
-                        stadiumLevel: club.facilities[FacilityType.stadium]?.level ?? 1,
-                        trainingLevel: club.facilities[FacilityType.trainingGround]?.level ?? 0,
-                        youthLevel: club.facilities[FacilityType.youthAcademy]?.level ?? 0,
-                        clubName: club.name,
+                      InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const FacilityDetailScreen(facilityType: FacilityType.stadium),
+                            ),
+                          );
+                        },
+                        child: StadiumIsometricWidget(
+                          stadiumLevel: club.facilities[FacilityType.stadium]?.level ?? 1,
+                          trainingLevel: club.facilities[FacilityType.trainingGround]?.level ?? 0,
+                          youthLevel: club.facilities[FacilityType.youthAcademy]?.level ?? 0,
+                          clubName: club.name,
+                        ),
                       ),
                       const SizedBox(height: 10),
 
