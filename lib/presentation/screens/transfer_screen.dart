@@ -13,7 +13,6 @@ import 'player_detail_screen.dart';
 import 'transfer_hijack_screen.dart';
 import 'transfer_negotiation_screen.dart';
 import '../widgets/contract_renewal_dialog.dart';
-import '../widgets/face_avatar_widget.dart';
 import '../widgets/loan_contract_summary_modal.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/player_sale_offer_modal.dart';
@@ -68,7 +67,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
   TransferPositionFilter _selectedPosition = TransferPositionFilter.all;
   TransferSortOption _selectedSort = TransferSortOption.ovrDesc;
   bool _onlyAffordable = false;
-  bool _showFreeAgents = true;
+  final bool _showFreeAgents = true;
 
   List<Player> _filterAndSortPlayers(List<Player> players, int currentCash) {
     var list = players.where((p) {
@@ -107,10 +106,12 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
       error: (e, _) => Scaffold(body: Center(child: Text('Hata: $e'))),
       data: (gameState) {
         final currentCash = gameState.userClub.meters.cash;
-        final rawMarket = gameState.transferMarket;
+        final squadIds = gameState.userClub.squad.map((p) => p.id).toSet();
+        final signedSet = {...gameState.signedMarketIds, ...squadIds};
+        final rawMarket = gameState.transferMarket.where((p) => !signedSet.contains(p.id)).toList();
         final squad = gameState.userClub.squad;
-        final loans = LoanMarketGenerator.generateLoanCandidates();
-        final freeAgents = FreeAgentMarketGenerator.generateFreeAgents();
+        final loans = LoanMarketGenerator.generateLoanCandidates().where((l) => !signedSet.contains(l.player.id)).toList();
+        final freeAgents = FreeAgentMarketGenerator.generateFreeAgents().where((p) => !signedSet.contains(p.id)).toList();
 
         final filteredMarket = _filterAndSortPlayers(rawMarket, currentCash);
         final filteredFreeAgents = _filterAndSortPlayers(freeAgents, currentCash);

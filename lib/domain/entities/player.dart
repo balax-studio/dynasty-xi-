@@ -2,6 +2,7 @@
 // Pure Dart. Player entity with position-weighted OVR, dynamic valuation, stats, personality & RPG attributes.
 
 import 'dart:math' as math;
+import 'position_weights.dart';
 
 enum Position {
   gk('Kaleci', 'GK', '🧤'),
@@ -335,38 +336,21 @@ class Player {
     }
   }
 
-  /// Ağırlıklı OVR (Genel Güç) Hesabı — Ek C.1
-  int get ovr {
-    double score;
-    switch (position) {
-      case Position.gk:
-        score = defending * 0.35 + physical * 0.30 + mentality * 0.20 + pace * 0.10 + passing * 0.05;
-        break;
-      case Position.cb:
-        score = defending * 0.40 + physical * 0.25 + mentality * 0.15 + pace * 0.10 + passing * 0.10;
-        break;
-      case Position.lb:
-      case Position.rb:
-        score = defending * 0.25 + pace * 0.25 + passing * 0.20 + physical * 0.15 + technique * 0.15;
-        break;
-      case Position.dm:
-        score = defending * 0.30 + passing * 0.25 + physical * 0.20 + mentality * 0.15 + technique * 0.10;
-        break;
-      case Position.cm:
-        score = passing * 0.30 + technique * 0.25 + mentality * 0.15 + physical * 0.15 + shooting * 0.15;
-        break;
-      case Position.am:
-        score = technique * 0.30 + passing * 0.25 + shooting * 0.20 + pace * 0.15 + mentality * 0.10;
-        break;
-      case Position.lw:
-      case Position.rw:
-        score = pace * 0.35 + technique * 0.25 + shooting * 0.20 + passing * 0.10 + physical * 0.10;
-        break;
-      case Position.st:
-        score = shooting * 0.35 + physical * 0.20 + pace * 0.20 + technique * 0.15 + mentality * 0.10;
-        break;
-    }
-    return score.round().clamp(35, 99);
+  /// Ağırlıklı OVR (Genel Güç) Hesabı — §9.2
+  int get ovr => calculateOvrFor(position);
+
+  /// Belirli bir pozisyondaki OVR hesabı (§9.2)
+  int calculateOvrFor(Position pos) {
+    final weights = kPositionWeights[pos] ?? kPositionWeights[position]!;
+    return weights.calculateOvr(
+      pace: pace,
+      technique: technique,
+      shooting: shooting,
+      passing: passing,
+      defending: defending,
+      physical: physical,
+      mentality: mentality,
+    );
   }
 
   /// Yıldız Derecelendirmesi (1★ - 5★+)
@@ -389,17 +373,60 @@ class Player {
     return ovr >= 93 ? 'İkon (5★+)' : 'Efsane (5★)';
   }
 
-  /// Piyasa Değeri Formülü — Ek C.1
-  int get marketValue {
+  /// Lig Kademesine Göre Piyasa Değeri Formülü — §9.9
+  int marketValueIn(int leagueTier) {
     final currentOvr = ovr;
-    final base = math.pow(1.35, (currentOvr - 40) / 4.2) * 1000.0;
-    final ageFactor = (age < 21) ? 1.35 : (age < 27 ? 1.15 : (age < 31 ? 0.90 : 0.65));
-    final potFactor = 1.0 + math.max(0, (potential - currentOvr)) * 0.015;
-    final contractFactor = contractSeasonsLeft > 1 ? 1.1 : 0.85;
-    final formFactor = (form / 6.5).clamp(0.8, 1.25);
+    final base = math.pow(1.16, (currentOvr - 50)) * 100000.0;
+    final ageFactor = (age <= 19)
+        ? 1.55
+        : (age <= 23 ? 1.35 : (age <= 27 ? 1.00 : (age <= 30 ? 0.70 : (age <= 33 ? 0.38 : 0.15))));
+    final potFactor = 1.0 + math.max(0, (potential - currentOvr)) * 0.028;
+    final contractFactor = (contractSeasonsLeft >= 3)
+        ? 1.15
+        : (contractSeasonsLeft == 2 ? 1.00 : (contractSeasonsLeft == 1 ? 0.72 : 0.40));
+    final formFactor = (1.0 + form * 0.035).clamp(0.80, 1.25);
+    final leagueFactor = (0.55 + (21 - leagueTier) * 0.048).clamp(0.55, 1.55);
 
-    return (base * ageFactor * potFactor * contractFactor * formFactor).round().clamp(1000, 250000000);
+    return (base * ageFactor * potFactor * contractFactor * formFactor * leagueFactor)
+        .round()
+        .clamp(1000, 250000000);
   }
+
+  /// Piyasa Değeri (Varsayılan Lig 20 Uyumluluğu)
+  int get marketValue => marketValueIn(20);
+
+  /// Beklenen Haftalık Maaş Formülü — §9.10
+  int expectedWeeklyWage(int leagueTier) {
+    final val = marketValueIn(leagueTier);
+    double egoMultiplier;
+    switch (personality) {
+      case PersonalityType.ambitious:
+        egoMultiplier = 1.35;
+        break;
+      case PersonalityType.mercenary:
+        egoMultiplier = 1.20;
+        break;
+      case PersonalityType.rebel:
+        egoMultiplier = 1.15;
+        break;
+      case PersonalityType.professional:
+      case PersonalityType.leader:
+        egoMultiplier = 1.00;
+        break;
+      case PersonalityType.loyal:
+      case PersonalityType.humble:
+        egoMultiplier = 0.85;
+        break;
+      default:
+        egoMultiplier = 1.00;
+        break;
+    }
+    final leagueTierMultiplier = (0.60 + (21 - leagueTier) * 0.045).clamp(0.60, 1.50);
+    return (val * 0.0038 * egoMultiplier * leagueTierMultiplier).round().clamp(150, 1000000);
+  }
+
+  /// Oyuncunun Maaşından Memnun Olup Olmadığı (§9.10)
+  bool isUnderpaid(int leagueTier) => weeklyWage < expectedWeeklyWage(leagueTier) * 0.85;
 
   Player copyWith({
     String? id,
@@ -436,6 +463,7 @@ class Player {
     int? injuryMatchesLeft,
     String? injuryType,
     InjurySeverity? injurySeverity,
+    bool clearInjury = false,
     int? appearances,
     int? goals,
     int? assists,
@@ -484,9 +512,9 @@ class Player {
       releaseClause: releaseClause ?? this.releaseClause,
       isYouthProduct: isYouthProduct ?? this.isYouthProduct,
       isTransferListed: isTransferListed ?? this.isTransferListed,
-      injuryMatchesLeft: injuryMatchesLeft ?? this.injuryMatchesLeft,
-      injuryType: injuryType ?? this.injuryType,
-      injurySeverity: injurySeverity ?? this.injurySeverity,
+      injuryMatchesLeft: clearInjury ? 0 : (injuryMatchesLeft ?? this.injuryMatchesLeft),
+      injuryType: clearInjury ? null : (injuryType ?? this.injuryType),
+      injurySeverity: clearInjury ? InjurySeverity.none : (injurySeverity ?? this.injurySeverity),
       appearances: appearances ?? this.appearances,
       goals: goals ?? this.goals,
       assists: assists ?? this.assists,

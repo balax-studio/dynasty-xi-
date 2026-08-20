@@ -559,7 +559,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                       confirmButtonColor: AppColors.comicRed,
                                       onConfirmed: () async {
                                         final ok = await ref.read(gameStateProvider.notifier).terminateSponsorshipContract(slot);
-                                        if (context.mounted) {
+                                        if (mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
                                               backgroundColor: ok ? AppColors.comicRed : Colors.orange,
@@ -847,7 +847,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 confirmButtonColor: AppColors.neonLime,
                                 onConfirmed: () async {
                                   final success = await ref.read(gameStateProvider.notifier).signSponsorshipContract(contract);
-                                  if (context.mounted) {
+                                  if (mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         backgroundColor: success ? AppColors.neonLime : AppColors.comicRed,

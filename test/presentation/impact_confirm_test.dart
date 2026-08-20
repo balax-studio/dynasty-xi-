@@ -60,8 +60,8 @@ void main() {
   );
 
   GameState createTestGameState() {
-    return GameState(
-      userClub: const Club(
+    return const GameState(
+      userClub: Club(
         id: 'club_1',
         name: 'Kadıköy SK',
         city: 'İstanbul',
@@ -69,7 +69,7 @@ void main() {
         meters: ClubMeters(cash: 300000, fans: 70, lockerRoom: 70, boardTrust: 80),
         squad: [testPlayer],
       ),
-      manager: const Manager(name: 'Test Menajer'),
+      manager: Manager(name: 'Test Menajer'),
       transferMarket: [testPlayer],
     );
   }
@@ -131,7 +131,7 @@ void main() {
         overrides: [
           saveRepositoryProvider.overrideWithValue(fakeRepo),
         ],
-        child: MaterialApp(
+        child: const MaterialApp(
           home: Scaffold(
             body: PlayerSaleOfferModal(player: testPlayer, salePrice: 150000),
           ),

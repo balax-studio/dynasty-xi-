@@ -212,14 +212,11 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
           ),
         ),
         const SizedBox(height: 28),
-        ElevatedButton(
+        RetroButton(
           onPressed: _nextStep,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accentGold,
-            foregroundColor: AppColors.neutral900,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-          ),
-          child: const Text('GÖREVİ KABUL EDİYORUM'),
+          backgroundColor: AppColors.accentGold,
+          textColor: AppColors.neutral900,
+          child: const Text('GÖREVİ KABUL EDİYORUM', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );
@@ -242,9 +239,11 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
         _buildMeterInfo('👕 SOYUNMA ODASI (%)', 'Futbolcuların morali ve bağlılığı. Düşerse takım sahada mücadele etmeyi bırakır.'),
         _buildMeterInfo('🏛️ YÖNETİM GÜVENİ (%)', 'Başkanın sana olan sabrı. 3 maç üst üste %15 altına inerse kovulursun!'),
         const SizedBox(height: 24),
-        ElevatedButton(
+        RetroButton(
           onPressed: _nextStep,
-          child: const Text('ANLADIM, DEVAM ET'),
+          backgroundColor: AppColors.neonLime,
+          textColor: Colors.black,
+          child: const Text('ANLADIM, DEVAM ET', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );
@@ -318,7 +317,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
 
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: RetroButton(
               onPressed: () {
                 final allOrigins = PresidentOrigin.getAllOrigins();
                 final chosenOrigin = allOrigins.firstWhere((o) => o.type == _selectedOrigin);
@@ -346,7 +345,9 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
 
                 _nextStep();
               },
-              child: const Text('BAŞKANLIK KİMLİĞİNİ & KULÜBÜ ONAYLA'),
+              backgroundColor: AppColors.accentGold,
+              textColor: Colors.black,
+              child: const Text('BAŞKANLIK KİMLİĞİNİ & KULÜBÜ ONAYLA', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -375,7 +376,12 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
               },
             )
           else
-            ElevatedButton(onPressed: _nextStep, child: const Text('İlerle')),
+            RetroButton(
+              onPressed: _nextStep,
+              backgroundColor: AppColors.neonLime,
+              textColor: Colors.black,
+              child: const Text('İlerle', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
         ],
       ),
     );
@@ -414,17 +420,20 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
           ),
         ),
         const SizedBox(height: 28),
-        ElevatedButton.icon(
+        RetroButton(
           onPressed: () async {
             await ref.read(gameStateProvider.notifier).playMatch(isLiveMode: false);
             _nextStep();
           },
-          icon: const Icon(Icons.sports_soccer),
-          label: const Text('MAÇI OYNA VE KAZAN'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.signalGreen,
-            foregroundColor: AppColors.neutral900,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+          backgroundColor: AppColors.signalGreen,
+          textColor: AppColors.neutral900,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.sports_soccer, size: 18, color: Colors.black),
+              SizedBox(width: 8),
+              Text('MAÇI OYNA VE KAZAN', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
           ),
         ),
       ],
@@ -487,7 +496,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
+                RetroButton(
                   onPressed: () async {
                     await ref.read(gameStateProvider.notifier).signPlayer(
                           firstTarget,
@@ -496,8 +505,9 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
                         );
                     _nextStep();
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentGold),
-                  child: const Text('ÜCRETSİZ İMZALA (FTUE HEDİYESİ)'),
+                  backgroundColor: AppColors.accentGold,
+                  textColor: Colors.black,
+                  child: const Text('ÜCRETSİZ İMZALA (FTUE HEDİYESİ)', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -522,17 +532,20 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
-        ElevatedButton.icon(
+        RetroButton(
           onPressed: () async {
             await ref.read(gameStateProvider.notifier).upgradeFacility(FacilityType.trainingGround);
             _nextStep();
           },
-          icon: const Icon(Icons.build),
-          label: const Text('ANTRENMAN SAHASINI İNŞA ET'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accentGold,
-            foregroundColor: AppColors.neutral900,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          backgroundColor: AppColors.accentGold,
+          textColor: AppColors.neutral900,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.build, size: 18, color: Colors.black),
+              SizedBox(width: 8),
+              Text('ANTRENMAN SAHASINI İNŞA ET', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
           ),
         ),
       ],

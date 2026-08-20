@@ -431,9 +431,11 @@ class _ManagerScreenState extends State<ManagerScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          RetroButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('VAZGEÇ', style: TextStyle(color: Colors.white54)),
+            backgroundColor: AppColors.win95DarkGrey,
+            textColor: Colors.black,
+            child: const Text('VAZGEÇ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
           ),
           RetroButton(
             onPressed: (manager.level >= nextLicense.requiredManagerLevel && cash >= nextLicense.courseCost)

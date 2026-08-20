@@ -1,6 +1,14 @@
 // domain/progression/daily_quest.dart
 // Daily quest progression system with endowed progress (§17.3, §21.2)
 
+enum QuestTrigger {
+  leagueMatch,
+  facilityUpgrade,
+  cardChoice,
+  transfer,
+  scouting,
+}
+
 class DailyQuest {
   final String id;
   final String title;
@@ -74,13 +82,13 @@ class DailyQuest {
 class DailyQuestManager {
   static List<DailyQuest> generateDailyQuests() {
     return const [
-      // 1. Görev — Endowed Progress (Psikolojik olarak hazır / 1 adımda tamam)
+      // 1. Görev — Endowed Progress (§7.2, §17.3)
       DailyQuest(
         id: 'q_tactics_check',
         title: 'Taktik ve Kadro Hazırlığı',
         description: 'Kadro ekranını aç ve takım dizilişini kontrol et.',
         targetCount: 1,
-        currentCount: 1, // Endowed progress: kullanıcı girişte tamamlanmış bulur!
+        currentCount: 1, // Endowed progress
         cashReward: 2000,
         xpReward: 35,
       ),
@@ -94,7 +102,7 @@ class DailyQuestManager {
         cashReward: 5000,
         xpReward: 75,
       ),
-      // 3. Görev — Tesis / Transfer / Karar
+      // 3. Görev — Tesis / Karar / Gelişim
       DailyQuest(
         id: 'q_club_development',
         title: 'Kulüp Yatırımı & Gelişim',
@@ -105,5 +113,23 @@ class DailyQuestManager {
         xpReward: 60,
       ),
     ];
+  }
+
+  /// Advances quests based on user in-game trigger (§17.3).
+  static List<DailyQuest> advanceQuest(
+    List<DailyQuest> currentQuests,
+    QuestTrigger trigger, {
+    int amount = 1,
+  }) {
+    return currentQuests.map((q) {
+      if (trigger == QuestTrigger.leagueMatch && q.id == 'q_play_league_match') {
+        return q.copyWith(currentCount: q.currentCount + amount);
+      }
+      if ((trigger == QuestTrigger.facilityUpgrade || trigger == QuestTrigger.cardChoice) &&
+          q.id == 'q_club_development') {
+        return q.copyWith(currentCount: q.currentCount + amount);
+      }
+      return q;
+    }).toList();
   }
 }

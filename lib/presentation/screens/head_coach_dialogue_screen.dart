@@ -7,7 +7,6 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../core/audio/audio_synthesizer.dart';
-import '../../domain/president/head_coach.dart';
 import '../../domain/rpg/head_coach_dialogue_engine.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
@@ -90,12 +89,12 @@ class _HeadCoachDialogueScreenState extends ConsumerState<HeadCoachDialogueScree
               backgroundColor: AppColors.neoCardBg,
               title: const Text('TEKNİK DİREKTÖR ODASI'),
             ),
-            body: Center(
+            body: const Center(
               child: RetroWindow(
                 title: 'RESMİ HOCA YOK',
                 icon: '⚠️',
                 titleBarColor: AppColors.comicRed,
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Text(
                     'Şu anda kulüpte sözleşmeli bir teknik direktör bulunmuyor.\nÖnce Teknik Direktör Merkezinden bir hoca ile sözleşme imzalayın.',

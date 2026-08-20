@@ -88,6 +88,19 @@ class NewspaperStoryEngine {
       );
     }
 
+    // 4. Soyunma Odası Huzursuzluğu
+    if (lockerRoom < 35) {
+      return NewspaperStory(
+        outletName: 'KULİS MANŞET • SOYUNMA ODASI',
+        headline: '${club.name.toUpperCase()} KAMPINDA MORALLER BOZUK!',
+        subhead: 'Takım içi klikleşmeler ve soyunma odası gerginliği basına sızdı. Kaptanların ve teknik heyetin krizi çözmek için acil toplantı yaptığı söyleniyor.',
+        reporter: 'Ali Rıza Korkmaz',
+        columnQuote: '"Takım içi uyum sağlanmadan sahada başarı hayalden ibarettir."',
+        dateString: dateStr,
+        isPositive: false,
+      );
+    }
+
     // 4. Son Maç Oynandıysa: Galibiyet, Mağlubiyet veya Beraberlik Yorumu
     if (playedFixtures.isNotEmpty) {
       final lastMatch = playedFixtures.last;

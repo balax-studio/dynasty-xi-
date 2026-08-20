@@ -6,18 +6,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
-import '../../domain/entities/facility.dart';
 import '../../domain/media/newspaper_story_engine.dart';
 import '../../domain/president/president_crisis.dart';
 import '../../domain/progression/daily_quest.dart';
 import '../widgets/club_emblem_widget.dart';
 import '../widgets/decision_card_widget.dart';
+import '../widgets/match_reward_dialog.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/newspaper_headline_widget.dart';
 import '../widgets/retro_pixel_icon.dart';
 import '../widgets/retro_window.dart';
 import '../widgets/urgent_phone_call_modal.dart';
 import 'match_screen.dart';
+import 'sacked_screen.dart';
 import 'trophy_room_screen.dart';
 
 class OfficeScreen extends ConsumerWidget {
@@ -35,6 +36,13 @@ class OfficeScreen extends ConsumerWidget {
         body: Center(child: Text('Hata: $err', style: AppTypography.body())),
       ),
       data: (gameState) {
+        if (gameState.isGameOver) {
+          return SackedScreen(
+            clubName: gameState.userClub.name,
+            sackingReason: gameState.gameOverReason ?? 'Yönetim Kurulu Güvenini Kaybettiniz',
+          );
+        }
+
         final club = gameState.userClub;
         final clock = gameState.clock;
         final nextFixture = gameState.currentLeague.fixtures.firstWhere(
@@ -607,10 +615,28 @@ class OfficeScreen extends ConsumerWidget {
               Expanded(
                 child: RetroButton(
                   onPressed: () async {
-                    await ref.read(gameStateProvider.notifier).playMatch(isLiveMode: false);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Maç hızlıca simüle edildi!')),
+                    final res = await ref.read(gameStateProvider.notifier).playMatch(isLiveMode: false);
+                    if (res != null && context.mounted) {
+                      final userGoals = isUserHome ? res.homeGoals : res.awayGoals;
+                      final oppGoals = isUserHome ? res.awayGoals : res.homeGoals;
+                      final isWin = userGoals > oppGoals;
+                      
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (ctx) => MatchRewardDialog(
+                          userScore: userGoals,
+                          oppScore: oppGoals,
+                          oppName: oppName.isNotEmpty ? oppName : 'Rakip Kulüp',
+                          cashEarned: isWin ? 25000 : 5000,
+                          managerXpEarned: isWin ? 80 : 30,
+                          fanDelta: isWin ? 4 : -3,
+                          motmPlayerName: state.userClub.squad.isNotEmpty ? state.userClub.squad.first.fullName : 'Yıldız Oyuncu',
+                          motmPlayerRating: 8,
+                          motmSeed: 42,
+                          topPerformers: const [],
+                          onContinue: () => Navigator.of(ctx).pop(),
+                        ),
                       );
                     }
                   },

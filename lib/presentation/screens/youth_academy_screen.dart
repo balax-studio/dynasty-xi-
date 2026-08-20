@@ -45,9 +45,9 @@ class YouthAcademyScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('ALTYAPI AKADEMİSİ MERKEZİ', style: AppTypography.h3(color: Colors.white)),
-                      Text(
+                      const Text(
                         'WONDERKID FABRİKASI VE ALTYAPI TESİS GELİŞİMİ',
-                        style: const TextStyle(color: AppColors.neonLime, fontSize: 9, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: AppColors.neonLime, fontSize: 9, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -91,9 +91,9 @@ class YouthAcademyScreen extends ConsumerWidget {
                                         style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 13),
                                       ),
                                       const SizedBox(height: 2),
-                                      Text(
+                                      const Text(
                                         'Yüksek seviye akademi, sezon başlarında ve scout aramalarında +80 ve +90 POT değerine sahip wonderkid üretir.',
-                                        style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                        style: TextStyle(color: Colors.white70, fontSize: 10),
                                       ),
                                     ],
                                   ),

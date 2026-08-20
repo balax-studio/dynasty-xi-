@@ -7,12 +7,10 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../core/audio/audio_synthesizer.dart';
-import '../../domain/entities/player.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_impact_confirm_modal.dart';
 import '../widgets/retro_pixel_icon.dart';
 import '../widgets/retro_window.dart';
-import 'player_detail_screen.dart';
 
 class U19SquadScreen extends ConsumerWidget {
   const U19SquadScreen({super.key});
@@ -46,9 +44,9 @@ class U19SquadScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('U19 GENÇ TAKIMI (${u19.length} YETENEK)', style: AppTypography.h3(color: Colors.white)),
-                      Text(
+                      const Text(
                         'GELECEĞİN YILDIZLARI VE WONDERKID GELİŞİM HAVUZU',
-                        style: const TextStyle(color: AppColors.neonLime, fontSize: 9, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: AppColors.neonLime, fontSize: 9, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),

@@ -4,15 +4,16 @@
 import 'dart:math' as math;
 import '../entities/player.dart';
 
+import '../entities/position_weights.dart';
+
 class PlayerGrowth {
-  /// Sezon Sonu / Antrenman Gelişim Hesabı — Ek C.1
+  /// Sezon Sonu / Antrenman Gelişim Hesabı — §9.3
   static Player applyTrainingGrowth({
     required Player player,
     required int trainingFacilityLevel,
     double randomFactor = 1.0,
   }) {
     if (player.isInjured) {
-      // Sakat oyuncunun kondisyonu ve formu toparlanır, OVR artmaz
       return player.copyWith(
         injuryMatchesLeft: math.max(0, player.injuryMatchesLeft - 1),
       );
@@ -21,15 +22,15 @@ class PlayerGrowth {
     final currentOvr = player.ovr;
     final potential = player.potential;
 
-    // Yaş Çarpanı
+    // Yaş Çarpanı (§9.3)
     double ageFactor;
-    if (player.age <= 18) {
+    if (player.age <= 19) {
       ageFactor = 1.6;
-    } else if (player.age <= 22) {
+    } else if (player.age <= 23) {
       ageFactor = 1.3;
-    } else if (player.age <= 26) {
+    } else if (player.age <= 27) {
       ageFactor = 0.6;
-    } else if (player.age <= 30) {
+    } else if (player.age <= 31) {
       ageFactor = -0.25;
     } else {
       ageFactor = -0.80;
@@ -42,21 +43,40 @@ class PlayerGrowth {
     final moraleFactor = (player.morale / 85.0).clamp(0.80, 1.15);
 
     // Oynama Süresi Çarpanı (Daha çok maça çıkan daha çok gelişir)
-    final appearancesFactor = player.appearances >= 10 ? 1.25 : (player.appearances >= 5 ? 1.0 : 0.75);
+    final appearancesFactor = player.appearances >= 12
+        ? 1.30
+        : (player.appearances >= 6 ? 1.05 : (player.appearances >= 1 ? 0.85 : 0.60));
 
-    final growthDelta = ((potential - currentOvr) * 0.18 * ageFactor * facilityFactor * moraleFactor * appearancesFactor * randomFactor);
-    final deltaInt = growthDelta.round();
+    final growthPoints = ((potential - currentOvr) *
+            0.18 *
+            ageFactor *
+            facilityFactor *
+            moraleFactor *
+            appearancesFactor *
+            randomFactor)
+        .round();
 
-    if (deltaInt == 0) return player;
+    if (growthPoints == 0) return player;
 
-    // Niteliklere dağıt
-    final newPace = (player.pace + (deltaInt > 0 ? (deltaInt > 2 ? 1 : 0) : -1)).clamp(30, 99);
-    final newTechnique = (player.technique + deltaInt).clamp(30, 99);
-    final newShooting = (player.shooting + deltaInt).clamp(30, 99);
-    final newPassing = (player.passing + deltaInt).clamp(30, 99);
-    final newDefending = (player.defending + deltaInt).clamp(30, 99);
-    final newPhysical = (player.physical + (deltaInt > 0 ? 1 : -1)).clamp(30, 99);
-    final newMentality = (player.mentality + (player.age > 24 ? 1 : 0)).clamp(30, 99);
+    // Pozisyon ağırlıklarına göre niteliklere ağırlıklı dağıtım (§9.3)
+    final pw = kPositionWeights[player.position] ?? kPositionWeights[Position.cm]!;
+
+    int calcDelta(double weight) {
+      if (growthPoints > 0) {
+        return (growthPoints * weight * 1.5).round().clamp(0, 4);
+      } else {
+        // Yaş gerilemesi fiziksel/hızda daha yüksek
+        return (growthPoints * (1.0 - weight * 0.5)).round().clamp(-4, 0);
+      }
+    }
+
+    final newPace = (player.pace + calcDelta(pw.pace)).clamp(30, 99);
+    final newTechnique = (player.technique + calcDelta(pw.technique)).clamp(30, 99);
+    final newShooting = (player.shooting + calcDelta(pw.shooting)).clamp(30, 99);
+    final newPassing = (player.passing + calcDelta(pw.passing)).clamp(30, 99);
+    final newDefending = (player.defending + calcDelta(pw.defending)).clamp(30, 99);
+    final newPhysical = (player.physical + calcDelta(pw.physical)).clamp(30, 99);
+    final newMentality = (player.mentality + (growthPoints > 0 && player.age > 23 ? 1 : 0)).clamp(30, 99);
 
     return player.copyWith(
       pace: newPace,

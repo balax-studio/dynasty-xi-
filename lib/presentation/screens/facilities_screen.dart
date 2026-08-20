@@ -1,6 +1,4 @@
-// presentation/screens/facilities_screen.dart
-// 12-facility infrastructure management screen with named tiers, visual indicators, and navigation to dedicated sub-pages.
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_colors.dart';
@@ -13,11 +11,35 @@ import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
 import 'facility_detail_screen.dart';
 
-class FacilitiesScreen extends ConsumerWidget {
+class FacilitiesScreen extends ConsumerStatefulWidget {
   const FacilitiesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FacilitiesScreen> createState() => _FacilitiesScreenState();
+}
+
+class _FacilitiesScreenState extends ConsumerState<FacilitiesScreen> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+        ref.read(gameStateProvider.notifier).checkFacilityUpgrades();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final stateAsync = ref.watch(gameStateProvider);
 
     return stateAsync.when(

@@ -86,6 +86,8 @@ class DecisionCard {
   final int minTier;
   final int maxTier;
   final String? chainId;
+  final String? chainArcId;
+  final int? chainStep;
   final int cooldownMatches;
 
   const DecisionCard({
@@ -100,6 +102,8 @@ class DecisionCard {
     this.minTier = 1,
     this.maxTier = 20,
     this.chainId,
+    this.chainArcId,
+    this.chainStep,
     this.cooldownMatches = 5,
   });
 
@@ -115,6 +119,8 @@ class DecisionCard {
         'minTier': minTier,
         'maxTier': maxTier,
         'chainId': chainId,
+        'chainArcId': chainArcId,
+        'chainStep': chainStep,
         'cooldownMatches': cooldownMatches,
       };
 
@@ -135,6 +141,8 @@ class DecisionCard {
         minTier: json['minTier'] as int? ?? 1,
         maxTier: json['maxTier'] as int? ?? 20,
         chainId: json['chainId'] as String?,
+        chainArcId: json['chainArcId'] as String?,
+        chainStep: json['chainStep'] as int?,
         cooldownMatches: json['cooldownMatches'] as int? ?? 5,
       );
 }

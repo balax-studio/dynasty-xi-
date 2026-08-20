@@ -20,7 +20,6 @@ class CupTournamentScreen extends ConsumerStatefulWidget {
 
 class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
   late ContinentalCup _continentalCup;
-  bool _isInit = false;
 
   @override
   Widget build(BuildContext context) {
@@ -33,14 +32,13 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
         final cup = gameState.cupTournament;
         final userClub = gameState.userClub;
 
-        if (!_isInit) {
-          _continentalCup = ContinentalCup.generateTournament(
-            userClubName: userClub.name,
-            userBadge: userClub.badgeIcon,
-            season: gameState.clock.seasonNumber,
-          );
-          _isInit = true;
-        }
+        final continentalCup = gameState.continentalCup ??
+            ContinentalCup.generateTournament(
+              userClubName: userClub.name,
+              userBadge: userClub.badgeIcon,
+              season: gameState.clock.seasonNumber,
+            );
+        _continentalCup = continentalCup;
 
         return DefaultTabController(
           length: 2,
@@ -343,23 +341,25 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
                       else if (isUserMatch)
                         RetroButton(
                           onPressed: () {
-                            setState(() {
-                              final idx = _continentalCup.fixtures.indexOf(m);
-                              _continentalCup.fixtures[idx] = ContinentalMatch(
-                                id: m.id,
-                                stage: m.stage,
-                                homeClubName: m.homeClubName,
-                                homeCountry: m.homeCountry,
-                                homeBadge: m.homeBadge,
-                                awayClubName: m.awayClubName,
-                                awayCountry: m.awayCountry,
-                                awayBadge: m.awayBadge,
-                                isPlayed: true,
-                                homeScore: 2,
-                                awayScore: 1,
-                                winnerName: m.homeClubName,
-                              );
-                            });
+                            final updatedFixtures = List<ContinentalMatch>.from(_continentalCup.fixtures);
+                            final idx = updatedFixtures.indexOf(m);
+                            updatedFixtures[idx] = ContinentalMatch(
+                              id: m.id,
+                              stage: m.stage,
+                              homeClubName: m.homeClubName,
+                              homeCountry: m.homeCountry,
+                              homeBadge: m.homeBadge,
+                              awayClubName: m.awayClubName,
+                              awayCountry: m.awayCountry,
+                              awayBadge: m.awayBadge,
+                              isPlayed: true,
+                              homeScore: 2,
+                              awayScore: 1,
+                              winnerName: m.homeClubName,
+                            );
+                            final updatedCup = _continentalCup.copyWith(fixtures: updatedFixtures);
+                            setState(() => _continentalCup = updatedCup);
+                            ref.read(gameStateProvider.notifier).updateContinentalCup(updatedCup);
                             ref.read(gameStateProvider.notifier).claimSponsorReward(35000);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(

@@ -3,7 +3,6 @@
 
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../app/theme/app_colors.dart';
 
 enum EmblemShape {
   classicShield,  // Klasik Sivri Kalkan

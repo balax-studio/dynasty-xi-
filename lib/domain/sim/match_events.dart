@@ -138,3 +138,22 @@ class MatchEvent {
             const [],
       );
 }
+
+class MatchGoalEvent {
+  final int minute;
+  final String? scorerName;
+  final String? scorerId;
+  final String? assistantName;
+  final String? assistantId;
+  final bool isHome;
+
+  const MatchGoalEvent({
+    required this.minute,
+    this.scorerName,
+    this.scorerId,
+    this.assistantName,
+    this.assistantId,
+    this.isHome = true,
+  });
+}
+

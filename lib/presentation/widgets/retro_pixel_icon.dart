@@ -175,7 +175,8 @@ enum RetroPixelIconType {
       case 'briefcase':
       case 'agent':
         return RetroPixelIconType.briefcase;
-      case '⚖':
+      case '🔨':
+      case '👨‍⚖️':
       case 'gavel':
       case 'legal':
         return RetroPixelIconType.gavel;
@@ -304,10 +305,6 @@ class _RetroPixelIconPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = primaryColor
-      ..style = PaintingStyle.fill;
-
-    final outlinePaint = Paint()
-      ..color = secondaryColor
       ..style = PaintingStyle.fill;
 
     // 16x16 Standart Piksel Izgara Oranlayıcı

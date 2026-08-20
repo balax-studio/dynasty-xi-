@@ -143,7 +143,7 @@ void main() {
         targetPlayer: targetPlayer,
         swapPlayer: goodSwap,
         offeredCash: 5000,
-        askingFee: 300000,
+        askingFee: targetPlayer.marketValue,
       );
 
       expect(result.isCounterOffer, isTrue);

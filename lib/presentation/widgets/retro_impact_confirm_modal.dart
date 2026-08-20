@@ -169,7 +169,7 @@ class _RetroImpactConfirmModalState extends State<RetroImpactConfirmModal> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.black,
-                border: Border.all(color: AppColors.neonCyan.withOpacity(0.5)),
+                border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.5)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

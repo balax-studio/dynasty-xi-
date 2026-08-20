@@ -90,9 +90,11 @@ class RefTunnelConfrontationDialog extends ConsumerWidget {
                 const SizedBox(height: 10),
 
                 Center(
-                  child: TextButton(
+                  child: RetroButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Vazgeç ve Protokol Tribününe Dön', style: TextStyle(color: Colors.black54, fontSize: 11)),
+                    backgroundColor: AppColors.win95DarkGrey,
+                    textColor: Colors.black,
+                    child: const Text('Vazgeç ve Protokol Tribününe Dön', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                   ),
                 ),
               ],

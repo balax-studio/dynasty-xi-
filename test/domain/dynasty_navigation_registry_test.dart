@@ -13,14 +13,14 @@ void main() {
     late GameState testState;
 
     setUp(() {
-      testState = GameState(
+      testState = const GameState(
         userClub: Club(
           id: 'test_club',
           name: 'Ankara Gücü',
           city: 'Ankara',
-          meters: const ClubMeters(cash: 10000, fans: 50, lockerRoom: 50, boardTrust: 30),
+          meters: ClubMeters(cash: 10000, fans: 50, lockerRoom: 50, boardTrust: 30),
         ),
-        manager: const Manager(name: 'Test Manager'),
+        manager: Manager(name: 'Test Manager'),
         headCoach: null,
       );
     });

@@ -90,9 +90,11 @@ class CareerShareDialog extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
+                RetroButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('KAPAT', style: TextStyle(color: Colors.white60)),
+                  backgroundColor: AppColors.win95DarkGrey,
+                  textColor: Colors.black,
+                  child: const Text('KAPAT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                 ),
                 const SizedBox(width: 8),
                 RetroButton(

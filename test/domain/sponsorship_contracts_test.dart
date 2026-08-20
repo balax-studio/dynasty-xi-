@@ -78,12 +78,12 @@ void main() {
     });
 
     test('GameState correctly stores and serializes activeSponsorships map', () {
-      final club = Club(
+      const club = Club(
         id: 'c1',
         name: 'Test FC',
         city: 'Ankara',
         leagueTier: 20,
-        meters: const ClubMeters(cash: 20000),
+        meters: ClubMeters(cash: 20000),
       );
 
       const manager = Manager(
@@ -111,7 +111,7 @@ void main() {
         ),
       );
 
-      final gameState = GameState(
+      const gameState = GameState(
         userClub: club,
         manager: manager,
         activeSponsorships: {

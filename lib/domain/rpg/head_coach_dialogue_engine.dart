@@ -92,7 +92,7 @@ class HeadCoachDialogueEngine {
             deltaLockerRoom: 2,
             resultSummary: 'Gençlerin forma şansı arttı. Takım enerjisi yükseldi (+2).',
           ),
-          CoachDialogueOption(
+          const CoachDialogueOption(
             id: 'squad_veteran_focus',
             label: 'Tecrübeli Yıldızlara Güven',
             presidentSpeech: 'Macera aramayalım. Maçı taşıyacak olanlar kariyerli ve soğukkanlı oyunculardır.',
@@ -104,7 +104,7 @@ class HeadCoachDialogueEngine {
         ];
 
       case CoachDialogueTopic.transferAdvice:
-        return [
+        return const [
           CoachDialogueOption(
             id: 'adv_striker',
             label: 'Bitirici Forvet & Golcü Raporu',
@@ -136,7 +136,7 @@ class HeadCoachDialogueEngine {
             deltaLockerRoom: -3,
             resultSummary: 'Hocaya sert uyarı verildi. Yönetim otoritesi pekişti (+4), soyunma odası gerildi (-3).',
           ),
-          CoachDialogueOption(
+          const CoachDialogueOption(
             id: 'critique_support',
             label: 'Tam Destek: "Yönetim Arkanda!"',
             presidentSpeech: 'Hocam dedikodulara kulak asma. Yönetim olarak senin arkandayız, hedefe beraber yürüyeceğiz.',

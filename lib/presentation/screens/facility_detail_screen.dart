@@ -1,6 +1,4 @@
-// presentation/screens/facility_detail_screen.dart
-// Dedicated detail and upgrade sub-page for every facility with 5 named tiers, live visual animations and construction controls.
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_colors.dart';
@@ -27,6 +25,24 @@ class FacilityDetailScreen extends ConsumerStatefulWidget {
 class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
   int? _selectedTierPreview;
   bool _showCelebration = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+        ref.read(gameStateProvider.notifier).checkFacilityUpgrades();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

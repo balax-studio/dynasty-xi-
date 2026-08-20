@@ -28,6 +28,26 @@ class CrisisChoice {
     this.boardTrustDelta = 0,
     required this.outcomeMessage,
   });
+
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'description': description,
+        'cashDelta': cashDelta,
+        'fansDelta': fansDelta,
+        'lockerRoomDelta': lockerRoomDelta,
+        'boardTrustDelta': boardTrustDelta,
+        'outcomeMessage': outcomeMessage,
+      };
+
+  factory CrisisChoice.fromJson(Map<String, dynamic> json) => CrisisChoice(
+        title: json['title'] as String? ?? '',
+        description: json['description'] as String? ?? '',
+        cashDelta: json['cashDelta'] as int? ?? 0,
+        fansDelta: json['fansDelta'] as int? ?? 0,
+        lockerRoomDelta: json['lockerRoomDelta'] as int? ?? 0,
+        boardTrustDelta: json['boardTrustDelta'] as int? ?? 0,
+        outcomeMessage: json['outcomeMessage'] as String? ?? '',
+      );
 }
 
 class PresidentCrisisCall {
@@ -48,6 +68,29 @@ class PresidentCrisisCall {
     required this.dialogQuote,
     required this.choices,
   });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'caller': caller.index,
+        'callerName': callerName,
+        'callerTitle': callerTitle,
+        'callerAvatar': callerAvatar,
+        'dialogQuote': dialogQuote,
+        'choices': choices.map((c) => c.toJson()).toList(),
+      };
+
+  factory PresidentCrisisCall.fromJson(Map<String, dynamic> json) => PresidentCrisisCall(
+        id: json['id'] as String? ?? '',
+        caller: CrisisCallerType.values[(json['caller'] as int?) ?? 0],
+        callerName: json['callerName'] as String? ?? '',
+        callerTitle: json['callerTitle'] as String? ?? '',
+        callerAvatar: json['callerAvatar'] as String? ?? '📞',
+        dialogQuote: json['dialogQuote'] as String? ?? '',
+        choices: (json['choices'] as List<dynamic>?)
+                ?.map((e) => CrisisChoice.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            const [],
+      );
 
   static List<PresidentCrisisCall> getPredefinedCalls() {
     return [

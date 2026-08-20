@@ -4,7 +4,6 @@ import '../../data/assets/card_database.dart';
 import '../../data/local/save_repository.dart';
 import '../../domain/cards/card_effects.dart';
 import '../../domain/cards/card_selector.dart';
-import '../../domain/economy/economy_calculator.dart';
 import '../../domain/economy/financial_statement.dart';
 import '../../domain/economy/offline_calculator.dart';
 import '../../domain/economy/negotiation_model.dart';
@@ -21,6 +20,8 @@ import '../../domain/progression/daily_quest.dart';
 import '../../domain/progression/dynasty_prestige.dart';
 import '../../domain/progression/season_transition.dart';
 import '../../domain/sim/match_engine.dart';
+import '../../domain/sim/match_events.dart';
+import '../../domain/tournament/continental_cup.dart';
 import '../../domain/rpg/player_dialogue_engine.dart';
 import '../../domain/entities/staff.dart';
 import '../../domain/generation/player_generator.dart';
@@ -29,6 +30,11 @@ import '../../domain/president/head_coach.dart';
 import '../../domain/president/boardroom_summit.dart';
 import '../../domain/president/president_crisis.dart';
 import '../../domain/president/crisis_trigger_engine.dart';
+import '../../domain/sim/match_stats_applier.dart';
+import '../../domain/sim/player_condition.dart';
+import '../../domain/sim/injury_engine.dart';
+import '../../domain/economy/weekly_ledger.dart';
+import '../../domain/cards/dynamic_card_factory.dart';
 
 final saveRepositoryProvider = Provider<SaveRepository>((ref) => SaveRepository());
 
@@ -108,26 +114,30 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     await _saveRepository.save(updated);
   }
 
-  /// Sıradaki Maçı Simüle Et
+  /// Sıradaki Maçı Simüle Et (7 Fazlı Modüler Boru Hattı — Bölüm A & §11)
   Future<MatchResult?> playMatch({bool isLiveMode = false}) async {
     final current = currentState;
     if (current == null || current.isGameOver) return null;
 
-    final fixture = current.currentLeague.fixtures.firstWhere(
+    // FAZ 1: ÖN KONTROLLER & FİKSTÜR
+    final fixture = current.currentLeague.fixtures.where(
       (f) => f.matchday == current.clock.matchday && !f.isPlayed,
-      orElse: () => current.currentLeague.fixtures.first,
-    );
+    ).firstOrNull;
+
+    if (fixture == null) {
+      return null;
+    }
 
     final isUserHome = fixture.homeClubId == current.userClub.id;
     final oppClubId = isUserHome ? fixture.awayClubId : fixture.homeClubId;
-
-    // Rakip Takım
     final oppClub = _getOpponentClub(current, oppClubId);
 
+    // FAZ 2: MAÇ MOTORU SİMÜLASYONU (§11)
+    final matchSeed = current.clock.seasonNumber * 10000 + current.clock.matchday * 100 + _rng.nextInt(99);
     final setup = MatchSetup(
       home: isUserHome ? current.userClub : oppClub,
       away: isUserHome ? oppClub : current.userClub,
-      seed: current.clock.seasonNumber * 10000 + current.clock.matchday * 100 + _rng.nextInt(99),
+      seed: matchSeed,
       isLiveMode: isLiveMode,
       hasTacticianPerk: current.manager.hasPerk('tactician_1'),
     );
@@ -140,30 +150,147 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final isUserWin = userGoals > oppGoals;
     final isUserDraw = userGoals == oppGoals;
 
-    // 1. Maç Günü Gelirleri (Kullanıcı ev sahibiyse)
-    var matchIncome = 0;
-    if (isUserHome) {
-      final rank = current.currentLeague.getRankOfClub(current.userClub.id);
-      final revenue = EconomyCalculator.calculateMatchDayRevenue(
-        club: current.userClub,
-        leagueRank: rank,
-      );
-      matchIncome = revenue.totalRevenue;
+    // FAZ 3: OYUNCU DURUMU, İSTATİSTİK & SAKATLIK BORU HATTI (A-2, A-3, A-4, A-5)
+    final starterIds = current.userClub.starting11Ids.toSet();
+
+    // Kiralık süresi dolanları filtrele
+    final updatedLoanDeals = <LoanDeal>[];
+    final expiredLoanPlayerIds = <String>{};
+    for (final deal in current.activeLoanDeals) {
+      final rem = deal.weeksRemaining - 1;
+      if (rem > 0) {
+        updatedLoanDeals.add(deal.copyWith(weeksRemaining: rem));
+      } else {
+        expiredLoanPlayerIds.add(deal.player.id);
+      }
+    }
+    final activeRoster = current.userClub.squad.where((p) => !expiredLoanPlayerIds.contains(p.id)).toList();
+
+    // Gol ve asist olayları
+    final userGoalEvents = result.events
+        .where((e) => e.type == MatchEventType.goal && e.isHomeTeam == isUserHome)
+        .map((e) {
+          final scorer = activeRoster.where((p) => p.fullName == e.primaryPlayerName).firstOrNull;
+          final assist = activeRoster.where((p) => p.fullName == e.secondaryPlayerName).firstOrNull;
+          return MatchGoalEvent(
+            minute: e.minute,
+            scorerName: e.primaryPlayerName,
+            scorerId: scorer?.id,
+            assistantName: e.secondaryPlayerName,
+            assistantId: assist?.id,
+            isHome: isUserHome,
+          );
+        }).toList();
+
+    // A-2: Maç İstatistikleri & Reytingler
+    final matchStats = MatchStatsApplier.apply(
+      currentSquad: activeRoster,
+      starting11Ids: starterIds,
+      userGoals: userGoals,
+      opponentGoals: oppGoals,
+      opponentOvr: oppClub.averageOvr.round(),
+      userGoalEvents: userGoalEvents,
+      randomSeed: matchSeed,
+    );
+
+    // A-3 & A-5: Kondisyon (Fitness), Form, Keskinlik & Moral Tetikleyicileri
+    final conditionSquad = PlayerConditionApplier.applyPostMatchCondition(
+      squad: matchStats.updatedPlayers,
+      starting11Ids: starterIds,
+      userGoals: userGoals,
+      opponentGoals: oppGoals,
+      performances: matchStats.performances,
+      trainingGroundLevel: current.userClub.facilities[FacilityType.trainingGround]?.level ?? 1,
+    );
+
+    // A-4: Sakatlık Motoru & İyileşme
+    final injuryResult = InjuryEngine.processMatchInjuries(
+      currentSquad: conditionSquad,
+      matchParticipants: starterIds,
+      medicalCenterLevel: current.userClub.facilities[FacilityType.medicalCenter]?.level ?? 1,
+      randomSeed: matchSeed,
+    );
+    final updatedSquad = injuryResult.squad;
+
+    // FAZ 4: EKONOMİ & BİLANÇO BORU HATTI (C-1, C-2, C-3)
+    final ledger = WeeklyLedgerCalculator.calculate(
+      state: current,
+      isHomeMatch: isUserHome,
+      isWin: isUserWin,
+    );
+
+    // Banka Kredisi Taksit Ödemesi
+    BankLoan? updatedLoan = current.activeLoan;
+    bool loanPaidOff = false;
+    if (updatedLoan != null) {
+      updatedLoan = updatedLoan.payWeeklyInstallment();
+      if (updatedLoan.isPaidOff) {
+        loanPaidOff = true;
+        updatedLoan = null;
+      }
     }
 
-    // 2. Metre Güncellemeleri
+    // Sponsorluk Süreleri & Bonuslar
+    final updatedSponsorships = <SponsorshipSlot, SponsorshipContract>{};
+    final sponsorExpiryLogs = <String>[];
+    var extraSponsorCash = 0;
+    int updatedSleeve = current.sleeveSponsorIncome;
+    int updatedStadiumNaming = current.stadiumNamingIncome;
+    int updatedMainShirtIncome = current.userClub.sponsorWeeklyIncome;
+
+    for (final entry in current.activeSponsorships.entries) {
+      final contract = entry.value;
+      if (isUserWin && contract.perk.matchWinBonus > 0) {
+        extraSponsorCash += contract.perk.matchWinBonus;
+      }
+      final remaining = contract.weeksRemaining - 1;
+      if (remaining > 0) {
+        updatedSponsorships[entry.key] = contract.copyWith(weeksRemaining: remaining);
+      } else {
+        sponsorExpiryLogs.add('📢 [${contract.brandName}] ile ${contract.slot.label} sponsorluk sözleşmeniz sona erdi!');
+        switch (contract.slot) {
+          case SponsorshipSlot.mainShirt:
+            updatedMainShirtIncome = 0;
+            break;
+          case SponsorshipSlot.sleeve:
+            updatedSleeve = 0;
+            break;
+          case SponsorshipSlot.stadiumNaming:
+            updatedStadiumNaming = 0;
+            break;
+        }
+      }
+    }
+
+    final netCashDelta = ledger.netCashFlow + extraSponsorCash;
+
+    // Metre Güncellemeleri & Kovulma Kontrolü (E-1)
     final deltaFans = isUserWin ? 4 : (isUserDraw ? 0 : -3);
     final deltaLocker = isUserWin ? 6 : (isUserDraw ? 1 : -5);
     final deltaBoard = isUserWin ? 5 : (isUserDraw ? 0 : -4);
 
-    final updatedMeters = current.userClub.meters.applyDeltas(
-      deltaCash: matchIncome,
+    final interimMeters = current.userClub.meters.applyDeltas(
+      deltaCash: netCashDelta,
       deltaFans: deltaFans,
       deltaLockerRoom: deltaLocker,
       deltaBoardTrust: deltaBoard,
     );
+    final finalMeters = interimMeters.onMatchCompleted();
 
-    // 3. Fikstür ve Sıralama Güncelleme
+    // 3 Aşamalı Kovulma Mantığı (E-1)
+    int sackingCountdown = current.sackingCountdownMatches;
+    if (finalMeters.boardTrust < 15) {
+      sackingCountdown = sackingCountdown > 0 ? sackingCountdown - 1 : 3;
+    } else {
+      sackingCountdown = 0;
+    }
+
+    final isGameOver = finalMeters.isSacked || (finalMeters.boardTrust < 15 && sackingCountdown == 0) || current.isGameOver;
+    final gameOverReason = isGameOver
+        ? (current.gameOverReason ?? 'Yönetim Kurulu Güvenini Kaybettiniz (Kovuldunuz)')
+        : null;
+
+    // FAZ 5: İLERLEME, FİKSTÜR & PUAN DURUMU
     final updatedFixtures = current.currentLeague.fixtures.map((f) {
       if (f.id == fixture.id) {
         return f.copyWith(
@@ -175,7 +302,6 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       return f;
     }).toList();
 
-    // Kullanıcı ve aktif rakip puanlarını güncelle
     var tempStandings = current.currentLeague.standings.map((entry) {
       if (entry.clubId == current.userClub.id) {
         return entry.recordMatch(goalsScored: userGoals, goalsConceded: oppGoals);
@@ -185,7 +311,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       return entry;
     }).toList();
 
-    // Aynı haftada diğer AI kulüplerinin maçlarını da simüle et (lig tablosunun dinamik ilerlemesi için)
+    // Diğer lig maçlarının simülasyonu
     final otherClubs = tempStandings.where(
       (entry) => entry.clubId != current.userClub.id && entry.clubId != oppClub.id,
     ).toList();
@@ -211,10 +337,45 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       standings: tempStandings,
     );
 
-    // 4. Sezon ve Seans İlerlemesi
+    // Tesis İnşaatı Kontrolü (A-6)
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final updatedFacMap = Map<FacilityType, Facility>.from(current.userClub.facilities);
+    final facilityLogs = <String>[];
+
+    for (final entry in current.userClub.facilities.entries) {
+      final fac = entry.value;
+      if (fac.isUpgrading && fac.upgradeFinishEpochMs != null && now >= fac.upgradeFinishEpochMs!) {
+        updatedFacMap[entry.key] = fac.copyWith(
+          level: fac.level + 1,
+          isUpgrading: false,
+          upgradeFinishEpochMs: null,
+        );
+        facilityLogs.add('🏗️ Tesis Tamamlandı: ${fac.type.label} Sv.${fac.level + 1} hizmete girdi!');
+      }
+    }
+
+    // Günlük Görevler (E-4)
+    final updatedDailyQuests = DailyQuestManager.advanceQuest(
+      current.dailyQuests,
+      QuestTrigger.leagueMatch,
+    );
+
+    // Menajer XP & İtibar & KulüpXP (E-3, E-6)
+    final xpEarned = 30 + (isUserWin ? 50 : (isUserDraw ? 20 : 0));
+    final updatedManager = current.manager.addXp(xpEarned);
+    final updatedClubXp = current.clubXp + (isUserWin ? 25 : (isUserDraw ? 10 : 0));
+
+    // Kupa Müzesi Rekorları (E-5)
+    final updatedMuseumRecords = current.museumRecords.checkAndRecordMatch(
+      homeScore: userGoals,
+      awayScore: oppGoals,
+      opponentName: oppClub.name,
+      isWin: isUserWin,
+    );
+
+    // FAZ 6: KART SEÇİMİ & KRİZ MOTORU (D-1, D-2, D-3, D-4)
     final nextClock = current.clock.advanceMatch();
 
-    // 5. Yeni Karar Kartları Seçimi (Yeni Maç Penceresi İçin)
     final newSessionCards = CardSelector.pickSessionCards(
       cardDatabase: CardDatabase.mvpCards,
       state: current,
@@ -222,71 +383,64 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       count: 2,
     );
 
-    // 6. Menajer XP (+30 XP maç oynama, +50 XP galibiyet)
-    final xpEarned = 30 + (isUserWin ? 50 : (isUserDraw ? 20 : 0));
-    final updatedManager = current.manager.addXp(xpEarned);
+    // Sakatlanan oyuncular için dinamik karar kartı ekle
+    final dynamicInjuryCards = injuryResult.newInjuries
+        .map((inj) => DynamicCardFactory.createInjuryCard(inj.player, inj))
+        .toList();
 
-    // 7. Sponsorluk Süre ve Galibiyet Primleri İlerlemesi
-    final updatedSponsorships = <SponsorshipSlot, SponsorshipContract>{};
-    final sponsorExpiryLogs = <String>[];
-    var extraSponsorCash = 0;
-    int updatedSleeve = current.sleeveSponsorIncome;
-    int updatedStadiumNaming = current.stadiumNamingIncome;
-    int updatedMainShirtIncome = current.userClub.sponsorWeeklyIncome;
+    final allPendingCards = [...dynamicInjuryCards, ...newSessionCards];
 
-    for (final entry in current.activeSponsorships.entries) {
-      final contract = entry.value;
-      if (isUserWin && contract.perk.matchWinBonus > 0) {
-        extraSponsorCash += contract.perk.matchWinBonus;
-      }
-      final remaining = contract.weeksRemaining - 1;
-      if (remaining > 0) {
-        updatedSponsorships[entry.key] = contract.copyWith(weeksRemaining: remaining);
-      } else {
-        // Sözleşme sona erdi
-        sponsorExpiryLogs.add('📢 [${contract.brandName}] ile ${contract.slot.label} sponsorluk sözleşmeniz sona erdi!');
-        switch (contract.slot) {
-          case SponsorshipSlot.mainShirt:
-            updatedMainShirtIncome = 0;
-            break;
-          case SponsorshipSlot.sleeve:
-            updatedSleeve = 0;
-            break;
-          case SponsorshipSlot.stadiumNaming:
-            updatedStadiumNaming = 0;
-            break;
-        }
-      }
-    }
+    // Kriz Cooldown & Tetikleyici (D-4)
+    final nextCrisisCooldown = current.crisisCooldownMatches > 0 ? current.crisisCooldownMatches - 1 : 0;
+    PresidentCrisisCall? nextCrisis = current.activeCrisisCall;
 
-    final finalMeters = extraSponsorCash > 0
-        ? updatedMeters.applyDeltas(deltaCash: extraSponsorCash)
-        : updatedMeters;
-
+    // FAZ 7: STATE COMMIT & PERSISTENCE
     final updatedState = current.copyWith(
       userClub: current.userClub.copyWith(
         meters: finalMeters,
         sponsorWeeklyIncome: updatedMainShirtIncome,
+        facilities: updatedFacMap,
+        squad: updatedSquad,
       ),
       manager: updatedManager,
       currentLeague: updatedLeague,
       clock: nextClock,
-      pendingCards: newSessionCards,
+      pendingCards: allPendingCards,
       activeSponsorships: updatedSponsorships,
       sleeveSponsorIncome: updatedSleeve,
       stadiumNamingIncome: updatedStadiumNaming,
+      activeLoan: loanPaidOff ? null : updatedLoan,
+      clearLoan: loanPaidOff,
+      activeLoanDeals: updatedLoanDeals,
+      museumRecords: updatedMuseumRecords,
+      dailyQuests: updatedDailyQuests,
+      crisisCooldownMatches: nextCrisisCooldown,
+      sackingCountdownMatches: sackingCountdown,
+      isGameOver: isGameOver,
+      gameOverReason: gameOverReason,
+      clubXp: updatedClubXp,
       notificationLog: [
         'Maç Sonucu: ${current.userClub.name} $userGoals - $oppGoals ${oppClub.name}',
         if (extraSponsorCash > 0) '💰 Sponsor Galibiyet Primi: +₣$extraSponsorCash hesaba yattı!',
+        if (loanPaidOff) '🎉 Banka Kredisi Tamamen Ödendi ve Kapatıldı!',
+        ...injuryResult.newInjuries.map((inj) => '🏥 Sakatlık: ${inj.player.fullName} (${inj.injuryType}, ${inj.matchesOut} maç yok)'),
+        ...injuryResult.recoveredPlayers.map((rec) => '✨ İyileşme: ${rec.fullName} sahalara geri döndü!'),
         ...sponsorExpiryLogs,
+        ...facilityLogs,
         ...current.notificationLog,
       ],
     );
 
-    final crisis = CrisisTriggerEngine.evaluateCrisis(updatedState);
+    if (nextCrisis == null && nextCrisisCooldown == 0) {
+      final evaluated = CrisisTriggerEngine.evaluateCrisis(updatedState);
+      if (evaluated != null && !current.resolvedCrisisIds.contains(evaluated.id)) {
+        nextCrisis = evaluated;
+      }
+    }
+
     final finalState = updatedState.copyWith(
-      activeCrisisCall: crisis,
-      clearCrisisCall: crisis == null,
+      activeCrisisCall: nextCrisis,
+      clearCrisisCall: nextCrisis == null,
     );
 
     state = AsyncValue.data(finalState);
@@ -307,9 +461,16 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       deltaBoardTrust: choice.boardTrustDelta,
     );
 
+    final resolvedId = current.activeCrisisCall?.id;
+    final updatedResolvedIds = resolvedId != null
+        ? [...current.resolvedCrisisIds, resolvedId]
+        : current.resolvedCrisisIds;
+
     final updated = current.copyWith(
       userClub: current.userClub.copyWith(meters: updatedMeters),
       clearCrisisCall: true,
+      crisisCooldownMatches: 3,
+      resolvedCrisisIds: updatedResolvedIds,
       notificationLog: [
         '🔴 Kırmızı Hat Kriz Çözümü: ${choice.outcomeMessage}',
         ...current.notificationLog,
@@ -1489,6 +1650,46 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     return true;
   }
 
+  /// Kiralık Oyuncu Sözleşmesi İmzala (§10.5)
+  Future<bool> loanInPlayer(LoanDeal deal) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final loanedPlayer = deal.player.copyWith(
+      weeklyWage: deal.weeklyWageToPay,
+      contractSeasonsLeft: deal.seasons,
+      morale: 80,
+    );
+
+    final updatedSquad = [...current.userClub.squad, loanedPlayer];
+    final updatedLoanDeals = [...current.activeLoanDeals, deal];
+    final updatedSignedIds = [...current.signedMarketIds, deal.player.id];
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(squad: updatedSquad),
+      activeLoanDeals: updatedLoanDeals,
+      signedMarketIds: updatedSignedIds,
+      notificationLog: [
+        '🤝 Kiralık Transfer: ${deal.player.fullName} (${deal.parentClubName}) ${deal.seasons} sezonluğuna kiralandı (Haftalık maaş: ₣${deal.weeklyWageToPay}).',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Kıta Kupası / Devler Ligi Güncelleme (§14.4)
+  Future<void> updateContinentalCup(ContinentalCup cup) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final updated = current.copyWith(continentalCup: cup);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
   /// Banka Kredisini Erken Kapat (İndirimli)
   Future<bool> repayBankLoanEarly() async {
     final current = currentState;
@@ -1507,6 +1708,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final updated = current.copyWith(
       userClub: current.userClub.copyWith(meters: updatedMeters),
       activeLoan: null,
+      clearLoan: true,
       notificationLog: [
         '🎉 Banka Kredisi Erken Kapatıldı! ₣$cost ödendi ve kulüp tüm faiz yükümlülüğünden kurtuldu.',
         ...current.notificationLog,
@@ -2012,7 +2214,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     state = AsyncValue.data(newGame);
   }
 
-  /// Kupa Maçı Oynama
+  /// Kupa Maçı Oynama (MatchEngine & Penaltı Destekli Simülasyon)
   Future<void> playCupMatch(String matchId) async {
     final current = currentState;
     if (current == null) return;
@@ -2021,13 +2223,40 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     if (match.isPlayed) return;
 
     final isHome = match.homeClubId == current.userClub.id;
+    final oppId = isHome ? match.awayClubId : match.homeClubId;
+    final oppClub = _getOpponentClub(current, oppId);
 
-    // Simulate cup match with random determinism
-    final userGoals = 1 + _rng.nextInt(3);
-    final oppGoals = _rng.nextInt(2);
-    final homeScore = isHome ? userGoals : oppGoals;
-    final awayScore = isHome ? oppGoals : userGoals;
-    final winnerId = homeScore >= awayScore ? match.homeClubId : match.awayClubId;
+    final setup = MatchSetup(
+      home: isHome ? current.userClub : oppClub,
+      away: isHome ? oppClub : current.userClub,
+      seed: current.clock.seasonNumber * 50000 + match.round.index * 1000 + _rng.nextInt(99),
+      hasTacticianPerk: current.manager.hasPerk('tactician_1'),
+    );
+    final engine = MatchEngine(setup.seed);
+    final result = engine.simulate(setup);
+
+    final homeScore = isHome ? result.homeGoals : result.awayGoals;
+    final awayScore = isHome ? result.awayGoals : result.homeGoals;
+    int? homePens;
+    int? awayPens;
+    String winnerId;
+
+    if (homeScore > awayScore) {
+      winnerId = match.homeClubId;
+    } else if (awayScore > homeScore) {
+      winnerId = match.awayClubId;
+    } else {
+      homePens = 4 + _rng.nextInt(2);
+      awayPens = 3 + _rng.nextInt(2);
+      if (homePens == awayPens) {
+        if (_rng.chance(0.5)) {
+          homePens += 1;
+        } else {
+          awayPens += 1;
+        }
+      }
+      winnerId = homePens > awayPens ? match.homeClubId : match.awayClubId;
+    }
 
     final updatedMatches = current.cupTournament.matches.map((m) {
       if (m.id == matchId) {
@@ -2035,23 +2264,40 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
           isPlayed: true,
           homeScore: homeScore,
           awayScore: awayScore,
+          homePenalties: homePens,
+          awayPenalties: awayPens,
           winnerClubId: winnerId,
         );
       }
       return m;
     }).toList();
 
-    // Auto-simulate other cup matches in the same round
+    // Diğer AI kupa maçlarını da gerçekçi skorlarla simüle et
     final fullySimulated = updatedMatches.map((m) {
       if (m.round == match.round && !m.isPlayed) {
         final hG = _rng.nextInt(3);
         var aG = _rng.nextInt(3);
-        if (hG == aG) aG += 1;
-        final wId = hG > aG ? m.homeClubId : m.awayClubId;
+        int? hP;
+        int? aP;
+        String wId;
+        if (hG > aG) {
+          wId = m.homeClubId;
+        } else if (aG > hG) {
+          wId = m.awayClubId;
+        } else {
+          hP = 4 + _rng.nextInt(2);
+          aP = 3 + _rng.nextInt(2);
+          if (hP == aP) {
+            hP += 1;
+          }
+          wId = hP > aP ? m.homeClubId : m.awayClubId;
+        }
         return m.copyWith(
           isPlayed: true,
           homeScore: hG,
           awayScore: aG,
+          homePenalties: hP,
+          awayPenalties: aP,
           winnerClubId: wId,
         );
       }
@@ -2065,6 +2311,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final deltaCash = isUserWinner ? 15000 : 3000;
     final deltaFans = isUserWinner ? 6 : -2;
 
+    final penaltyLog = (homePens != null && awayPens != null) ? ' (Penaltılar: $homePens - $awayPens)' : '';
     final updated = current.copyWith(
       cupTournament: updatedCup,
       userClub: current.userClub.copyWith(
@@ -2072,7 +2319,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       ),
       manager: current.manager.addXp(isUserWinner ? 100 : 30),
       notificationLog: [
-        'Kupa Maçı: ${match.homeClubName} $homeScore - $awayScore ${match.awayClubName} (${isUserWinner ? "TUR ATLANDI!" : "ELENDİK"})',
+        'Kupa Maçı: ${match.homeClubName} $homeScore - $awayScore ${match.awayClubName}$penaltyLog (${isUserWinner ? "TUR ATLANDI!" : "ELENDİK"})',
         ...current.notificationLog,
       ],
     );

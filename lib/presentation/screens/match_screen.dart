@@ -16,6 +16,7 @@ import '../../domain/media/press_conference.dart';
 import '../../domain/media/fan_social_buzz.dart';
 import '../widgets/pitch_painter.dart';
 import '../widgets/ref_tunnel_confrontation_dialog.dart';
+import '../widgets/retro_window.dart';
 
 class MatchScreen extends ConsumerStatefulWidget {
   final bool isLiveMode;
@@ -229,8 +230,15 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                       itemCount: starters.length,
                       itemBuilder: (context, index) {
                         final starter = starters[index];
-                        return Card(
-                          color: AppColors.neutral800,
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.neutral800,
+                            border: Border.all(color: Colors.black, width: 2),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black, offset: Offset(2, 2)),
+                            ],
+                          ),
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundColor: AppColors.signalGreen,
@@ -544,12 +552,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
             ...HalfTimeTalkType.values.map((talk) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.neutral800,
-                    padding: const EdgeInsets.all(14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
+                child: RetroButton(
+                  backgroundColor: AppColors.neutral800,
+                  textColor: Colors.white,
                   onPressed: () => _applyHalfTimeTalk(talk),
                   child: Row(
                     children: [
@@ -764,13 +769,11 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.neutral800,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
+                    child: RetroButton(
+                      backgroundColor: AppColors.neutral800,
+                      textColor: Colors.white,
                       onPressed: () => _resumeAfterKeyMoment(opt),
-                      child: Text(opt.label, style: AppTypography.body()),
+                      child: Text(opt.label, style: AppTypography.label(color: Colors.white)),
                     ),
                   ),
                 );
@@ -932,18 +935,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
 
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.signalGreen,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
+                child: RetroButton(
+                  backgroundColor: AppColors.signalGreen,
+                  textColor: Colors.black,
                   onPressed: () {
                     AudioSynthesizer.playClick();
                     Navigator.of(context).pop();
                   },
-                  child: Text('KULÜP OFİSİNE DÖN', style: AppTypography.body(color: Colors.black).copyWith(fontWeight: FontWeight.bold)),
+                  child: Text('KULÜP OFİSİNE DÖN', style: AppTypography.label(color: Colors.black)),
                 ),
               ),
             ],

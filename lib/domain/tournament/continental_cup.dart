@@ -154,6 +154,22 @@ class ContinentalCup {
     );
   }
 
+  ContinentalCup copyWith({
+    String? title,
+    bool? isUnlocked,
+    int? seasonNumber,
+    List<ContinentalMatch>? fixtures,
+    int? prizeMoney,
+  }) {
+    return ContinentalCup(
+      title: title ?? this.title,
+      isUnlocked: isUnlocked ?? this.isUnlocked,
+      seasonNumber: seasonNumber ?? this.seasonNumber,
+      fixtures: fixtures ?? this.fixtures,
+      prizeMoney: prizeMoney ?? this.prizeMoney,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'title': title,
     'isUnlocked': isUnlocked,

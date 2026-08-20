@@ -56,8 +56,8 @@ void main() {
   );
 
   GameState createTestGameState() {
-    return GameState(
-      userClub: const Club(
+    return const GameState(
+      userClub: Club(
         id: 'club_1',
         name: 'Kadıköy SK',
         city: 'İstanbul',
@@ -83,7 +83,7 @@ void main() {
           ),
         ],
       ),
-      manager: const Manager(name: 'Test Menajer'),
+      manager: Manager(name: 'Test Menajer'),
       transferMarket: [testPlayer],
     );
   }

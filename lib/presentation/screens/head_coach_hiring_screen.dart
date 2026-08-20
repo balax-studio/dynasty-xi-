@@ -261,14 +261,17 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
                       style: const TextStyle(color: Colors.white),
                     ),
                     actions: [
-                      TextButton(
+                      RetroButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('VAZGEÇ', style: TextStyle(color: Colors.white70)),
+                        backgroundColor: AppColors.win95DarkGrey,
+                        textColor: Colors.black,
+                        child: const Text('VAZGEÇ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                       ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.comicRed),
+                      RetroButton(
+                        backgroundColor: AppColors.comicRed,
+                        textColor: Colors.white,
                         onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('GÖREVDEN AL (KOV)'),
+                        child: const Text('GÖREVDEN AL (KOV)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                       ),
                     ],
                   ),

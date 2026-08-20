@@ -98,6 +98,30 @@ class ClubMuseumRecords {
     return 0;
   }
 
+  ClubMuseumRecords copyWith({
+    String? biggestWinScore,
+    String? biggestWinOpponent,
+    int? unbeatenStreak,
+    String? recordSigningName,
+    int? recordSigningFee,
+    String? recordSaleName,
+    int? recordSaleFee,
+    String? allTimeTopScorerName,
+    int? allTimeTopScorerGoals,
+  }) {
+    return ClubMuseumRecords(
+      biggestWinScore: biggestWinScore ?? this.biggestWinScore,
+      biggestWinOpponent: biggestWinOpponent ?? this.biggestWinOpponent,
+      unbeatenStreak: unbeatenStreak ?? this.unbeatenStreak,
+      recordSigningName: recordSigningName ?? this.recordSigningName,
+      recordSigningFee: recordSigningFee ?? this.recordSigningFee,
+      recordSaleName: recordSaleName ?? this.recordSaleName,
+      recordSaleFee: recordSaleFee ?? this.recordSaleFee,
+      allTimeTopScorerName: allTimeTopScorerName ?? this.allTimeTopScorerName,
+      allTimeTopScorerGoals: allTimeTopScorerGoals ?? this.allTimeTopScorerGoals,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
         'biggestWinScore': biggestWinScore,
         'biggestWinOpponent': biggestWinOpponent,

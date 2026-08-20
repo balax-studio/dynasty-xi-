@@ -358,13 +358,15 @@ class _ScoutingScreenState extends State<ScoutingScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
+                  RetroButton(
                     onPressed: () {
                       setState(() {
                         _discoveredProspects.remove(p);
                       });
                     },
-                    child: const Text('RAPORU SİL', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                    backgroundColor: AppColors.win95DarkGrey,
+                    textColor: Colors.black,
+                    child: const Text('RAPORU SİL', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                   ),
                   const SizedBox(width: 8),
                   RetroButton(

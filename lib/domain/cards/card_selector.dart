@@ -1,12 +1,12 @@
 // domain/cards/card_selector.dart
-// Pure Dart. Contextual card selection with category fatigue, novelty bonus, and meter pressure weighting.
+// Pure Dart. Contextual card selection with active chains, category fatigue, novelty bonus, and meter pressure weighting (§12.4 & §12.5).
 
 import '../../core/rng/deterministic_rng.dart';
 import '../entities/card.dart';
 import '../entities/game_state.dart';
 
 class CardSelector {
-  /// Bir Seans İçin 2 Adet Uygun Karar Kartı Seçer — Ek C.6
+  /// Bir Seans İçin Uygun Karar Kartlarını Seçer (§12.4 & §12.5)
   static List<DecisionCard> pickSessionCards({
     required List<DecisionCard> cardDatabase,
     required GameState state,
@@ -15,20 +15,56 @@ class CardSelector {
   }) {
     if (cardDatabase.isEmpty) return [];
 
+    final picked = <DecisionCard>[];
+
+    // 1. AKTİF HİKAYE ZİNCİRLERİ (Story Arcs / Active Chains - D-1)
+    if (state.activeChains.isNotEmpty) {
+      for (final entry in state.activeChains.entries) {
+        final arcId = entry.key;
+        final nextStep = entry.value;
+
+        final chainCard = cardDatabase.firstWhere(
+          (c) => c.chainArcId == arcId && c.chainStep == nextStep,
+          orElse: () => cardDatabase.firstWhere(
+            (c) => c.id == arcId,
+            orElse: () => const DecisionCard(
+              id: '',
+              characterName: '',
+              characterRole: '',
+              characterAvatar: '',
+              headline: '',
+              storyText: '',
+              category: CardCategory.lockerRoom,
+              options: [],
+            ),
+          ),
+        );
+
+        if (chainCard.id.isNotEmpty && !picked.any((p) => p.id == chainCard.id)) {
+          picked.add(chainCard);
+          if (picked.length >= count) return picked;
+        }
+      }
+    }
+
+    // 2. KULLANILABİLİR KART HAVUZU
     final available = cardDatabase.where((c) {
-      // 1. Lig Kademesi Uygunluğu
+      if (picked.any((p) => p.id == c.id)) return false;
+      // Lig Kademesi Uygunluğu
       if (state.userClub.leagueTier < c.minTier || state.userClub.leagueTier > c.maxTier) {
         return false;
       }
       return true;
     }).toList();
 
-    if (available.isEmpty) return cardDatabase.take(count).toList();
+    if (available.isEmpty) {
+      if (picked.isNotEmpty) return picked;
+      return cardDatabase.take(count).toList();
+    }
 
-    final picked = <DecisionCard>[];
     final pool = List<DecisionCard>.from(available);
 
-    for (var i = 0; i < count && pool.isNotEmpty; i++) {
+    while (picked.length < count && pool.isNotEmpty) {
       final card = rng.weightedPick<DecisionCard>(pool, (c) {
         return _calculateWeight(c, state);
       });
@@ -39,7 +75,7 @@ class CardSelector {
     return picked;
   }
 
-  /// Kart Ağırlık Formülü — Ek C.6
+  /// Kart Ağırlık Formülü (§12.4 & Ek C.6)
   /// kartAğırlığı = taban × kategoriYorgunluğu × bağlamBoost × göstergeBaskısı × yenilikBonusu
   static double _calculateWeight(DecisionCard card, GameState state) {
     var weight = 10.0;
@@ -49,7 +85,7 @@ class CardSelector {
         (card.category == CardCategory.board || card.category == CardCategory.crisis)) {
       weight *= 2.8;
     }
-    if (state.userClub.meters.cash <= 8000 &&
+    if (state.userClub.meters.cash <= 10000 &&
         (card.category == CardCategory.finance || card.category == CardCategory.sponsor)) {
       weight *= 2.5;
     }

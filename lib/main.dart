@@ -9,25 +9,17 @@ import 'app/theme/app_theme.dart';
 import 'app/theme/app_typography.dart';
 import 'application/providers/game_state_provider.dart';
 import 'core/audio/audio_synthesizer.dart';
-import 'presentation/screens/board_room_screen.dart';
 import 'presentation/screens/facilities_screen.dart';
 import 'presentation/screens/finance_screen.dart';
 import 'presentation/screens/ftue_screen.dart';
 import 'presentation/screens/league_screen.dart';
 import 'presentation/screens/manager_screen.dart';
 import 'presentation/screens/office_screen.dart';
-import 'presentation/screens/press_conference_screen.dart';
-import 'presentation/screens/scouting_screen.dart';
 import 'presentation/screens/shop_screen.dart';
 import 'presentation/screens/squad_screen.dart';
-import 'presentation/screens/staff_screen.dart';
 import 'presentation/screens/transfer_screen.dart';
-import 'presentation/screens/trophy_room_screen.dart';
-import 'presentation/screens/head_coach_hiring_screen.dart';
-import 'presentation/screens/boardroom_summit_screen.dart';
-import 'presentation/screens/cup_tournament_screen.dart';
-import 'presentation/screens/prestige_screen.dart';
 import 'domain/navigation/dynasty_navigation_registry.dart';
+import 'presentation/screens/sacked_screen.dart';
 import 'presentation/widgets/club_emblem_widget.dart';
 import 'presentation/widgets/dynasty_shortcut_customizer_modal.dart';
 import 'presentation/widgets/retro_window.dart';
@@ -160,6 +152,13 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
         ),
       ),
       data: (gameState) {
+        if (gameState.isGameOver) {
+          return SackedScreen(
+            clubName: gameState.userClub.name,
+            sackingReason: gameState.gameOverReason ?? 'Yönetim Kurulu Güveninin Yitirilmesi',
+          );
+        }
+
         // FTUE Onboarding Kontrolü
         if (gameState.isFtueActive) {
           return FtueScreen(
@@ -546,7 +545,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text('⚠️'),
-                                  const SizedBox(width: 6),
+                                  SizedBox(width: 6),
                                   Text(
                                     'SIFIRLA',
                                     style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 11),

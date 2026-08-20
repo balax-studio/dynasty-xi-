@@ -1,6 +1,7 @@
 // domain/entities/game_state.dart
 // Pure Dart. Root game state combining user club, manager, league pyramid, game clock, cards, quests, economy, cups, prestige, staff and head coach.
 
+import 'dart:math' as math;
 import '../../core/time/game_clock.dart';
 import '../economy/financial_statement.dart';
 import '../economy/sponsorship_contract.dart';
@@ -11,6 +12,8 @@ import '../president/head_coach.dart';
 import '../president/president_crisis.dart';
 import '../progression/daily_quest.dart';
 import '../progression/dynasty_prestige.dart';
+import '../progression/museum_records.dart';
+import '../tournament/continental_cup.dart';
 import '../tournament/cup_tournament.dart';
 import 'card.dart';
 import 'club.dart';
@@ -46,6 +49,7 @@ class GameState {
 
   // Offline Genişletilmiş Sistemler (Kupa, Prestij, Bilet, Efsaneler)
   final CupTournament cupTournament;
+  final ContinentalCup? continentalCup;
   final List<DynastyLegacyPerk> unlockedLegacyPerks;
   final List<Player> retiredLegends;
   final int ticketPrice;
@@ -57,6 +61,12 @@ class GameState {
   final List<String> pinnedShortcutIds;
   final List<StaffMember> staff;
   final Map<SponsorshipSlot, SponsorshipContract> activeSponsorships;
+  final Set<String> unlockedAchievementIds;
+  final ClubMuseumRecords museumRecords;
+  final List<String> signedMarketIds;
+  final int crisisCooldownMatches;
+  final List<String> resolvedCrisisIds;
+  final int clubXp;
 
   const GameState({
     required this.userClub,
@@ -81,6 +91,7 @@ class GameState {
     this.accumulatedIdleCash = 0,
     this.sackingCountdownMatches = 0,
     this.cupTournament = const CupTournament(),
+    this.continentalCup,
     this.unlockedLegacyPerks = const [],
     this.retiredLegends = const [],
     this.ticketPrice = 25,
@@ -92,6 +103,12 @@ class GameState {
     this.activeCrisisCall,
     this.staff = const [],
     this.activeSponsorships = const {},
+    this.unlockedAchievementIds = const {},
+    this.museumRecords = const ClubMuseumRecords(),
+    this.signedMarketIds = const [],
+    this.crisisCooldownMatches = 0,
+    this.resolvedCrisisIds = const [],
+    this.clubXp = 0,
     this.pinnedShortcutIds = const [
       'head_coach',
       'boardroom_summit',
@@ -112,6 +129,10 @@ class GameState {
   bool get hasActiveCrisis => activeCrisisCall != null;
   SeasonThemeType get currentSeasonTheme => SeasonThemeService.getThemeForMatchday(clock.matchday);
   bool get hasSecondBuilder => unlockedLegacyPerks.any((p) => p.id == 'double_builder' && p.isUnlocked);
+  int get clubLevel => math.min(50, math.max(1, (math.sqrt(clubXp / 180.0)).floor() + 1));
+  int get maxSquadSize => math.min(30, 18 + (clubLevel ~/ 5));
+  int get minSquadSize => 16;
+  bool get isTransferWindowOpen => clock.matchday <= 15;
 
   GameState copyWith({
     Club? userClub,
@@ -129,13 +150,17 @@ class GameState {
     List<String>? notificationLog,
     bool? isGameOver,
     String? gameOverReason,
+    bool clearGameOverReason = false,
     List<DailyQuest>? dailyQuests,
     BankLoan? activeLoan,
+    bool clearLoan = false,
     int? sleeveSponsorIncome,
     int? stadiumNamingIncome,
     int? accumulatedIdleCash,
     int? sackingCountdownMatches,
     CupTournament? cupTournament,
+    ContinentalCup? continentalCup,
+    bool clearContinentalCup = false,
     List<DynastyLegacyPerk>? unlockedLegacyPerks,
     List<Player>? retiredLegends,
     int? ticketPrice,
@@ -150,6 +175,12 @@ class GameState {
     List<String>? pinnedShortcutIds,
     List<StaffMember>? staff,
     Map<SponsorshipSlot, SponsorshipContract>? activeSponsorships,
+    Set<String>? unlockedAchievementIds,
+    ClubMuseumRecords? museumRecords,
+    List<String>? signedMarketIds,
+    int? crisisCooldownMatches,
+    List<String>? resolvedCrisisIds,
+    int? clubXp,
   }) {
     return GameState(
       userClub: userClub ?? this.userClub,
@@ -166,14 +197,15 @@ class GameState {
       targetLeaguePosition: targetLeaguePosition ?? this.targetLeaguePosition,
       notificationLog: notificationLog ?? this.notificationLog,
       isGameOver: isGameOver ?? this.isGameOver,
-      gameOverReason: gameOverReason ?? this.gameOverReason,
+      gameOverReason: clearGameOverReason ? null : (gameOverReason ?? this.gameOverReason),
       dailyQuests: dailyQuests ?? this.dailyQuests,
-      activeLoan: activeLoan ?? this.activeLoan,
+      activeLoan: clearLoan ? null : (activeLoan ?? this.activeLoan),
       sleeveSponsorIncome: sleeveSponsorIncome ?? this.sleeveSponsorIncome,
       stadiumNamingIncome: stadiumNamingIncome ?? this.stadiumNamingIncome,
       accumulatedIdleCash: accumulatedIdleCash ?? this.accumulatedIdleCash,
       sackingCountdownMatches: sackingCountdownMatches ?? this.sackingCountdownMatches,
       cupTournament: cupTournament ?? this.cupTournament,
+      continentalCup: clearContinentalCup ? null : (continentalCup ?? this.continentalCup),
       unlockedLegacyPerks: unlockedLegacyPerks ?? this.unlockedLegacyPerks,
       retiredLegends: retiredLegends ?? this.retiredLegends,
       ticketPrice: ticketPrice ?? this.ticketPrice,
@@ -186,6 +218,12 @@ class GameState {
       pinnedShortcutIds: pinnedShortcutIds ?? this.pinnedShortcutIds,
       staff: staff ?? this.staff,
       activeSponsorships: activeSponsorships ?? this.activeSponsorships,
+      unlockedAchievementIds: unlockedAchievementIds ?? this.unlockedAchievementIds,
+      museumRecords: museumRecords ?? this.museumRecords,
+      signedMarketIds: signedMarketIds ?? this.signedMarketIds,
+      crisisCooldownMatches: crisisCooldownMatches ?? this.crisisCooldownMatches,
+      resolvedCrisisIds: resolvedCrisisIds ?? this.resolvedCrisisIds,
+      clubXp: clubXp ?? this.clubXp,
     );
   }
 
@@ -212,6 +250,7 @@ class GameState {
         'accumulatedIdleCash': accumulatedIdleCash,
         'sackingCountdownMatches': sackingCountdownMatches,
         'cupTournament': cupTournament.toJson(),
+        'continentalCup': continentalCup?.toJson(),
         'unlockedLegacyPerks': unlockedLegacyPerks.map((p) => p.toJson()).toList(),
         'retiredLegends': retiredLegends.map((p) => p.toJson()).toList(),
         'ticketPrice': ticketPrice,
@@ -220,9 +259,16 @@ class GameState {
         'treasuryDeposit': treasuryDeposit,
         'headCoach': headCoach?.toJson(),
         'vipBoxDeals': vipBoxDeals.map((v) => v.toJson()).toList(),
+        'activeCrisisCall': activeCrisisCall?.toJson(),
         'pinnedShortcutIds': pinnedShortcutIds,
         'staff': staff.map((s) => s.toJson()).toList(),
         'activeSponsorships': activeSponsorships.map((k, v) => MapEntry(k.name, v.toJson())),
+        'unlockedAchievementIds': unlockedAchievementIds.toList(),
+        'museumRecords': museumRecords.toJson(),
+        'signedMarketIds': signedMarketIds,
+        'crisisCooldownMatches': crisisCooldownMatches,
+        'resolvedCrisisIds': resolvedCrisisIds,
+        'clubXp': clubXp,
       };
 
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -274,6 +320,10 @@ class GameState {
         ? HeadCoach.fromJson(json['headCoach'] as Map<String, dynamic>)
         : null;
 
+    final activeCrisisCall = json['activeCrisisCall'] != null
+        ? PresidentCrisisCall.fromJson(json['activeCrisisCall'] as Map<String, dynamic>)
+        : null;
+
     final vipBoxDeals = (json['vipBoxDeals'] as List<dynamic>?)
             ?.map((v) => VipBoxDeal.fromJson(v as Map<String, dynamic>))
             .toList() ??
@@ -282,6 +332,10 @@ class GameState {
     final cupTournament = json['cupTournament'] != null
         ? CupTournament.fromJson(json['cupTournament'] as Map<String, dynamic>)
         : const CupTournament();
+
+    final continentalCup = json['continentalCup'] != null
+        ? ContinentalCup.fromJson(json['continentalCup'] as Map<String, dynamic>)
+        : null;
 
     final unlockedLegacyPerks = (json['unlockedLegacyPerks'] as List<dynamic>?)
             ?.map((p) => DynastyLegacyPerk.fromJson(p as Map<String, dynamic>))
@@ -325,6 +379,19 @@ class GameState {
         ) ??
         const {};
 
+    final unlockedAchievementIds = (json['unlockedAchievementIds'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toSet() ??
+        const {};
+
+    final museumRecords = json['museumRecords'] != null
+        ? ClubMuseumRecords.fromJson(json['museumRecords'] as Map<String, dynamic>)
+        : const ClubMuseumRecords();
+
+    final signedMarketIds = (json['signedMarketIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
+    final crisisCooldownMatches = json['crisisCooldownMatches'] as int? ?? 0;
+    final resolvedCrisisIds = (json['resolvedCrisisIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
+
     return GameState(
       userClub: userClub,
       manager: manager,
@@ -348,6 +415,7 @@ class GameState {
       accumulatedIdleCash: json['accumulatedIdleCash'] as int? ?? 0,
       sackingCountdownMatches: json['sackingCountdownMatches'] as int? ?? 0,
       cupTournament: cupTournament,
+      continentalCup: continentalCup,
       unlockedLegacyPerks: unlockedLegacyPerks,
       retiredLegends: retiredLegends,
       ticketPrice: json['ticketPrice'] as int? ?? 25,
@@ -356,9 +424,16 @@ class GameState {
       treasuryDeposit: json['treasuryDeposit'] as int? ?? 0,
       headCoach: headCoach,
       vipBoxDeals: vipBoxDeals,
+      activeCrisisCall: activeCrisisCall,
       pinnedShortcutIds: pinnedShortcutIds,
       staff: staff,
       activeSponsorships: activeSponsorships,
+      unlockedAchievementIds: unlockedAchievementIds,
+      museumRecords: museumRecords,
+      signedMarketIds: signedMarketIds,
+      crisisCooldownMatches: crisisCooldownMatches,
+      resolvedCrisisIds: resolvedCrisisIds,
+      clubXp: json['clubXp'] as int? ?? 0,
     );
   }
 }

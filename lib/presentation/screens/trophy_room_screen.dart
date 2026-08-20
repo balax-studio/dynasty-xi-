@@ -7,7 +7,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/achievement.dart';
-import '../../domain/progression/museum_records.dart';
+import '../../domain/entities/player.dart';
 import '../widgets/president_statue_unveiling_modal.dart';
 import '../widgets/retro_window.dart';
 import 'prestige_screen.dart';
@@ -30,7 +30,7 @@ class TrophyRoomScreen extends StatelessWidget {
             // Dinamik Hanedan Puanı
             final dynastyScore = AchievementEvaluator.calculateDynastyScore(
               leagueTier: state.currentLeague.tier,
-              trophiesWon: (20 - state.currentLeague.tier).clamp(0, 20),
+              trophiesWon: state.userClub.totalTrophies,
               seasonsPlayed: state.clock.seasonNumber,
               legendPlayersCount: state.userClub.squad.where((p) => p.overall >= 80).length,
               maxSquadValue: state.userClub.squad.fold(0, (sum, p) => sum + p.marketValue),
@@ -39,20 +39,23 @@ class TrophyRoomScreen extends StatelessWidget {
             // Kilit Açılmış Başarımlar
             final unlockedAchievements = AchievementEvaluator.evaluateAchievements(
               state: state,
-              previouslyUnlockedIds: {},
+              previouslyUnlockedIds: state.unlockedAchievementIds,
             );
             final unlockedIds = unlockedAchievements.map((a) => a.id).toSet();
 
-            const records = ClubMuseumRecords(
-              biggestWinScore: '5-0',
-              biggestWinOpponent: 'Kartaltepe SK',
-              unbeatenStreak: 4,
-              recordSigningName: 'Kerem Aktürkoğlu',
-              recordSigningFee: 85000,
-              recordSaleName: 'Emre Gökmen',
-              recordSaleFee: 120000,
-              allTimeTopScorerName: 'Semih Kılıçsoy',
-              allTimeTopScorerGoals: 24,
+            final topScorer = state.userClub.squad.isNotEmpty
+                ? (List<Player>.from(state.userClub.squad)..sort((a, b) => b.goals.compareTo(a.goals))).first
+                : null;
+            final topScorerName = (topScorer != null && topScorer.goals > 0)
+                ? topScorer.fullName
+                : state.museumRecords.allTimeTopScorerName;
+            final topScorerGoals = (topScorer != null && topScorer.goals > 0)
+                ? topScorer.goals
+                : state.museumRecords.allTimeTopScorerGoals;
+
+            final records = state.museumRecords.copyWith(
+              allTimeTopScorerName: topScorerName,
+              allTimeTopScorerGoals: topScorerGoals,
             );
 
             return Scaffold(

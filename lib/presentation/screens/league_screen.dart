@@ -114,21 +114,8 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
   }
 
   Widget _buildLeaderboardsTab(GameState gameState) {
-    // Generate realistic league leaders based on current matchday
-    final scorers = [
-      ScorerEntry(playerId: 'sc_1', playerName: 'Semih Kılıçsoy', clubName: gameState.userClub.name, goals: 8, assists: 3),
-      ScorerEntry(playerId: 'sc_2', playerName: 'Batuhan Karadeniz', clubName: 'Anadolu Gücü', goals: 7, assists: 1),
-      ScorerEntry(playerId: 'sc_3', playerName: 'Burak Yılmaz', clubName: 'Marmara FK', goals: 6, assists: 2),
-      ScorerEntry(playerId: 'sc_4', playerName: 'Hugo Almeida', clubName: 'Boğaziçi 1903', goals: 5, assists: 0),
-      ScorerEntry(playerId: 'sc_5', playerName: 'Umut Bulut', clubName: 'Kuzey Yıldızı', goals: 5, assists: 4),
-    ];
-
-    final assists = [
-      ScorerEntry(playerId: 'as_1', playerName: 'Alex de Souza', clubName: 'Kadıköy Martı', goals: 4, assists: 9),
-      ScorerEntry(playerId: 'as_2', playerName: 'Kerem Aktürkoğlu', clubName: gameState.userClub.name, goals: 4, assists: 6),
-      ScorerEntry(playerId: 'as_3', playerName: 'Olcay Şahan', clubName: 'Bursa İdman', goals: 2, assists: 5),
-      ScorerEntry(playerId: 'as_4', playerName: 'Arda Turan', clubName: 'Florya Akademi', goals: 3, assists: 5),
-    ];
+    final scorers = _computeLeagueScorers(gameState);
+    final assists = _computeLeagueAssisters(gameState);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(10),
@@ -140,46 +127,69 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
             title: 'LİG GOL KRALLIĞI (ALTIN AYAKKABI)',
             icon: '⚽',
             titleBarColor: const Color(0xFF6E5000),
-            child: Column(
-              children: scorers.asMap().entries.map((entry) {
-                final rank = entry.key + 1;
-                final s = entry.value;
-                final isUserClub = s.clubName == gameState.userClub.name;
+            child: scorers.isEmpty
+                ? Container(
+                    padding: const EdgeInsets.all(16),
+                    alignment: Alignment.center,
+                    child: const Text('Henüz gol kaydı bulunmuyor.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  )
+                : Column(
+                    children: scorers.asMap().entries.map((entry) {
+                      final rank = entry.key + 1;
+                      final s = entry.value;
+                      final isUserClub = s.clubName == gameState.userClub.name;
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
-                    border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 24,
-                        alignment: Alignment.center,
-                        child: Text('$rank', style: TextStyle(fontWeight: FontWeight.bold, color: rank == 1 ? AppColors.accentGold : Colors.white)),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 4),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
+                          border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
+                        ),
+                        child: Row(
                           children: [
-                            Text(s.playerName, style: AppTypography.label(color: isUserClub ? AppColors.neonLime : Colors.white).copyWith(fontSize: 11)),
-                            Text(s.clubName, style: const TextStyle(color: Colors.white60, fontSize: 9)),
+                            Container(
+                              width: 24,
+                              alignment: Alignment.center,
+                              child: Text(
+                                '$rank',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: rank == 1 ? AppColors.accentGold : Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    s.playerName,
+                                    style: AppTypography.label(
+                                      color: isUserClub ? AppColors.neonLime : Colors.white,
+                                    ).copyWith(fontSize: 11),
+                                  ),
+                                  Text(
+                                    s.clubName,
+                                    style: const TextStyle(color: Colors.white60, fontSize: 9),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              color: Colors.black,
+                              child: Text(
+                                '${s.goals} GOL',
+                                style: AppTypography.monoNumber(color: AppColors.accentGold).copyWith(fontSize: 12),
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        color: Colors.black,
-                        child: Text('${s.goals} GOL', style: AppTypography.monoNumber(color: AppColors.accentGold).copyWith(fontSize: 12)),
-                      ),
-                    ],
+                      );
+                    }).toList(),
                   ),
-                );
-              }).toList(),
-            ),
           ),
           const SizedBox(height: 10),
 
@@ -188,50 +198,251 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
             title: 'LİG ASİST KRALLIĞI (OYUN KURUCULAR)',
             icon: '👟',
             titleBarColor: AppColors.win95TitleNavy,
-            child: Column(
-              children: assists.asMap().entries.map((entry) {
-                final rank = entry.key + 1;
-                final a = entry.value;
-                final isUserClub = a.clubName == gameState.userClub.name;
+            child: assists.isEmpty
+                ? Container(
+                    padding: const EdgeInsets.all(16),
+                    alignment: Alignment.center,
+                    child: const Text('Henüz asist kaydı bulunmuyor.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  )
+                : Column(
+                    children: assists.asMap().entries.map((entry) {
+                      final rank = entry.key + 1;
+                      final a = entry.value;
+                      final isUserClub = a.clubName == gameState.userClub.name;
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
-                    border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 24,
-                        alignment: Alignment.center,
-                        child: Text('$rank', style: TextStyle(fontWeight: FontWeight.bold, color: rank == 1 ? AppColors.neonCyan : Colors.white)),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 4),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
+                          border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
+                        ),
+                        child: Row(
                           children: [
-                            Text(a.playerName, style: AppTypography.label(color: isUserClub ? AppColors.neonLime : Colors.white).copyWith(fontSize: 11)),
-                            Text(a.clubName, style: const TextStyle(color: Colors.white60, fontSize: 9)),
+                            Container(
+                              width: 24,
+                              alignment: Alignment.center,
+                              child: Text(
+                                '$rank',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: rank == 1 ? AppColors.neonCyan : Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    a.playerName,
+                                    style: AppTypography.label(
+                                      color: isUserClub ? AppColors.neonLime : Colors.white,
+                                    ).copyWith(fontSize: 11),
+                                  ),
+                                  Text(
+                                    a.clubName,
+                                    style: const TextStyle(color: Colors.white60, fontSize: 9),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              color: Colors.black,
+                              child: Text(
+                                '${a.assists} ASİST',
+                                style: AppTypography.monoNumber(color: AppColors.neonCyan).copyWith(fontSize: 12),
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        color: Colors.black,
-                        child: Text('${a.assists} ASİST', style: AppTypography.monoNumber(color: AppColors.neonCyan).copyWith(fontSize: 12)),
-                      ),
-                    ],
+                      );
+                    }).toList(),
                   ),
-                );
-              }).toList(),
-            ),
           ),
         ],
       ),
     );
+  }
+
+  List<ScorerEntry> _computeLeagueScorers(GameState gameState) {
+    final List<ScorerEntry> list = [];
+
+    // 1. Kullanıcı Kulübü Oyuncuları
+    for (final p in gameState.userClub.squad) {
+      if (p.goals > 0) {
+        list.add(ScorerEntry(
+          playerId: p.id,
+          playerName: p.fullName,
+          clubName: gameState.userClub.name,
+          goals: p.goals,
+          assists: p.assists,
+        ));
+      }
+    }
+
+    // 2. Ligdeki Rakip Kulüpler (Standings verilerinden dinamik)
+    for (final entry in gameState.currentLeague.standings) {
+      if (entry.clubId == gameState.userClub.id) continue;
+      final gf = entry.goalsFor;
+      if (gf > 0) {
+        final strikerGoals = (gf * 0.55).round().clamp(1, gf);
+        list.add(ScorerEntry(
+          playerId: 'ai_str_${entry.clubId}',
+          playerName: _getAiStrikerName(entry.clubId, entry.clubName),
+          clubName: entry.clubName,
+          goals: strikerGoals,
+          assists: (gf * 0.15).round(),
+        ));
+
+        if (gf >= 4) {
+          final wingGoals = (gf * 0.25).round().clamp(1, gf - strikerGoals);
+          if (wingGoals > 0) {
+            list.add(ScorerEntry(
+              playerId: 'ai_wng_${entry.clubId}',
+              playerName: _getAiPlaymakerName(entry.clubId, entry.clubName),
+              clubName: entry.clubName,
+              goals: wingGoals,
+              assists: (gf * 0.40).round().clamp(1, gf),
+            ));
+          }
+        }
+      }
+    }
+
+    // Başlangıçta 0 gol varsa kadro yıldızlarını göster
+    if (list.isEmpty) {
+      for (final p in gameState.userClub.squad.take(2)) {
+        list.add(ScorerEntry(
+          playerId: p.id,
+          playerName: p.fullName,
+          clubName: gameState.userClub.name,
+          goals: 0,
+          assists: 0,
+        ));
+      }
+      for (final entry in gameState.currentLeague.standings.where((e) => e.clubId != gameState.userClub.id).take(4)) {
+        list.add(ScorerEntry(
+          playerId: 'ai_init_${entry.clubId}',
+          playerName: _getAiStrikerName(entry.clubId, entry.clubName),
+          clubName: entry.clubName,
+          goals: 0,
+          assists: 0,
+        ));
+      }
+    }
+
+    list.sort((a, b) {
+      final gComp = b.goals.compareTo(a.goals);
+      if (gComp != 0) return gComp;
+      return b.assists.compareTo(a.assists);
+    });
+
+    return list.take(8).toList();
+  }
+
+  List<ScorerEntry> _computeLeagueAssisters(GameState gameState) {
+    final List<ScorerEntry> list = [];
+
+    // 1. Kullanıcı Kulübü Oyuncuları
+    for (final p in gameState.userClub.squad) {
+      if (p.assists > 0) {
+        list.add(ScorerEntry(
+          playerId: p.id,
+          playerName: p.fullName,
+          clubName: gameState.userClub.name,
+          goals: p.goals,
+          assists: p.assists,
+        ));
+      }
+    }
+
+    // 2. Ligdeki Rakip Kulüpler
+    for (final entry in gameState.currentLeague.standings) {
+      if (entry.clubId == gameState.userClub.id) continue;
+      final gf = entry.goalsFor;
+      if (gf > 0) {
+        final assistsCount = (gf * 0.45).round().clamp(1, gf);
+        list.add(ScorerEntry(
+          playerId: 'ai_ast_${entry.clubId}',
+          playerName: _getAiPlaymakerName(entry.clubId, entry.clubName),
+          clubName: entry.clubName,
+          goals: (gf * 0.20).round(),
+          assists: assistsCount,
+        ));
+      }
+    }
+
+    if (list.isEmpty) {
+      for (final p in gameState.userClub.squad.take(2)) {
+        list.add(ScorerEntry(
+          playerId: p.id,
+          playerName: p.fullName,
+          clubName: gameState.userClub.name,
+          goals: 0,
+          assists: 0,
+        ));
+      }
+      for (final entry in gameState.currentLeague.standings.where((e) => e.clubId != gameState.userClub.id).take(4)) {
+        list.add(ScorerEntry(
+          playerId: 'ai_init_ast_${entry.clubId}',
+          playerName: _getAiPlaymakerName(entry.clubId, entry.clubName),
+          clubName: entry.clubName,
+          goals: 0,
+          assists: 0,
+        ));
+      }
+    }
+
+    list.sort((a, b) {
+      final aComp = b.assists.compareTo(a.assists);
+      if (aComp != 0) return aComp;
+      return b.goals.compareTo(a.goals);
+    });
+
+    return list.take(8).toList();
+  }
+
+  String _getAiStrikerName(String clubId, String clubName) {
+    const strikers = {
+      'c_ankara': 'Batuhan Karadeniz',
+      'c_marmara': 'Burak Yılmaz',
+      'c_bursa': 'Pablo Batalla',
+      'c_izmir': 'Göztepe Yıldızı',
+      'c_adana': 'Mario Balotelli',
+      'c_trabzon': 'Alexander Sörloth',
+      'c_rize': 'Vedat Muriqi',
+      'c_konya': 'Riad Bajic',
+      'c_antalyaspor': 'Samuel Eto\'o',
+      'c_kayseri': 'Gökhan Ünal',
+      'c_sivas': 'Aatif Chahechouhe',
+      'c_kasimpasa': 'Mbaye Diagne',
+      'c_alanya': 'Papiss Cisse',
+      'c_gaziantep': 'Muhammet Demir',
+    };
+    return strikers[clubId] ?? '$clubName Santrforu';
+  }
+
+  String _getAiPlaymakerName(String clubId, String clubName) {
+    const playmakers = {
+      'c_ankara': 'Hakan Bayraktar',
+      'c_marmara': 'Yıldıray Baştürk',
+      'c_bursa': 'Volkan Şen',
+      'c_izmir': 'Halil Akbunar',
+      'c_adana': 'Younes Belhanda',
+      'c_trabzon': 'Jose Sosa',
+      'c_rize': 'Fernando Boldrin',
+      'c_konya': 'Amir Hadziahmetovic',
+      'c_antalyaspor': 'Fredy',
+      'c_kayseri': 'Bernard Mensah',
+      'c_sivas': 'Fayçal Fajr',
+      'c_kasimpasa': 'Haris Hajradinovic',
+      'c_alanya': 'Efecan Karaca',
+      'c_gaziantep': 'Alexandru Maxim',
+    };
+    return playmakers[clubId] ?? '$clubName 10 Numarası';
   }
 
   Widget _buildStandingsTab(List<LeagueTableEntry> standings, String userClubId, GameState gameState) {

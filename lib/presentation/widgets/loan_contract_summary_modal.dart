@@ -9,7 +9,6 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../core/audio/audio_synthesizer.dart';
 import '../../domain/economy/transfer_models.dart';
-import 'retro_pixel_icon.dart';
 import 'retro_window.dart';
 
 class LoanContractSummaryModal extends StatefulWidget {
@@ -88,7 +87,7 @@ class _LoanContractSummaryModalState extends State<LoanContractSummaryModal> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.black,
-                    border: Border.all(color: AppColors.neonCyan.withOpacity(0.6)),
+                    border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.6)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,11 +102,11 @@ class _LoanContractSummaryModalState extends State<LoanContractSummaryModal> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Bonservis Ödemesi:', style: TextStyle(color: Colors.white70, fontSize: 10)),
-                          const Text('₣0 (Ücretsiz Geçici Transfer)', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                          Text('Bonservis Ödemesi:', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                          Text('₣0 (Ücretsiz Geçici Transfer)', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10.5)),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -170,7 +169,7 @@ class _LoanContractSummaryModalState extends State<LoanContractSummaryModal> {
                             setState(() => _isProcessing = true);
                             AudioSynthesizer.playSuccess();
                             await Future.delayed(const Duration(milliseconds: 450));
-                            final ok = await ref.read(gameStateProvider.notifier).buyPlayer(p, 0, deal.weeklyWageToPay);
+                            final ok = await ref.read(gameStateProvider.notifier).loanInPlayer(deal);
                             if (context.mounted) {
                               Navigator.of(context).pop(ok);
                               ScaffoldMessenger.of(context).showSnackBar(

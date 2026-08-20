@@ -98,7 +98,7 @@ class _PlayerSaleOfferModalState extends State<PlayerSaleOfferModal> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.black,
-                    border: Border.all(color: rarityColor.withOpacity(0.6)),
+                    border: Border.all(color: rarityColor.withValues(alpha: 0.6)),
                   ),
                   child: Row(
                     children: [

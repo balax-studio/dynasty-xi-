@@ -1,7 +1,6 @@
 // presentation/screens/transfer_negotiation_screen.dart
 // Dedicated Full-Screen 16-Bit Neo-Brutalist Transfer & Contract Negotiation Desk
 
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_colors.dart';
@@ -39,7 +38,7 @@ class _TransferNegotiationScreenState
   int _signingBonus = 0;
   int _sellOnPercentage = 0;
   int _championshipBonus = 0;
-  int _goalBonus = 0;
+  final int _goalBonus = 0;
   Player? _selectedSwapPlayer;
   SwapEvaluationResult? _swapResult;
 
@@ -388,7 +387,7 @@ class _TransferNegotiationScreenState
                     const Text('SÖZLEŞME SÜRESİ', style: TextStyle(color: Colors.white70, fontSize: 10)),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<int>(
-                      value: _contractYears,
+                      initialValue: _contractYears,
                       dropdownColor: Colors.black,
                       decoration: const InputDecoration(
                         isDense: true,
@@ -409,7 +408,7 @@ class _TransferNegotiationScreenState
                     const Text('İMZA PARASI', style: TextStyle(color: Colors.white70, fontSize: 10)),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<int>(
-                      value: _signingBonus,
+                      initialValue: _signingBonus,
                       dropdownColor: Colors.black,
                       decoration: const InputDecoration(
                         isDense: true,
@@ -558,15 +557,15 @@ class _TransferNegotiationScreenState
         children: [
           const RetroPixelIcon(type: RetroPixelIconType.suit, size: 28, color: AppColors.accentGold),
           const SizedBox(width: 10),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'MENAJERE EL ALTINDAN KOMİSYON',
                   style: TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
-                const Text(
+                Text(
                   '₣5.000 gizli prim vererek menajerin sabrını +%30 yenileyin ve oyuncunun maaş talebini %18 indirin.',
                   style: TextStyle(color: Colors.white70, fontSize: 9.5),
                 ),

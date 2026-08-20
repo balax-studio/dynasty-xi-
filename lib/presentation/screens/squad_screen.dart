@@ -15,7 +15,6 @@ import '../widgets/retro_window.dart';
 import 'head_coach_dialogue_screen.dart';
 import 'head_coach_hiring_screen.dart';
 import 'player_detail_screen.dart';
-import 'staff_screen.dart';
 import 'u19_squad_screen.dart';
 import 'youth_academy_screen.dart';
 
@@ -323,9 +322,11 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
                                   ),
                                 ),
                                 if (_selectedPlayerForSwap != null)
-                                  TextButton(
+                                  RetroButton(
                                     onPressed: () => setState(() => _selectedPlayerForSwap = null),
-                                    child: const Text('Seçimi İptal Et ✕', style: TextStyle(color: AppColors.comicRed, fontSize: 9.5)),
+                                    backgroundColor: AppColors.comicRed,
+                                    textColor: Colors.white,
+                                    child: const Text('İPTAL ✕', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
                                   ),
                               ],
                             ),

@@ -9,6 +9,7 @@ class LoanDeal {
   final double borrowingClubWageShare; // e.g. 0.50 = %50
   final int buyoutClause;
   final int seasons;
+  final int weeksRemaining;
 
   const LoanDeal({
     required this.player,
@@ -16,9 +17,28 @@ class LoanDeal {
     this.borrowingClubWageShare = 0.50,
     required this.buyoutClause,
     this.seasons = 1,
+    this.weeksRemaining = 19,
   });
 
   int get weeklyWageToPay => (player.weeklyWage * borrowingClubWageShare).round();
+
+  LoanDeal copyWith({
+    Player? player,
+    String? parentClubName,
+    double? borrowingClubWageShare,
+    int? buyoutClause,
+    int? seasons,
+    int? weeksRemaining,
+  }) {
+    return LoanDeal(
+      player: player ?? this.player,
+      parentClubName: parentClubName ?? this.parentClubName,
+      borrowingClubWageShare: borrowingClubWageShare ?? this.borrowingClubWageShare,
+      buyoutClause: buyoutClause ?? this.buyoutClause,
+      seasons: seasons ?? this.seasons,
+      weeksRemaining: weeksRemaining ?? this.weeksRemaining,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'player': player.toJson(),
@@ -26,6 +46,7 @@ class LoanDeal {
         'borrowingClubWageShare': borrowingClubWageShare,
         'buyoutClause': buyoutClause,
         'seasons': seasons,
+        'weeksRemaining': weeksRemaining,
       };
 
   factory LoanDeal.fromJson(Map<String, dynamic> json) => LoanDeal(
@@ -34,6 +55,7 @@ class LoanDeal {
         borrowingClubWageShare: (json['borrowingClubWageShare'] as num?)?.toDouble() ?? 0.50,
         buyoutClause: json['buyoutClause'] as int,
         seasons: json['seasons'] as int? ?? 1,
+        weeksRemaining: json['weeksRemaining'] as int? ?? ((json['seasons'] as int? ?? 1) * 19),
       );
 }
 
