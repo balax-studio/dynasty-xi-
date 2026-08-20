@@ -7,6 +7,8 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/player.dart';
+import '../widgets/face_avatar_widget.dart';
+import '../widgets/player_growth_chart_widget.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
 import 'staff_screen.dart';
@@ -296,10 +298,11 @@ class SquadScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header
+                      // Header with Procedural Pixel Avatar
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          FaceAvatarWidget(seed: p.faceSeed, size: 52),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,6 +345,13 @@ class SquadScreen extends ConsumerWidget {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Sezonluk Gelişim Çizgi Grafiği (§21.4)
+                      PlayerGrowthChartWidget(
+                        seasonRatings: [p.ovr - 2, p.ovr - 1],
+                        currentOvr: p.ovr,
                       ),
                       const SizedBox(height: 12),
 

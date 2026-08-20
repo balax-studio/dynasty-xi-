@@ -13,6 +13,7 @@ import '../../domain/entities/meter.dart';
 import '../../domain/entities/player.dart';
 import '../../domain/generation/club_generator.dart';
 import '../../domain/generation/player_generator.dart';
+import '../../domain/tournament/cup_tournament.dart';
 import '../assets/card_database.dart';
 
 class SaveRepository {
@@ -162,6 +163,21 @@ class SaveRepository {
       ftueStep: 0,
       targetLeaguePosition: 5,
       notificationLog: ['Dynasty XI kariyeriniz başladı. Hoş geldiniz hocam!'],
+      cupTournament: CupTournament.generateQuarterFinalTournament(
+        userClub: userClub,
+        opponents: league.standings
+            .where((s) => s.clubId != userClub.id)
+            .map((s) => Club(
+                  id: s.clubId,
+                  name: s.clubName,
+                  badgeIcon: s.badgeIcon,
+                  city: 'Anadolu',
+                  leagueTier: league.tier,
+                  squad: const [],
+                  starting11Ids: const [],
+                ))
+            .toList(),
+      ),
     );
   }
 }

@@ -6,13 +6,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
+import '../../domain/entities/facility.dart';
 import '../../domain/progression/daily_quest.dart';
 import '../widgets/decision_card_widget.dart';
 import '../widgets/meters_bar_widget.dart';
+import '../widgets/newspaper_headline_widget.dart';
 import '../widgets/retro_window.dart';
+import '../widgets/stadium_isometric_widget.dart';
 import 'board_room_screen.dart';
+import 'cup_tournament_screen.dart';
 import 'match_screen.dart';
 import 'press_conference_screen.dart';
+import 'prestige_screen.dart';
+import 'sacked_screen.dart';
 import 'scouting_screen.dart';
 import 'staff_screen.dart';
 import 'trophy_room_screen.dart';
@@ -124,8 +130,63 @@ class OfficeScreen extends ConsumerWidget {
                         const SizedBox(height: 10),
                       ],
 
+                      // 1. Stadyum ve Tesisler İzometrik İllüstrasyonu (§21.3, §48)
+                      StadiumIsometricWidget(
+                        stadiumLevel: club.facilities[FacilityType.stadium]?.level ?? 1,
+                        trainingLevel: club.facilities[FacilityType.trainingGround]?.level ?? 0,
+                        youthLevel: club.facilities[FacilityType.youthAcademy]?.level ?? 0,
+                        clubName: club.name,
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Haftalık Sezon Teması Banner'ı (§28.2, #100)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E293B),
+                          border: Border.all(color: AppColors.accentGold, width: 1),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(gameState.currentSeasonTheme.icon, style: const TextStyle(fontSize: 18)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'HAFTALIK TEMA: ${gameState.currentSeasonTheme.title.toUpperCase()}',
+                                    style: const TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    gameState.currentSeasonTheme.description,
+                                    style: const TextStyle(color: Colors.white70, fontSize: 9.5),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
                       // 2. Sıradaki Maç Penceresi (Windows 95 Window Frame)
                       _buildNextMatchWindow(context, ref, gameState, nextFixture),
+                      const SizedBox(height: 10),
+
+                      // Basın Manşetleri & Gazete Kupürü (§17.5-1, §66)
+                      NewspaperHeadlineWidget(
+                        outletName: 'FUTBOL GAZETESİ • SON BASKI',
+                        headline: nextFixture.isPlayed
+                            ? (((nextFixture.homeScore ?? 0) > (nextFixture.awayScore ?? 0)) ? 'ZAFERİN ADI ${club.name.toUpperCase()}!' : 'KRİTİK MAÇTA PUAN KAYBI!')
+                            : 'GÖZLER ${nextFixture.matchday}. HAFTA KARŞILAŞMASINDA!',
+                        subhead: nextFixture.isPlayed
+                            ? 'Teknik Direktör taktik planıyla tüm spor kamuoyunun takdirini toplamayı başardı.'
+                            : 'Yönetim ve taraftarlar hafta sonu oynanacak zorlu maç öncesinde takıma tam destek verdi.',
+                        dateString: 'HAFTA ${clock.matchday} • SEZON ${clock.seasonNumber}',
+                        isPositive: true,
+                      ),
                       const SizedBox(height: 10),
 
                       // 3. Günlük Görevler Widget'ı (§17.3, §21.2)
@@ -137,13 +198,57 @@ class OfficeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 10),
 
-                      // 4. Başkanlık Odası & Departmanlar (Tam Sayfa Navigasyon)
+                      // 4. Başkanlık Odası, Kupa & Departmanlar (Tam Sayfa Navigasyon)
                       RetroWindow(
-                        title: 'BAŞKANLIK ODASI & KULÜP DEPARTMANLARI',
+                        title: 'KULÜP MERKEZİ & TURNUVALAR',
                         icon: '🏛️',
                         titleBarColor: AppColors.neoCardBg,
                         child: Column(
                           children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RetroButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const CupTournamentScreen()),
+                                      );
+                                    },
+                                    backgroundColor: AppColors.accentGold,
+                                    textColor: Colors.black,
+                                    child: const Column(
+                                      children: [
+                                        Text('🏆', style: TextStyle(fontSize: 20)),
+                                        SizedBox(height: 4),
+                                        Text('TÜRKİYE KUPASI', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: RetroButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const PrestigeScreen()),
+                                      );
+                                    },
+                                    backgroundColor: AppColors.neonPink,
+                                    textColor: Colors.black,
+                                    child: const Column(
+                                      children: [
+                                        Text('⭐', style: TextStyle(fontSize: 20)),
+                                        SizedBox(height: 4),
+                                        Text('HANEDAN MAĞAZASI', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
                             Row(
                               children: [
                                 Expanded(
@@ -198,7 +303,7 @@ class OfficeScreen extends ConsumerWidget {
                                         MaterialPageRoute(builder: (_) => const PressConferenceScreen()),
                                       );
                                     },
-                                    backgroundColor: AppColors.neonPink,
+                                    backgroundColor: const Color(0xFFF59E0B),
                                     textColor: Colors.black,
                                     child: const Column(
                                       children: [

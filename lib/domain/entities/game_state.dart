@@ -1,9 +1,13 @@
 // domain/entities/game_state.dart
-// Pure Dart. Root game state combining user club, manager, league pyramid, game clock, cards, quests, and economy.
+// Pure Dart. Root game state combining user club, manager, league pyramid, game clock, cards, quests, economy, cups, and prestige.
 
 import '../../core/time/game_clock.dart';
 import '../economy/financial_statement.dart';
+import '../economy/transfer_models.dart';
+import '../liveops/season_theme.dart';
 import '../progression/daily_quest.dart';
+import '../progression/dynasty_prestige.dart';
+import '../tournament/cup_tournament.dart';
 import 'card.dart';
 import 'club.dart';
 import 'league.dart';
@@ -27,13 +31,21 @@ class GameState {
   final bool isGameOver;
   final String? gameOverReason;
 
-  // Sprint 2 RPG & Ekonomi Katmanları (§15, §17.3, §12.8)
+  // RPG & Ekonomi Katmanları (§15, §17.3, §12.8)
   final List<DailyQuest> dailyQuests;
   final BankLoan? activeLoan;
   final int sleeveSponsorIncome;
   final int stadiumNamingIncome;
   final int accumulatedIdleCash;
   final int sackingCountdownMatches; // 0 ise güvenli, >0 ise kovulma riski uyarısı
+
+  // Offline Genişletilmiş Sistemler (Kupa, Prestij, Bilet, Efsaneler)
+  final CupTournament cupTournament;
+  final List<DynastyLegacyPerk> unlockedLegacyPerks;
+  final List<Player> retiredLegends;
+  final int ticketPrice;
+  final int winBonusPerMatch;
+  final List<LoanDeal> activeLoanDeals;
 
   const GameState({
     required this.userClub,
@@ -57,9 +69,17 @@ class GameState {
     this.stadiumNamingIncome = 2500,
     this.accumulatedIdleCash = 0,
     this.sackingCountdownMatches = 0,
+    this.cupTournament = const CupTournament(),
+    this.unlockedLegacyPerks = const [],
+    this.retiredLegends = const [],
+    this.ticketPrice = 25,
+    this.winBonusPerMatch = 0,
+    this.activeLoanDeals = const [],
   });
 
   bool get isUnderSackingThreat => userClub.meters.boardTrust < 30;
+  SeasonThemeType get currentSeasonTheme => SeasonThemeService.getThemeForMatchday(clock.matchday);
+  bool get hasSecondBuilder => unlockedLegacyPerks.any((p) => p.id == 'double_builder' && p.isUnlocked);
 
   GameState copyWith({
     Club? userClub,
@@ -83,6 +103,12 @@ class GameState {
     int? stadiumNamingIncome,
     int? accumulatedIdleCash,
     int? sackingCountdownMatches,
+    CupTournament? cupTournament,
+    List<DynastyLegacyPerk>? unlockedLegacyPerks,
+    List<Player>? retiredLegends,
+    int? ticketPrice,
+    int? winBonusPerMatch,
+    List<LoanDeal>? activeLoanDeals,
   }) {
     return GameState(
       userClub: userClub ?? this.userClub,
@@ -106,6 +132,12 @@ class GameState {
       stadiumNamingIncome: stadiumNamingIncome ?? this.stadiumNamingIncome,
       accumulatedIdleCash: accumulatedIdleCash ?? this.accumulatedIdleCash,
       sackingCountdownMatches: sackingCountdownMatches ?? this.sackingCountdownMatches,
+      cupTournament: cupTournament ?? this.cupTournament,
+      unlockedLegacyPerks: unlockedLegacyPerks ?? this.unlockedLegacyPerks,
+      retiredLegends: retiredLegends ?? this.retiredLegends,
+      ticketPrice: ticketPrice ?? this.ticketPrice,
+      winBonusPerMatch: winBonusPerMatch ?? this.winBonusPerMatch,
+      activeLoanDeals: activeLoanDeals ?? this.activeLoanDeals,
     );
   }
 
@@ -131,6 +163,12 @@ class GameState {
         'stadiumNamingIncome': stadiumNamingIncome,
         'accumulatedIdleCash': accumulatedIdleCash,
         'sackingCountdownMatches': sackingCountdownMatches,
+        'cupTournament': cupTournament.toJson(),
+        'unlockedLegacyPerks': unlockedLegacyPerks.map((p) => p.toJson()).toList(),
+        'retiredLegends': retiredLegends.map((p) => p.toJson()).toList(),
+        'ticketPrice': ticketPrice,
+        'winBonusPerMatch': winBonusPerMatch,
+        'activeLoanDeals': activeLoanDeals.map((l) => l.toJson()).toList(),
       };
 
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -178,6 +216,25 @@ class GameState {
         ? BankLoan.fromJson(json['activeLoan'] as Map<String, dynamic>)
         : null;
 
+    final cupTournament = json['cupTournament'] != null
+        ? CupTournament.fromJson(json['cupTournament'] as Map<String, dynamic>)
+        : const CupTournament();
+
+    final unlockedLegacyPerks = (json['unlockedLegacyPerks'] as List<dynamic>?)
+            ?.map((p) => DynastyLegacyPerk.fromJson(p as Map<String, dynamic>))
+            .toList() ??
+        const [];
+
+    final retiredLegends = (json['retiredLegends'] as List<dynamic>?)
+            ?.map((p) => Player.fromJson(p as Map<String, dynamic>))
+            .toList() ??
+        const [];
+
+    final activeLoanDeals = (json['activeLoanDeals'] as List<dynamic>?)
+            ?.map((l) => LoanDeal.fromJson(l as Map<String, dynamic>))
+            .toList() ??
+        const [];
+
     return GameState(
       userClub: userClub,
       manager: manager,
@@ -200,6 +257,12 @@ class GameState {
       stadiumNamingIncome: json['stadiumNamingIncome'] as int? ?? 2500,
       accumulatedIdleCash: json['accumulatedIdleCash'] as int? ?? 0,
       sackingCountdownMatches: json['sackingCountdownMatches'] as int? ?? 0,
+      cupTournament: cupTournament,
+      unlockedLegacyPerks: unlockedLegacyPerks,
+      retiredLegends: retiredLegends,
+      ticketPrice: json['ticketPrice'] as int? ?? 25,
+      winBonusPerMatch: json['winBonusPerMatch'] as int? ?? 0,
+      activeLoanDeals: activeLoanDeals,
     );
   }
 }

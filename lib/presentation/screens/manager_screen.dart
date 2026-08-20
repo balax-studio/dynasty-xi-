@@ -9,9 +9,10 @@ import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/manager.dart';
 import '../../domain/progression/coaching_license.dart';
 import '../../domain/progression/manager_skill_tree.dart';
-import 'trophy_room_screen.dart';
+import '../widgets/career_share_dialog.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
+import 'trophy_room_screen.dart';
 
 class ManagerScreen extends StatefulWidget {
   const ManagerScreen({super.key});
@@ -48,6 +49,16 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 backgroundColor: AppColors.win95TitleNavy,
                 title: Text('MENAJER PROFİLİ & RPG YETENEK MATRİSİ', style: AppTypography.h2(color: Colors.white)),
                 actions: [
+                  IconButton(
+                    icon: const Icon(Icons.share, color: AppColors.neonCyan),
+                    tooltip: 'Kariyer Kartını Paylaş',
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => CareerShareDialog(gameState: gameState),
+                      );
+                    },
+                  ),
                   IconButton(
                     icon: const Icon(Icons.emoji_events, color: AppColors.accentGold),
                     tooltip: 'Kupa Odası & Kulüp Müzesi',

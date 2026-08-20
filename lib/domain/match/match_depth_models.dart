@@ -95,3 +95,25 @@ class LeagueStatsLeaderboard {
     return list;
   }
 }
+
+class PlayerMatchSummary {
+  final String playerId;
+  final String playerName;
+  final String position;
+  final double rating;
+  final int goals;
+  final int assists;
+  final int xpEarned;
+  final dynamic faceSeed;
+
+  const PlayerMatchSummary({
+    required this.playerId,
+    required this.playerName,
+    required this.position,
+    required this.rating,
+    this.goals = 0,
+    this.assists = 0,
+    this.xpEarned = 10,
+    this.faceSeed = 1,
+  });
+}

@@ -8,7 +8,9 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/achievement.dart';
 import '../../domain/progression/museum_records.dart';
+import '../widgets/retro_button.dart';
 import '../widgets/retro_window.dart';
+import 'prestige_screen.dart';
 
 class TrophyRoomScreen extends StatelessWidget {
   const TrophyRoomScreen({super.key});
@@ -94,6 +96,30 @@ class TrophyRoomScreen extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Hanedan Prestij Mağazası Butonu (§13.4, #91, #92)
+                    SizedBox(
+                      width: double.infinity,
+                      child: RetroButton(
+                        backgroundColor: AppColors.accentGold,
+                        textColor: Colors.black,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const PrestigeScreen()),
+                          );
+                        },
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('⭐', style: TextStyle(fontSize: 18)),
+                            SizedBox(width: 8),
+                            Text('HANEDAN PRESTİJ MAĞAZASI & YADİGÂR PERKLER', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),

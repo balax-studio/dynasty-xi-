@@ -14,6 +14,10 @@ import '../../domain/sim/match_engine.dart';
 import '../../domain/sim/match_events.dart';
 import '../../domain/media/press_conference.dart';
 import '../../domain/media/fan_social_buzz.dart';
+import '../../domain/tactics/opposition_scout.dart';
+import '../../domain/match/match_depth_models.dart';
+import '../widgets/opposition_report_dialog.dart';
+import '../widgets/match_reward_dialog.dart';
 import '../widgets/pitch_painter.dart';
 
 class MatchScreen extends ConsumerStatefulWidget {

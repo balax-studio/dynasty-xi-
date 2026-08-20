@@ -9,7 +9,9 @@ import '../../application/providers/game_state_provider.dart';
 import '../../domain/economy/negotiation_model.dart';
 import '../../domain/economy/transfer_models.dart';
 import '../../domain/entities/player.dart';
+import '../widgets/contract_renewal_dialog.dart';
 import '../widgets/meters_bar_widget.dart';
+import '../widgets/retro_button.dart';
 import '../widgets/retro_window.dart';
 
 class TransferScreen extends StatelessWidget {
@@ -321,13 +323,26 @@ class TransferScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Piyasa: ₣${p.marketValue}', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 11)),
-              RetroButton(
-                onPressed: () {
-                  _showNegotiationModal(context, ref, p, gameState);
-                },
-                backgroundColor: AppColors.neonLime,
-                textColor: Colors.black,
-                child: const Text('PAZARLIK YAP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+              Row(
+                children: [
+                  RetroButton(
+                    onPressed: () {
+                      _showSwapPlayerModal(context, ref, p, gameState);
+                    },
+                    backgroundColor: AppColors.accentGold,
+                    textColor: Colors.black,
+                    child: const Text('TAKAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                  ),
+                  const SizedBox(width: 6),
+                  RetroButton(
+                    onPressed: () {
+                      _showNegotiationModal(context, ref, p, gameState);
+                    },
+                    backgroundColor: AppColors.neonLime,
+                    textColor: Colors.black,
+                    child: const Text('PAZARLIK YAP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                  ),
+                ],
               ),
             ],
           ),
@@ -364,6 +379,27 @@ class TransferScreen extends StatelessWidget {
             ),
           ),
           RetroButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => ContractRenewalDialog(
+                  player: p,
+                  onContractSigned: (newWage, contractWeeks, role, signingBonus) {
+                    final seasons = (contractWeeks / 21).round().clamp(1, 5);
+                    ref.read(gameStateProvider.notifier).renewPlayerContract(p.id, seasons, newWage);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('✍️ ${p.fullName} ile sözleşme yenilendi!')),
+                    );
+                  },
+                ),
+              );
+            },
+            backgroundColor: AppColors.neonCyan,
+            textColor: Colors.black,
+            child: const Text('SÖZLEŞME', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9)),
+          ),
+          const SizedBox(width: 4),
+          RetroButton(
             onPressed: () async {
               final ok = await ref.read(gameStateProvider.notifier).sellPlayer(p, p.marketValue);
               if (context.mounted) {
@@ -374,10 +410,65 @@ class TransferScreen extends StatelessWidget {
             },
             backgroundColor: AppColors.neonLime,
             textColor: Colors.black,
-            child: Text('₣${p.marketValue}\nSAT', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+            child: Text('₣${p.marketValue}\nSAT', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9)),
           ),
         ],
       ),
+    );
+  }
+
+  void _showSwapPlayerModal(BuildContext context, WidgetRef ref, Player targetPlayer, dynamic gameState) {
+    final squad = gameState.userClub.squad as List<Player>;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF141A24),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('TAKAS TEKLİFİ: ${targetPlayer.fullName.toUpperCase()}', style: AppTypography.h2(color: AppColors.accentGold)),
+              const SizedBox(height: 4),
+              Text('Takas etmek için kulübünüzden bir oyuncu seçin (Piyasa: ₣${targetPlayer.marketValue}):', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: squad.length,
+                  itemBuilder: (context, idx) {
+                    final sp = squad[idx];
+                    final diff = targetPlayer.marketValue - sp.marketValue;
+                    return Card(
+                      color: const Color(0xFF1E293B),
+                      child: ListTile(
+                        leading: Text(sp.position.code, style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold)),
+                        title: Text(sp.fullName, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                        subtitle: Text('${sp.ovr} OVR • ₣${sp.marketValue} Değer • Fark: ₣${diff > 0 ? "+$diff" : "$diff"}', style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                        trailing: RetroButton(
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            final cashDiff = diff > 0 ? diff : 0;
+                            final ok = await ref.read(gameStateProvider.notifier).swapPlayerTransfer(sp, targetPlayer, cashDiff);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(ok ? '🤝 Takas tamamlandı! ${sp.fullName} verildi, ${targetPlayer.fullName} alındı.' : '⚠️ Yetersiz nakit bakiye!')),
+                              );
+                            }
+                          },
+                          backgroundColor: AppColors.accentGold,
+                          textColor: Colors.black,
+                          child: const Text('TAKAS ET', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
