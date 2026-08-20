@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../core/audio/audio_synthesizer.dart';
+import 'retro_pixel_icon.dart';
 
 /// Neo-Brutalist 16-Bit Arcade Pencere Çerçevesi
 class RetroWindow extends StatelessWidget {
   final String title;
   final String icon;
+  final Widget? leadingIcon;
   final Widget child;
   final VoidCallback? onClose;
   final VoidCallback? onMinimize;
@@ -24,6 +26,7 @@ class RetroWindow extends StatelessWidget {
     super.key,
     required this.title,
     this.icon = '⚡',
+    this.leadingIcon,
     required this.child,
     this.onClose,
     this.onMinimize,
@@ -66,7 +69,13 @@ class RetroWindow extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Text(icon, style: const TextStyle(fontSize: 14)),
+                    leadingIcon ??
+                        RetroPixelIcon.fromEmoji(
+                          icon,
+                          size: 15,
+                          color: titleTextColor,
+                          secondaryColor: isTitleDark ? Colors.black : Colors.white,
+                        ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(

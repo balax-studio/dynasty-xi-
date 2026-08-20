@@ -1,12 +1,14 @@
 // domain/entities/game_state.dart
-// Pure Dart. Root game state combining user club, manager, league pyramid, game clock, cards, quests, economy, cups, and prestige.
+// Pure Dart. Root game state combining user club, manager, league pyramid, game clock, cards, quests, economy, cups, prestige, staff and head coach.
 
 import '../../core/time/game_clock.dart';
 import '../economy/financial_statement.dart';
+import '../economy/sponsorship_contract.dart';
 import '../economy/transfer_models.dart';
 import '../liveops/season_theme.dart';
 import '../president/boardroom_summit.dart';
 import '../president/head_coach.dart';
+import '../president/president_crisis.dart';
 import '../progression/daily_quest.dart';
 import '../progression/dynasty_prestige.dart';
 import '../tournament/cup_tournament.dart';
@@ -15,6 +17,7 @@ import 'club.dart';
 import 'league.dart';
 import 'manager.dart';
 import 'player.dart';
+import 'staff.dart';
 
 class GameState {
   final Club userClub;
@@ -50,6 +53,10 @@ class GameState {
   final List<LoanDeal> activeLoanDeals;
   final HeadCoach? headCoach;
   final List<VipBoxDeal> vipBoxDeals;
+  final PresidentCrisisCall? activeCrisisCall;
+  final List<String> pinnedShortcutIds;
+  final List<StaffMember> staff;
+  final Map<SponsorshipSlot, SponsorshipContract> activeSponsorships;
 
   const GameState({
     required this.userClub,
@@ -82,11 +89,27 @@ class GameState {
     this.treasuryDeposit = 0,
     this.headCoach,
     this.vipBoxDeals = const [],
+    this.activeCrisisCall,
+    this.staff = const [],
+    this.activeSponsorships = const {},
+    this.pinnedShortcutIds = const [
+      'head_coach',
+      'boardroom_summit',
+      'cup_tournament',
+      'prestige',
+      'facilities',
+      'staff',
+      'board_room',
+      'press_conference',
+      'scouting',
+      'trophy_room',
+    ],
   });
 
   final int treasuryDeposit;
 
   bool get isUnderSackingThreat => userClub.meters.boardTrust < 30;
+  bool get hasActiveCrisis => activeCrisisCall != null;
   SeasonThemeType get currentSeasonTheme => SeasonThemeService.getThemeForMatchday(clock.matchday);
   bool get hasSecondBuilder => unlockedLegacyPerks.any((p) => p.id == 'double_builder' && p.isUnlocked);
 
@@ -122,6 +145,11 @@ class GameState {
     HeadCoach? headCoach,
     bool clearHeadCoach = false,
     List<VipBoxDeal>? vipBoxDeals,
+    PresidentCrisisCall? activeCrisisCall,
+    bool clearCrisisCall = false,
+    List<String>? pinnedShortcutIds,
+    List<StaffMember>? staff,
+    Map<SponsorshipSlot, SponsorshipContract>? activeSponsorships,
   }) {
     return GameState(
       userClub: userClub ?? this.userClub,
@@ -154,6 +182,10 @@ class GameState {
       treasuryDeposit: treasuryDeposit ?? this.treasuryDeposit,
       headCoach: clearHeadCoach ? null : (headCoach ?? this.headCoach),
       vipBoxDeals: vipBoxDeals ?? this.vipBoxDeals,
+      activeCrisisCall: clearCrisisCall ? null : (activeCrisisCall ?? this.activeCrisisCall),
+      pinnedShortcutIds: pinnedShortcutIds ?? this.pinnedShortcutIds,
+      staff: staff ?? this.staff,
+      activeSponsorships: activeSponsorships ?? this.activeSponsorships,
     );
   }
 
@@ -188,6 +220,9 @@ class GameState {
         'treasuryDeposit': treasuryDeposit,
         'headCoach': headCoach?.toJson(),
         'vipBoxDeals': vipBoxDeals.map((v) => v.toJson()).toList(),
+        'pinnedShortcutIds': pinnedShortcutIds,
+        'staff': staff.map((s) => s.toJson()).toList(),
+        'activeSponsorships': activeSponsorships.map((k, v) => MapEntry(k.name, v.toJson())),
       };
 
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -263,6 +298,33 @@ class GameState {
             .toList() ??
         const [];
 
+    final staff = (json['staff'] as List<dynamic>?)
+            ?.map((s) => StaffMember.fromJson(s as Map<String, dynamic>))
+            .toList() ??
+        StaffGenerator.generateDefaultStaff();
+
+    final pinnedShortcutIds = (json['pinnedShortcutIds'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+        const [
+          'head_coach',
+          'boardroom_summit',
+          'cup_tournament',
+          'prestige',
+          'facilities',
+          'staff',
+          'board_room',
+          'press_conference',
+          'scouting',
+          'trophy_room',
+        ];
+
+    final activeSponsorships = (json['activeSponsorships'] as Map<String, dynamic>?)?.map(
+          (k, v) => MapEntry(
+            SponsorshipSlot.values.firstWhere((s) => s.name == k, orElse: () => SponsorshipSlot.mainShirt),
+            SponsorshipContract.fromJson(v as Map<String, dynamic>),
+          ),
+        ) ??
+        const {};
+
     return GameState(
       userClub: userClub,
       manager: manager,
@@ -294,6 +356,9 @@ class GameState {
       treasuryDeposit: json['treasuryDeposit'] as int? ?? 0,
       headCoach: headCoach,
       vipBoxDeals: vipBoxDeals,
+      pinnedShortcutIds: pinnedShortcutIds,
+      staff: staff,
+      activeSponsorships: activeSponsorships,
     );
   }
 }

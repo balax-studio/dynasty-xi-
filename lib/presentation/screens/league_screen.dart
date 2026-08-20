@@ -7,6 +7,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../core/audio/audio_synthesizer.dart';
+import '../../domain/entities/game_state.dart';
 import '../../domain/entities/league.dart';
 import '../../domain/match/match_depth_models.dart';
 import '../widgets/meters_bar_widget.dart';
@@ -14,14 +15,14 @@ import '../widgets/retro_window.dart';
 import '../widgets/season_summary_dialog.dart';
 import 'clubs_association_summit_screen.dart';
 
-class LeagueScreen extends StatefulWidget {
+class LeagueScreen extends ConsumerStatefulWidget {
   const LeagueScreen({super.key});
 
   @override
-  State<LeagueScreen> createState() => _LeagueScreenState();
+  ConsumerState<LeagueScreen> createState() => _LeagueScreenState();
 }
 
-class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderStateMixin {
+class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -38,85 +39,81 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, _) {
-        final stateAsync = ref.watch(gameStateProvider);
+    final stateAsync = ref.watch(gameStateProvider);
 
-        return stateAsync.when(
-          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (e, _) => Scaffold(body: Center(child: Text('Hata: $e'))),
-          data: (gameState) {
-            final league = gameState.currentLeague;
-            final sortedStandings = league.sortedStandings;
+    return stateAsync.when(
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Scaffold(body: Center(child: Text('Hata: $e'))),
+      data: (GameState gameState) {
+        final league = gameState.currentLeague;
+        final sortedStandings = league.sortedStandings;
 
-            return Scaffold(
-              backgroundColor: AppColors.primaryDeep,
-              appBar: AppBar(
-                backgroundColor: AppColors.win95TitleNavy,
-                title: Text('${league.tier}. LİG VERİTABANI — ${league.name.toUpperCase()}', style: AppTypography.h2(color: Colors.white)),
-                bottom: TabBar(
-                  controller: _tabController,
-                  indicatorColor: AppColors.neonLime,
-                  labelColor: AppColors.neonLime,
-                  unselectedLabelColor: AppColors.win95White,
-                  tabs: const [
-                    Tab(text: '📊 PUAN TABLOSU'),
-                    Tab(text: '📅 FİKSTÜR'),
-                    Tab(text: '🌟 GOL & ASİST'),
-                  ],
-                ),
-              ),
-              body: Column(
-                children: [
-                  MetersBarWidget(meters: gameState.userClub.meters),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: RetroButton(
-                        backgroundColor: AppColors.win95TitleNavy,
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const ClubsAssociationSummitScreen()),
-                          );
-                        },
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('🏛️', style: TextStyle(fontSize: 16)),
-                            SizedBox(width: 6),
-                            Text('KULÜPLER BİRLİĞİ VAKFI ZİRVESİ & HAVUZ OYLAMASI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
+        return Scaffold(
+          backgroundColor: AppColors.primaryDeep,
+          appBar: AppBar(
+            backgroundColor: AppColors.win95TitleNavy,
+            title: Text('${league.tier}. LİG VERİTABANI — ${league.name.toUpperCase()}', style: AppTypography.h2(color: Colors.white)),
+            bottom: TabBar(
+              controller: _tabController,
+              indicatorColor: AppColors.neonLime,
+              labelColor: AppColors.neonLime,
+              unselectedLabelColor: AppColors.win95White,
+              tabs: const [
+                Tab(text: '📊 PUAN TABLOSU'),
+                Tab(text: '📅 FİKSTÜR'),
+                Tab(text: '🌟 GOL & ASİST'),
+              ],
+            ),
+          ),
+          body: Column(
+            children: [
+              MetersBarWidget(meters: gameState.userClub.meters),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: RetroButton(
+                    backgroundColor: AppColors.win95TitleNavy,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ClubsAssociationSummitScreen()),
+                      );
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Tab 1: Puan Durumu
-                        _buildStandingsTab(sortedStandings, gameState.userClub.id, gameState, ref),
-
-                        // Tab 2: Fikstür
-                        _buildFixturesTab(league.fixtures, gameState.userClub.id),
-
-                        // Tab 3: Gol ve Asist Krallığı (§12)
-                        _buildLeaderboardsTab(gameState),
+                        Text('🏛️', style: TextStyle(fontSize: 16)),
+                        SizedBox(width: 6),
+                        Text('KULÜPLER BİRLİĞİ VAKFI ZİRVESİ & HAVUZ OYLAMASI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
-            );
-          },
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // Tab 1: Puan Durumu
+                    _buildStandingsTab(sortedStandings, gameState.userClub.id, gameState),
+
+                    // Tab 2: Fikstür
+                    _buildFixturesTab(league.fixtures, gameState.userClub.id),
+
+                    // Tab 3: Gol ve Asist Krallığı (§12)
+                    _buildLeaderboardsTab(gameState),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  Widget _buildLeaderboardsTab(dynamic gameState) {
+  Widget _buildLeaderboardsTab(GameState gameState) {
     // Generate realistic league leaders based on current matchday
     final scorers = [
       ScorerEntry(playerId: 'sc_1', playerName: 'Semih Kılıçsoy', clubName: gameState.userClub.name, goals: 8, assists: 3),
@@ -237,7 +234,10 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildStandingsTab(List<LeagueTableEntry> standings, String userClubId, dynamic gameState, WidgetRef ref) {
+  Widget _buildStandingsTab(List<LeagueTableEntry> standings, String userClubId, GameState gameState) {
+    final isSeasonCompleted = gameState.currentLeague.fixtures.isNotEmpty &&
+        gameState.currentLeague.fixtures.every((f) => f.isPlayed);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(10),
       child: Column(
@@ -249,9 +249,11 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
             icon: '🏆',
             titleBarColor: const Color(0xFF6E5000),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('LİG ŞAMPİYONLUK VE TERFİ PROTOKOLÜ', style: AppTypography.label(color: Colors.black).copyWith(fontSize: 11)),
@@ -259,27 +261,23 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
                     ],
                   ),
                 ),
-                Builder(
-                  builder: (context) {
-                    final isSeasonCompleted = gameState.currentLeague.fixtures.every((f) => f.isPlayed);
-                    return RetroButton(
-                      onPressed: isSeasonCompleted
-                          ? () {
-                              AudioSynthesizer.playTrophyFanfare();
-                              showDialog(
-                                context: context,
-                                builder: (ctx) => SeasonSummaryDialog(
-                                  state: gameState,
-                                  onStartNextSeason: () {
-                                    ref.read(gameStateProvider.notifier).executeSeasonTransition();
-                                  },
-                                ),
-                              );
-                            }
-                          : null,
-                      child: Text(isSeasonCompleted ? '🏆 TÖRENİ AÇ' : '🔒 21. HAFTA SONU'),
-                    );
-                  },
+                const SizedBox(width: 8),
+                RetroButton(
+                  onPressed: isSeasonCompleted
+                      ? () {
+                          AudioSynthesizer.playTrophyFanfare();
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => SeasonSummaryDialog(
+                              state: gameState,
+                              onStartNextSeason: () {
+                                ref.read(gameStateProvider.notifier).executeSeasonTransition();
+                              },
+                            ),
+                          );
+                        }
+                      : null,
+                  child: Text(isSeasonCompleted ? '🏆 TÖRENİ AÇ' : '🔒 21. HAFTA SONU'),
                 ),
               ],
             ),

@@ -114,12 +114,8 @@ class UrgentPhoneCallModal extends ConsumerWidget {
                       child: RetroButton(
                         backgroundColor: AppColors.win95Grey,
                         onPressed: () {
-                          // Sayaç güncellemeleri
-                          final notifier = ref.read(gameStateProvider.notifier);
-                          if (choice.cashDelta != 0) notifier.adjustCash(choice.cashDelta);
-                          if (choice.fansDelta != 0) notifier.adjustFans(choice.fansDelta);
-                          if (choice.lockerRoomDelta != 0) notifier.adjustLockerRoom(choice.lockerRoomDelta);
-                          if (choice.boardTrustDelta != 0) notifier.adjustBoardTrust(choice.boardTrustDelta);
+                          // Sayaç güncellemeleri ve kriz çözümü
+                          ref.read(gameStateProvider.notifier).resolveCrisisCall(choice);
 
                           Navigator.of(context).pop();
 

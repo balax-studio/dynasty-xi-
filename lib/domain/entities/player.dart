@@ -60,6 +60,19 @@ enum TrainingIntensity {
   const TrainingIntensity(this.label, this.description, this.growthMultiplier, this.injuryRiskMultiplier);
 }
 
+enum LockerRoomFaction {
+  domesticCore('Yerli Çekirdek', '🇹🇷', 'Takımın yerli ve kıdemli omurgası.'),
+  foreignLegion('Yabancı Lejyonu', '🌍', 'Yüksek maaşlı uluslararası yıldızlar.'),
+  academyYouth('Akademi Gençleri', '🌱', 'Altyapıdan yetişen aç ve hırslı yetenekler.'),
+  loneWolf('Bağımsız Profesyonel', '🐺', 'Kliklerden uzak, sadece işine odaklanan.');
+
+  final String label;
+  final String icon;
+  final String description;
+
+  const LockerRoomFaction(this.label, this.icon, this.description);
+}
+
 enum SquadRole {
   star('Yıldız Oyuncu', 'Her maç ilk 11 beklenir.', 0.9, 1.5),
   first11('İlk 11', 'Düzenli olarak sahaya çıkmak ister.', 0.75, 1.2),
@@ -158,6 +171,16 @@ class Player {
   final List<int> seasonRatings;
   final String faceSeed;
 
+  // Başkanlık & Soyunma Odası Özel Alanları
+  final int jerseyNumber;
+  final LockerRoomFaction faction;
+  final int matchBonusOffered;
+  final bool hasLuxuryGift;
+  final int disciplinaryFinesCount;
+  final int loyaltyBonus;
+  final int goalBonus;
+  final int cleanSheetBonus;
+
   const Player({
     required this.id,
     required this.firstName,
@@ -200,6 +223,14 @@ class Player {
     this.recentRatings = const [],
     this.seasonRatings = const [],
     this.faceSeed = '',
+    this.jerseyNumber = 10,
+    this.faction = LockerRoomFaction.domesticCore,
+    this.matchBonusOffered = 0,
+    this.hasLuxuryGift = false,
+    this.disciplinaryFinesCount = 0,
+    this.loyaltyBonus = 0,
+    this.goalBonus = 0,
+    this.cleanSheetBonus = 0,
   });
 
   String get fullName => '$firstName $lastName';
@@ -216,6 +247,29 @@ class Player {
     if (!isInjured) return 'Sağlıklı';
     final t = injuryType ?? 'Sakatlık';
     return '$t (${injurySeverity.label} - $injuryMatchesLeft maç)';
+  }
+
+  int getCoachChemistry(String? tacticalStyle) {
+    if (tacticalStyle == null || tacticalStyle.isEmpty) return 75;
+    var base = 70;
+    final styleLower = tacticalStyle.toLowerCase();
+
+    if (styleLower.contains('ofansif') || styleLower.contains('hücum')) {
+      if (position.isForward || position == Position.am) base += 15;
+      if (personality == PersonalityType.ambitious || personality == PersonalityType.leader) base += 10;
+    } else if (styleLower.contains('defansif') || styleLower.contains('kontra')) {
+      if (position.isDefender || position == Position.dm) base += 15;
+      if (personality == PersonalityType.professional || personality == PersonalityType.loyal) base += 10;
+    } else if (styleLower.contains('baskı') || styleLower.contains('pres')) {
+      if (physical >= 75 && mentality >= 75) base += 15;
+      if (personality == PersonalityType.temperamental) base -= 10;
+    } else {
+      base += 5;
+    }
+
+    if (morale > 80) base += 5;
+    if (morale < 50) base -= 15;
+    return base.clamp(20, 99);
   }
 
   bool get wantsTransfer {
@@ -389,6 +443,14 @@ class Player {
     List<double>? recentRatings,
     List<int>? seasonRatings,
     String? faceSeed,
+    int? jerseyNumber,
+    LockerRoomFaction? faction,
+    int? matchBonusOffered,
+    bool? hasLuxuryGift,
+    int? disciplinaryFinesCount,
+    int? loyaltyBonus,
+    int? goalBonus,
+    int? cleanSheetBonus,
   }) {
     return Player(
       id: id ?? this.id,
@@ -432,6 +494,14 @@ class Player {
       recentRatings: recentRatings ?? this.recentRatings,
       seasonRatings: seasonRatings ?? this.seasonRatings,
       faceSeed: faceSeed ?? this.faceSeed,
+      jerseyNumber: jerseyNumber ?? this.jerseyNumber,
+      faction: faction ?? this.faction,
+      matchBonusOffered: matchBonusOffered ?? this.matchBonusOffered,
+      hasLuxuryGift: hasLuxuryGift ?? this.hasLuxuryGift,
+      disciplinaryFinesCount: disciplinaryFinesCount ?? this.disciplinaryFinesCount,
+      loyaltyBonus: loyaltyBonus ?? this.loyaltyBonus,
+      goalBonus: goalBonus ?? this.goalBonus,
+      cleanSheetBonus: cleanSheetBonus ?? this.cleanSheetBonus,
     );
   }
 
@@ -477,6 +547,14 @@ class Player {
         'recentRatings': recentRatings,
         'seasonRatings': seasonRatings,
         'faceSeed': faceSeed,
+        'jerseyNumber': jerseyNumber,
+        'faction': faction.name,
+        'matchBonusOffered': matchBonusOffered,
+        'hasLuxuryGift': hasLuxuryGift,
+        'disciplinaryFinesCount': disciplinaryFinesCount,
+        'loyaltyBonus': loyaltyBonus,
+        'goalBonus': goalBonus,
+        'cleanSheetBonus': cleanSheetBonus,
       };
 
   factory Player.fromJson(Map<String, dynamic> json) => Player(
@@ -545,5 +623,16 @@ class Player {
                 .toList() ??
             const [],
         faceSeed: json['faceSeed'] as String? ?? '',
+        jerseyNumber: json['jerseyNumber'] as int? ?? 10,
+        faction: LockerRoomFaction.values.firstWhere(
+          (f) => f.name == json['faction'],
+          orElse: () => LockerRoomFaction.domesticCore,
+        ),
+        matchBonusOffered: json['matchBonusOffered'] as int? ?? 0,
+        hasLuxuryGift: json['hasLuxuryGift'] as bool? ?? false,
+        disciplinaryFinesCount: json['disciplinaryFinesCount'] as int? ?? 0,
+        loyaltyBonus: json['loyaltyBonus'] as int? ?? 0,
+        goalBonus: json['goalBonus'] as int? ?? 0,
+        cleanSheetBonus: json['cleanSheetBonus'] as int? ?? 0,
       );
 }

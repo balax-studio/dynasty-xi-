@@ -1,233 +1,453 @@
 // presentation/screens/transfer_screen.dart
-// Transfer market listing, interactive negotiation dialog with patience meter, Loan Market tab, and Agent fees (§10).
+// Cyber Transfer & Scout Market with Advanced Filter Bar, Free Agents, Loan Market, and Dedicated Negotiation Desk.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
-import '../../domain/economy/negotiation_model.dart';
+import '../../core/audio/audio_synthesizer.dart';
 import '../../domain/economy/transfer_models.dart';
 import '../../domain/entities/player.dart';
 import 'player_detail_screen.dart';
-import '../widgets/contract_renewal_dialog.dart';
-import '../widgets/meters_bar_widget.dart';
-import '../widgets/retro_window.dart';
 import 'transfer_hijack_screen.dart';
+import 'transfer_negotiation_screen.dart';
+import '../widgets/contract_renewal_dialog.dart';
+import '../widgets/face_avatar_widget.dart';
+import '../widgets/loan_contract_summary_modal.dart';
+import '../widgets/meters_bar_widget.dart';
+import '../widgets/player_sale_offer_modal.dart';
+import '../widgets/retro_pixel_icon.dart';
+import '../widgets/retro_window.dart';
 
-class TransferScreen extends StatelessWidget {
+enum TransferPositionFilter {
+  all('TÜMÜ'),
+  gk('KALECİ'),
+  def('SAVUNMA'),
+  mid('ORTA SAHA'),
+  fwd('HÜCUM');
+
+  final String label;
+  const TransferPositionFilter(this.label);
+
+  bool matches(Position pos) {
+    switch (this) {
+      case TransferPositionFilter.all:
+        return true;
+      case TransferPositionFilter.gk:
+        return pos == Position.gk;
+      case TransferPositionFilter.def:
+        return pos == Position.cb || pos == Position.lb || pos == Position.rb;
+      case TransferPositionFilter.mid:
+        return pos == Position.dm || pos == Position.cm || pos == Position.am;
+      case TransferPositionFilter.fwd:
+        return pos == Position.st || pos == Position.lw || pos == Position.rw;
+    }
+  }
+}
+
+enum TransferSortOption {
+  ovrDesc('En Yüksek Puan (OVR)'),
+  potDesc('En Yüksek Potansiyel (POT)'),
+  valueAsc('En Uygun Bonservis'),
+  valueDesc('En Değerli Yıldızlar'),
+  wageAsc('En Düşük Maaş');
+
+  final String label;
+  const TransferSortOption(this.label);
+}
+
+class TransferScreen extends ConsumerStatefulWidget {
   const TransferScreen({super.key});
 
   @override
+  ConsumerState<TransferScreen> createState() => _TransferScreenState();
+}
+
+class _TransferScreenState extends ConsumerState<TransferScreen> {
+  TransferPositionFilter _selectedPosition = TransferPositionFilter.all;
+  TransferSortOption _selectedSort = TransferSortOption.ovrDesc;
+  bool _onlyAffordable = false;
+  bool _showFreeAgents = true;
+
+  List<Player> _filterAndSortPlayers(List<Player> players, int currentCash) {
+    var list = players.where((p) {
+      if (!_selectedPosition.matches(p.position)) return false;
+      if (_onlyAffordable && p.marketValue > currentCash) return false;
+      return true;
+    }).toList();
+
+    switch (_selectedSort) {
+      case TransferSortOption.ovrDesc:
+        list.sort((a, b) => b.ovr.compareTo(a.ovr));
+        break;
+      case TransferSortOption.potDesc:
+        list.sort((a, b) => b.potential.compareTo(a.potential));
+        break;
+      case TransferSortOption.valueAsc:
+        list.sort((a, b) => a.marketValue.compareTo(b.marketValue));
+        break;
+      case TransferSortOption.valueDesc:
+        list.sort((a, b) => b.marketValue.compareTo(a.marketValue));
+        break;
+      case TransferSortOption.wageAsc:
+        list.sort((a, b) => a.weeklyWage.compareTo(b.weeklyWage));
+        break;
+    }
+
+    return list;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Consumer(
-      builder: (ctx, ref, _) {
-        final stateAsync = ref.watch(gameStateProvider);
+    final stateAsync = ref.watch(gameStateProvider);
 
-        return stateAsync.when(
-          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (e, _) => Scaffold(body: Center(child: Text('Hata: $e'))),
-          data: (gameState) {
-            final market = gameState.transferMarket;
-            final squad = gameState.userClub.squad;
-            final loans = LoanMarketGenerator.generateLoanCandidates();
+    return stateAsync.when(
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Scaffold(body: Center(child: Text('Hata: $e'))),
+      data: (gameState) {
+        final currentCash = gameState.userClub.meters.cash;
+        final rawMarket = gameState.transferMarket;
+        final squad = gameState.userClub.squad;
+        final loans = LoanMarketGenerator.generateLoanCandidates();
+        final freeAgents = FreeAgentMarketGenerator.generateFreeAgents();
 
-            return DefaultTabController(
-              length: 3,
-              child: Scaffold(
-                backgroundColor: AppColors.primaryDeep,
-                appBar: AppBar(
-                  backgroundColor: AppColors.neoCardBg,
-                  title: Text('CYBER TRANSFER & SCOUT BORSASI', style: AppTypography.h2(color: Colors.white)),
-                  bottom: const TabBar(
-                    indicatorColor: AppColors.neonLime,
-                    indicatorWeight: 3,
-                    labelColor: AppColors.neonLime,
-                    unselectedLabelColor: Colors.white70,
-                    tabs: [
-                      Tab(icon: Icon(Icons.shopping_cart), text: 'TRANSFER PAZARI'),
-                      Tab(icon: Icon(Icons.sell), text: 'SATIŞ LİSTESİ'),
-                      Tab(icon: Icon(Icons.handshake), text: 'KİRALIK PAZARI'),
-                    ],
+        final filteredMarket = _filterAndSortPlayers(rawMarket, currentCash);
+        final filteredFreeAgents = _filterAndSortPlayers(freeAgents, currentCash);
+
+        return DefaultTabController(
+          length: 3,
+          child: Scaffold(
+            backgroundColor: AppColors.primaryDeep,
+            appBar: AppBar(
+              backgroundColor: AppColors.neoCardBg,
+              title: Text('CYBER TRANSFER & SCOUT BORSASI', style: AppTypography.h2(color: Colors.white)),
+              bottom: const TabBar(
+                indicatorColor: AppColors.neonLime,
+                indicatorWeight: 3,
+                labelColor: AppColors.neonLime,
+                unselectedLabelColor: Colors.white70,
+                tabs: [
+                  Tab(
+                    icon: RetroPixelIcon(type: RetroPixelIconType.cart, size: 20, color: AppColors.neonLime),
+                    text: 'TRANSFER PAZARI',
                   ),
-                ),
-                body: Column(
-                  children: [
-                    MetersBarWidget(meters: gameState.userClub.meters),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          // TAB 1: OYUNCU ALMA (PAZAR)
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 0. Transfer Çalımı Butonu
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: RetroButton(
-                                    backgroundColor: AppColors.comicRed,
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const TransferHijackScreen()),
-                                      );
-                                    },
-                                    child: const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                  Tab(
+                    icon: RetroPixelIcon(type: RetroPixelIconType.tag, size: 20, color: AppColors.neonCyan),
+                    text: 'SATIŞ LİSTESİ',
+                  ),
+                  Tab(
+                    icon: RetroPixelIcon(type: RetroPixelIconType.handshake, size: 20, color: AppColors.accentGold),
+                    text: 'KİRALIK PAZARI',
+                  ),
+                ],
+              ),
+            ),
+            body: Column(
+              children: [
+                MetersBarWidget(meters: gameState.userClub.meters),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // TAB 1: TRANSFER PAZARI & SERBEST OYUNCULAR
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 0. Son Dakika Transfer Çalımı Butonu
+                            SizedBox(
+                              width: double.infinity,
+                              child: RetroButton(
+                                backgroundColor: AppColors.comicRed,
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const TransferHijackScreen()),
+                                  );
+                                },
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    RetroPixelIcon(type: RetroPixelIconType.plane, size: 16, color: Colors.white),
+                                    SizedBox(width: 8),
+                                    Text('SON DAKİKA TRANSFER ÇALIMI & OTEL BASKINI MASASI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+
+                            // 1. Çok Kriterli Siber Arama & Filtreleme Araç Çubuğu
+                            _buildAdvancedFilterToolbar(currentCash),
+                            const SizedBox(height: 10),
+
+                            // 2. Scout Bilgi ve İstihbarat Akışı
+                            RetroWindow(
+                              title: 'SCOUT BİLGİ VE İSTİHBARAT AKIŞI',
+                              icon: 'satellite',
+                              child: Row(
+                                children: [
+                                  const RetroPixelIcon(type: RetroPixelIconType.satellite, size: 28, color: AppColors.neonCyan),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text('✈️', style: TextStyle(fontSize: 16)),
-                                        SizedBox(width: 6),
-                                        Text('SON DAKİKA TRANSFER ÇALIMI & OTEL BASKINI MASASI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                                        Text(
+                                          'DÜNYA TRANSFER BORSASI & SERBEST OYUNCULAR',
+                                          style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 11),
+                                        ),
+                                        Text(
+                                          'Piyasadaki yıldızlarla ve serbest oyuncularla doğrudan tam ekran pazarlık masasına oturun.',
+                                          style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 10),
+                                        ),
                                       ],
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 10),
-
-                                RetroWindow(
-                                  title: 'SCOUT BİLGİ VE İSTİHBARAT AKIŞI',
-                                  icon: '🛰️',
-                                  child: Row(
-                                    children: [
-                                      const Text('📡', style: TextStyle(fontSize: 26)),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'DÜNYA TRANSFER BORSASI & SERBEST OYUNCULAR',
-                                              style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 11),
-                                            ),
-                                            Text(
-                                              'Piyasadaki yıldızlarla ve scout keşifleriyle doğrudan masaya oturup pazarlık yapın.',
-                                              style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 10),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                RetroWindow(
-                                  title: 'SATIN ALINABİLİR OYUNCULAR (${market.length})',
-                                  icon: '💼',
-                                  titleBarColor: AppColors.neoCardBg,
-                                  child: market.isEmpty
-                                      ? Padding(
-                                          padding: const EdgeInsets.all(24.0),
-                                          child: Center(
-                                            child: Text('ŞU AN PİYASADA OYUNCU BULUNAMADI.', style: AppTypography.label(color: Colors.white)),
-                                          ),
-                                        )
-                                      : Column(
-                                          children: market.map((p) => _buildMarketPlayerCard(context, ref, p, gameState)).toList(),
-                                        ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 10),
 
-                          // TAB 2: OYUNCU SATMA (KADRO SATIŞI)
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                RetroWindow(
-                                  title: 'KULÜP TRANSFER VE SATIŞ MERKEZİ',
-                                  icon: '💸',
-                                  child: Row(
-                                    children: [
-                                      const Text('🏷️', style: TextStyle(fontSize: 26)),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'KADRONUZDAKİ OYUNCULARI SATIN VE GELİR ELDE EDİN',
-                                              style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 11),
-                                            ),
-                                            Text(
-                                              'Gözden çıkardığınız oyuncuları piyasa değerinden transfer borsasına sunarak kulüp kasasını doldurun.',
-                                              style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 10),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                            // 3. Serbest Oyuncular (Free Agents & Bosman) Havuzu
+                            if (_showFreeAgents && filteredFreeAgents.isNotEmpty) ...[
+                              RetroWindow(
+                                title: 'SERBEST OYUNCULAR & BOSMAN LİSTESİ (${filteredFreeAgents.length})',
+                                icon: 'sprout',
+                                titleBarColor: const Color(0xFF1E3A8A),
+                                child: Column(
+                                  children: filteredFreeAgents
+                                      .map((p) => _buildMarketPlayerCard(context, ref, p, gameState, isFreeAgent: true))
+                                      .toList(),
                                 ),
-                                const SizedBox(height: 10),
-                                RetroWindow(
-                                  title: 'SATILABİLİR KADRO OYUNCULARI (${squad.length})',
-                                  icon: '💰',
-                                  titleBarColor: const Color(0xFF005500),
-                                  child: Column(
-                                    children: squad.map((p) => _buildSellableSquadPlayerCard(context, ref, p, gameState)).toList(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                              ),
+                              const SizedBox(height: 10),
+                            ],
 
-                          // TAB 3: KİRALIK PAZARI (§10.5)
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                RetroWindow(
-                                  title: 'KİRALIK OYUNCU BORSASI (LOAN MARKET)',
-                                  icon: '🤝',
-                                  titleBarColor: const Color(0xFF1E3A8A),
-                                  child: Row(
-                                    children: [
-                                      const Text('📑', style: TextStyle(fontSize: 26)),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'BÜYÜK KULÜPLERDEN GENÇ YETENEK KİRALA',
-                                              style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 11),
-                                            ),
-                                            Text(
-                                              'Bonservis ödemeden sadece maaş payı ödeyerek 1 sezonluk kiralayın.',
-                                              style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 10),
-                                            ),
-                                          ],
-                                        ),
+                            // 4. Satın Alınabilir Pazar Oyuncuları
+                            RetroWindow(
+                              title: 'SATIN ALINABİLİR OYUNCULAR (${filteredMarket.length})',
+                              icon: 'cart',
+                              titleBarColor: AppColors.neoCardBg,
+                              child: filteredMarket.isEmpty
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(24.0),
+                                      child: Center(
+                                        child: Text('FİLTREYE UYGUN OYUNCU BULUNAMADI.', style: AppTypography.label(color: Colors.white)),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                RetroWindow(
-                                  title: 'KİRALANABİLİR YILDIZ ADAYLARI (${loans.length})',
-                                  icon: '🌟',
-                                  child: Column(
-                                    children: loans.map((deal) => _buildLoanDealCard(context, ref, deal, gameState)).toList(),
-                                  ),
-                                ),
-                              ],
+                                    )
+                                  : Column(
+                                      children: filteredMarket
+                                          .map((p) => _buildMarketPlayerCard(context, ref, p, gameState))
+                                          .toList(),
+                                    ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+
+                      // TAB 2: OYUNCU SATMA (KADRO SATIŞI)
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RetroWindow(
+                              title: 'KULÜP TRANSFER VE SATIŞ MERKEZİ',
+                              icon: 'tag',
+                              child: Row(
+                                children: [
+                                  const RetroPixelIcon(type: RetroPixelIconType.tag, size: 28, color: AppColors.neonLime),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'KADRONUZDAKİ OYUNCULARI SATIN VE GELİR ELDE EDİN',
+                                          style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 11),
+                                        ),
+                                        Text(
+                                          'Gözden çıkardığınız oyuncuları piyasa değerinden transfer borsasına sunarak kulüp kasasını doldurun.',
+                                          style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 10),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            RetroWindow(
+                              title: 'SATILABİLİR KADRO OYUNCULARI (${squad.length})',
+                              icon: 'cash',
+                              titleBarColor: const Color(0xFF005500),
+                              child: Column(
+                                children: squad.map((p) => _buildSellableSquadPlayerCard(context, ref, p, gameState)).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // TAB 3: KİRALIK PAZARI (§10.5)
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RetroWindow(
+                              title: 'KİRALIK OYUNCU BORSASI (LOAN MARKET)',
+                              icon: 'handshake',
+                              titleBarColor: const Color(0xFF1E3A8A),
+                              child: Row(
+                                children: [
+                                  const RetroPixelIcon(type: RetroPixelIconType.handshake, size: 28, color: AppColors.accentGold),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'BÜYÜK KULÜPLERDEN GENÇ YETENEK KİRALA',
+                                          style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 11),
+                                        ),
+                                        Text(
+                                          'Bonservis ödemeden sadece maaş payı ödeyerek 1 sezonluk kiralayın.',
+                                          style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 10),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            RetroWindow(
+                              title: 'KİRALANABİLİR YILDIZ ADAYLARI (${loans.length})',
+                              icon: 'star',
+                              child: Column(
+                                children: loans.map((deal) => _buildLoanDealCard(context, ref, deal, gameState)).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Çok Kriterli Gelişmiş Filtreleme Araç Çubuğu
+  Widget _buildAdvancedFilterToolbar(int currentCash) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: AppColors.neoInnerBg,
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Mevki Filtre Butonları
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: TransferPositionFilter.values.map((filter) {
+                final isSelected = _selectedPosition == filter;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6.0),
+                  child: InkWell(
+                    onTap: () {
+                      AudioSynthesizer.playClick();
+                      setState(() => _selectedPosition = filter);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.neonLime : Colors.black,
+                        border: Border.all(
+                          color: isSelected ? Colors.black : AppColors.win95DarkGrey,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Text(
+                        filter.label,
+                        style: TextStyle(
+                          color: isSelected ? Colors.black : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 9.5,
+                        ),
                       ),
                     ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Sıralama & Bütçe Kontrolleri
+          Row(
+            children: [
+              const Text('Sırala: ', style: TextStyle(color: Colors.white70, fontSize: 10)),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Container(
+                  height: 30,
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    border: Border.all(color: Colors.white30),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<TransferSortOption>(
+                      value: _selectedSort,
+                      dropdownColor: Colors.black,
+                      isExpanded: true,
+                      style: const TextStyle(color: AppColors.neonCyan, fontSize: 10),
+                      items: TransferSortOption.values.map((opt) {
+                        return DropdownMenuItem(
+                          value: opt,
+                          child: Text(opt.label, overflow: TextOverflow.ellipsis),
+                        );
+                      }).toList(),
+                      onChanged: (opt) {
+                        if (opt != null) setState(() => _selectedSort = opt);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Bütçeye Uygun Filtresi
+              InkWell(
+                onTap: () => setState(() => _onlyAffordable = !_onlyAffordable),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: _onlyAffordable,
+                      activeColor: AppColors.neonLime,
+                      checkColor: Colors.black,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onChanged: (v) => setState(() => _onlyAffordable = v ?? false),
+                    ),
+                    const Text('Kasa Yeten', style: TextStyle(color: Colors.white, fontSize: 10)),
                   ],
                 ),
               ),
-            );
-          },
-        );
-      },
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -291,14 +511,7 @@ class TransferScreen extends StatelessWidget {
                 children: [
                   Text('Opsiyon: ₣${deal.buyoutClause}', style: const TextStyle(color: AppColors.accentGold, fontSize: 10)),
                   RetroButton(
-                    onPressed: () async {
-                      final ok = await ref.read(gameStateProvider.notifier).buyPlayer(p, 0, deal.weeklyWageToPay);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(ok ? '🎉 ${p.fullName} 1 sezonluğuna kiralandı!' : '⚠️ Kiralama başarısız oldu.')),
-                        );
-                      }
-                    },
+                    onPressed: () => LoanContractSummaryModal.show(context, deal),
                     backgroundColor: AppColors.neonCyan,
                     textColor: Colors.black,
                     child: const Text('KİRALA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
@@ -312,7 +525,7 @@ class TransferScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMarketPlayerCard(BuildContext context, WidgetRef ref, Player p, dynamic gameState) {
+  Widget _buildMarketPlayerCard(BuildContext context, WidgetRef ref, Player p, dynamic gameState, {bool isFreeAgent = false}) {
     final rarityColor = AppColors.getRarityColor(p.stars);
 
     return MouseRegion(
@@ -331,7 +544,7 @@ class TransferScreen extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: AppColors.neoInnerBg,
-            border: Border.all(color: Colors.white24),
+            border: Border.all(color: isFreeAgent ? AppColors.neonCyan : Colors.white24),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +561,19 @@ class TransferScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(p.fullName, style: AppTypography.label(color: Colors.white).copyWith(fontSize: 12)),
+                        Row(
+                          children: [
+                            Text(p.fullName, style: AppTypography.label(color: Colors.white).copyWith(fontSize: 12)),
+                            if (isFreeAgent) ...[
+                              const SizedBox(width: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                color: AppColors.neonCyan,
+                                child: const Text('SERBEST', style: TextStyle(color: Colors.black, fontSize: 8, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ],
+                        ),
                         Text(
                           '${p.age} Yaş • ${p.personality.label} • ${p.stars}★',
                           style: const TextStyle(color: Colors.white70, fontSize: 10),
@@ -370,27 +595,28 @@ class TransferScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Piyasa: ₣${p.marketValue}', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 11)),
-                  Row(
-                    children: [
-                      RetroButton(
-                        onPressed: () {
-                          _showSwapPlayerModal(context, ref, p, gameState);
-                        },
-                        backgroundColor: AppColors.accentGold,
-                        textColor: Colors.black,
-                        child: const Text('TAKAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                      ),
-                      const SizedBox(width: 6),
-                      RetroButton(
-                        onPressed: () {
-                          _showNegotiationModal(context, ref, p, gameState);
-                        },
-                        backgroundColor: AppColors.neonLime,
-                        textColor: Colors.black,
-                        child: const Text('PAZARLIK YAP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                      ),
-                    ],
+                  Text(
+                    isFreeAgent ? 'Bonservis: ₣0 (Serbest)' : 'Piyasa: ₣${p.marketValue}',
+                    style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 11),
+                  ),
+                  RetroButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TransferNegotiationScreen(player: p),
+                        ),
+                      );
+                    },
+                    backgroundColor: AppColors.neonLime,
+                    textColor: Colors.black,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        RetroPixelIcon(type: RetroPixelIconType.handshake, size: 12, color: Colors.black),
+                        SizedBox(width: 4),
+                        Text('PAZARLIK YAP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -448,27 +674,17 @@ class TransferScreen extends StatelessWidget {
                       onContractSigned: (newWage, contractWeeks, role, signingBonus) {
                         final seasons = (contractWeeks / 21).round().clamp(1, 5);
                         ref.read(gameStateProvider.notifier).renewPlayerContract(p.id, seasons, newWage);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('✍️ ${p.fullName} ile sözleşme yenilendi!')),
-                        );
                       },
                     ),
                   );
                 },
-                backgroundColor: AppColors.neonCyan,
-                textColor: Colors.black,
-                child: const Text('SÖZLEŞME', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9)),
+                backgroundColor: AppColors.win95TitleNavy,
+                textColor: Colors.white,
+                child: const Text('SÖZLEŞME', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               RetroButton(
-                onPressed: () async {
-                  final ok = await ref.read(gameStateProvider.notifier).sellPlayer(p, p.marketValue);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(ok ? '💰 ${p.fullName} ₣${p.marketValue} bedelle satıldı!' : '⚠️ Satış başarısız: Minimum kadro şartı.')),
-                    );
-                  }
-                },
+                onPressed: () => PlayerSaleOfferModal.show(context, p, p.marketValue),
                 backgroundColor: AppColors.neonLime,
                 textColor: Colors.black,
                 child: Text('₣${p.marketValue}\nSAT', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9)),
@@ -477,217 +693,6 @@ class TransferScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _showSwapPlayerModal(BuildContext context, WidgetRef ref, Player targetPlayer, dynamic gameState) {
-    final squad = gameState.userClub.squad as List<Player>;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.neoCardBg,
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('TAKAS TEKLİFİ: ${targetPlayer.fullName.toUpperCase()}', style: AppTypography.h2(color: AppColors.accentGold)),
-              const SizedBox(height: 4),
-              Text('Takas etmek için kulübünüzden bir oyuncu seçin (Piyasa: ₣${targetPlayer.marketValue}):', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: squad.length,
-                  itemBuilder: (context, idx) {
-                    final sp = squad[idx];
-                    final diff = targetPlayer.marketValue - sp.marketValue;
-                    return Card(
-                      color: AppColors.neoInnerBg,
-                      child: ListTile(
-                        leading: Text(sp.position.code, style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold)),
-                        title: Text(sp.fullName, style: const TextStyle(color: Colors.white, fontSize: 12)),
-                        subtitle: Text('${sp.ovr} OVR • ₣${sp.marketValue} Değer • Fark: ₣${diff > 0 ? "+$diff" : "$diff"}', style: const TextStyle(color: Colors.white54, fontSize: 10)),
-                        trailing: RetroButton(
-                          onPressed: () async {
-                            Navigator.pop(ctx);
-                            final cashDiff = diff > 0 ? diff : 0;
-                            final ok = await ref.read(gameStateProvider.notifier).swapPlayerTransfer(sp, targetPlayer, cashDiff);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(ok ? '🤝 Takas tamamlandı! ${sp.fullName} verildi, ${targetPlayer.fullName} alındı.' : '⚠️ Yetersiz nakit bakiye!')),
-                              );
-                            }
-                          },
-                          backgroundColor: AppColors.accentGold,
-                          textColor: Colors.black,
-                          child: const Text('TAKAS ET', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showNegotiationModal(BuildContext context, WidgetRef ref, Player p, dynamic gameState) {
-    var state = NegotiationState.start(player: p);
-    int offerFee = (p.marketValue * 0.85).round();
-    int offerWage = p.weeklyWage;
-    final agentFee = (p.marketValue * 0.08).round();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.neoCardBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (modalCtx, setModalState) {
-            final isAccepted = state.outcome == NegotiationOutcome.accepted;
-            final isWalkedAway = state.outcome == NegotiationOutcome.walkedAway;
-
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('TRANSFER PAZARLIĞI: ${p.fullName.toUpperCase()}', style: AppTypography.h2(color: AppColors.neonLime)),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Piyasa: ₣${p.marketValue} • İstenen: ₣${state.askingFee} Bonservis / ₣${state.askingWage}/h • Sabır: %${state.currentPatience}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 11),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Bonservis Teklif Slider
-                    Text('Bonservis Teklifi: ₣$offerFee', style: const TextStyle(color: AppColors.neonCyan, fontWeight: FontWeight.bold, fontSize: 12)),
-                    Slider(
-                      value: offerFee.toDouble().clamp((p.marketValue * 0.3), (p.marketValue * 2.0)),
-                      min: (p.marketValue * 0.3).toDouble(),
-                      max: (p.marketValue * 2.0).toDouble(),
-                      divisions: 24,
-                      activeColor: AppColors.neonCyan,
-                      onChanged: isAccepted || isWalkedAway
-                          ? null
-                          : (val) {
-                              setModalState(() => offerFee = val.round());
-                            },
-                    ),
-
-                    // Maaş Teklif Slider
-                    Text('Haftalık Maaş Teklifi: ₣$offerWage', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 12)),
-                    Slider(
-                      value: offerWage.toDouble().clamp((p.weeklyWage * 0.5), (p.weeklyWage * 3.0)),
-                      min: (p.weeklyWage * 0.5).toDouble(),
-                      max: (p.weeklyWage * 3.0).toDouble(),
-                      divisions: 20,
-                      activeColor: AppColors.neonLime,
-                      onChanged: isAccepted || isWalkedAway
-                          ? null
-                          : (val) {
-                              setModalState(() => offerWage = val.round());
-                            },
-                    ),
-
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: isAccepted
-                            ? const Color(0xFF0B2E20)
-                            : isWalkedAway
-                                ? const Color(0xFF2E0B0B)
-                                : const Color(0xFF1E293B),
-                        border: Border.all(
-                          color: isAccepted
-                              ? AppColors.neonLime
-                              : isWalkedAway
-                                  ? AppColors.comicRed
-                                  : AppColors.neonCyan,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(isAccepted ? '✅ ' : isWalkedAway ? '❌ ' : '💬 ', style: const TextStyle(fontSize: 18)),
-                          Expanded(
-                            child: Text(
-                              state.statusMessage,
-                              style: TextStyle(
-                                color: isAccepted
-                                    ? AppColors.neonLime
-                                    : isWalkedAway
-                                        ? AppColors.comicRed
-                                        : Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('MASADAN KALK', style: TextStyle(color: Colors.white54)),
-                        ),
-                        const SizedBox(width: 8),
-                        if (!isAccepted && !isWalkedAway)
-                          RetroButton(
-                            onPressed: () {
-                              setModalState(() {
-                                state = state.submitOffer(offeredFee: offerFee, offeredWage: offerWage);
-                              });
-                            },
-                            backgroundColor: AppColors.neonCyan,
-                            textColor: Colors.black,
-                            child: const Text('TEKLİFİ SUN'),
-                          )
-                        else if (isAccepted)
-                          RetroButton(
-                            onPressed: () async {
-                              Navigator.pop(ctx);
-                              final totalCost = offerFee + agentFee;
-                              final ok = await ref.read(gameStateProvider.notifier).buyPlayer(p, totalCost, offerWage);
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      ok
-                                          ? '🎉 Transfer Başarılı! ${p.fullName} kulübe katıldı (Maliyet: ₣$totalCost).'
-                                          : '⚠️ Yetersiz bakiye!',
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            backgroundColor: AppColors.neonLime,
-                            textColor: Colors.black,
-                            child: const Text('İMZALAT (ANLAŞILDI)'),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }

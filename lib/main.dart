@@ -23,6 +23,13 @@ import 'presentation/screens/squad_screen.dart';
 import 'presentation/screens/staff_screen.dart';
 import 'presentation/screens/transfer_screen.dart';
 import 'presentation/screens/trophy_room_screen.dart';
+import 'presentation/screens/head_coach_hiring_screen.dart';
+import 'presentation/screens/boardroom_summit_screen.dart';
+import 'presentation/screens/cup_tournament_screen.dart';
+import 'presentation/screens/prestige_screen.dart';
+import 'domain/navigation/dynasty_navigation_registry.dart';
+import 'presentation/widgets/club_emblem_widget.dart';
+import 'presentation/widgets/dynasty_shortcut_customizer_modal.dart';
 import 'presentation/widgets/retro_window.dart';
 
 void main() {
@@ -312,11 +319,13 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
     );
   }
 
-  /// Neo-Brutalist Dynasty HUD Menüsü
+  /// Neo-Brutalist Dynasty HUD Menüsü (Dinamik Kısayollar, Özelleştirme ve Kulüp Yönetimi)
   void _showStartMenuModal(BuildContext context, dynamic gameState) {
     AudioSynthesizer.playClick();
     final club = gameState.userClub;
-    var currentTicketPrice = club.ticketPrice;
+    final shortcuts = DynastyNavigationRegistry.getShortcutsByIds(
+      List<String>.from(gameState.pinnedShortcutIds),
+    );
 
     showModalBottomSheet(
       context: context,
@@ -324,221 +333,232 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
       isScrollControlled: true,
       builder: (ctx) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (modalCtx, setModalState) {
             return Padding(
               padding: const EdgeInsets.all(12.0),
               child: RetroWindow(
-                title: 'DYNASTY HUD — AYARLAR VE KULÜP PANELİ',
+                title: 'DYNASTY HUD — MERKEZ KISAYOL KONSOLU',
                 icon: '🎮',
                 titleBarColor: AppColors.neoCardBg,
                 onClose: () => Navigator.pop(ctx),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Kulüp Başlık Alanı
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: AppColors.comicBoxDecoration(
-                        backgroundColor: AppColors.neoInnerBg,
-                        borderColor: Colors.black,
-                        shadowColor: AppColors.neonLime,
-                      ),
-                      child: Row(
-                        children: [
-                          Text(club.badgeIcon, style: const TextStyle(fontSize: 34)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  club.name.toUpperCase(),
-                                  style: AppTypography.h3(color: AppColors.neonLime),
-                                ),
-                                Text(
-                                  'Menajer: ${gameState.manager.name} • Seviye ${gameState.manager.level}',
-                                  style: AppTypography.bodySmall(color: AppColors.neutral300),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Bilet Fiyatı Ayarlama Sürgüsü
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        border: Border.all(color: AppColors.neonCyan, width: 2.0),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '🎟️ STADYUM BİLET FİYATI:',
-                                style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 11),
-                              ),
-                              Text(
-                                '₣$currentTicketPrice / bilet',
-                                style: AppTypography.monoNumber(color: AppColors.accentGold).copyWith(fontSize: 13),
-                              ),
-                            ],
-                          ),
-                          Slider(
-                            value: currentTicketPrice.toDouble(),
-                            min: 5,
-                            max: 50,
-                            divisions: 45,
-                            activeColor: AppColors.neonLime,
-                            inactiveColor: AppColors.neutral700,
-                            onChanged: (val) {
-                              setModalState(() {
-                                currentTicketPrice = val.round();
-                              });
-                              ref.read(gameStateProvider.notifier).setTicketPrice(val.round());
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                     // Hızlı Aksiyon Butonları
-                    Row(
-                      children: [
-                        Expanded(
-                          child: RetroButton(
-                            backgroundColor: AudioSynthesizer.soundEnabled ? AppColors.neonLime : AppColors.comicRed,
-                            textColor: AudioSynthesizer.soundEnabled ? Colors.black : Colors.white,
-                            onPressed: () {
-                              AudioSynthesizer.toggleSound();
-                              setModalState(() {});
-                              setState(() {});
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(AudioSynthesizer.soundEnabled ? '🔊' : '🔇'),
-                                const SizedBox(width: 6),
-                                Text(
-                                  AudioSynthesizer.soundEnabled ? 'SES: AÇIK' : 'SES: KAPALI',
-                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
-                                ),
-                              ],
-                            ),
-                          ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Kulüp Başlık Alanı (Vektörel Dinamik Arma ile)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: AppColors.comicBoxDecoration(
+                          backgroundColor: AppColors.neoInnerBg,
+                          borderColor: Colors.black,
+                          shadowColor: AppColors.neonLime,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: RetroButton(
-                            backgroundColor: AppColors.comicYellow,
-                            textColor: Colors.black,
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const TrophyRoomScreen()),
-                              );
-                            },
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text('🏆'),
-                                SizedBox(width: 6),
-                                Text('KUPA ODASI', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Colors.black)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    // BAŞKANLIK DEPARTMANLARI (Tam Sayfa Yönlendirme)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: RetroButton(
-                            backgroundColor: AppColors.neonLime,
-                            textColor: Colors.black,
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const StaffScreen()));
-                            },
-                            child: const Text('👔 TEKNİK EKİP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: RetroButton(
-                            backgroundColor: AppColors.neonCyan,
-                            textColor: Colors.black,
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const BoardRoomScreen()));
-                            },
-                            child: const Text('🏛️ YÖNETİM', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: RetroButton(
-                            backgroundColor: AppColors.neonPink,
-                            textColor: Colors.black,
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const PressConferenceScreen()));
-                            },
-                            child: const Text('🎙️ BASIN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: RetroButton(
-                            backgroundColor: AppColors.comicYellow,
-                            textColor: Colors.black,
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const ScoutingScreen()));
-                            },
-                            child: const Text('🛰️ SCOUT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Kariyeri Baştan Başlat Butonu
-                    SizedBox(
-                      width: double.infinity,
-                      child: RetroButton(
-                        backgroundColor: AppColors.comicRed,
-                        textColor: Colors.white,
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _showResetConfirmDialog(context);
-                        },
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Row(
                           children: [
-                            Text('⚠️'),
-                            SizedBox(width: 6),
-                            Text('KARİYERİ SIFIRLA (BAŞTAN BAŞLA)', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
+                            ClubEmblemWidget(
+                              clubName: club.name,
+                              clubId: club.id,
+                              badgeIcon: club.badgeIcon,
+                              size: 44,
+                              showShadow: false,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    club.name.toUpperCase(),
+                                    style: AppTypography.h3(color: AppColors.neonLime),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    'Başkan: ${gameState.manager.name} • Seviye ${gameState.manager.level}',
+                                    style: AppTypography.bodySmall(color: AppColors.neutral300),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+
+                      // Dinamik Kısayollar Başlığı & Düzenleme Butonu
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            color: AppColors.neonCyan,
+                            child: const Text(
+                              'HIZLI ERİŞİM KONSOLU',
+                              style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w900),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              DynastyShortcutCustomizerModal.show(context);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentGold,
+                                border: Border.all(color: Colors.black, width: 1.5),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('⚙️', style: TextStyle(fontSize: 11)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'DÜZENLE (+ / -)',
+                                    style: TextStyle(color: Colors.black, fontSize: 9.5, fontWeight: FontWeight.w900),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Dinamik Kısayol Grid'i (2 Sütunlu)
+                      if (shortcuts.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          color: Colors.black,
+                          child: Center(
+                            child: Text(
+                              'Henüz sabitlenmiş kısayol yok. Düzenle butonundan ekleyin.',
+                              style: AppTypography.bodySmall(color: AppColors.neutral300),
+                            ),
+                          ),
+                        )
+                      else
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: shortcuts.length,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 2.7,
+                            crossAxisSpacing: 6,
+                            mainAxisSpacing: 6,
+                          ),
+                          itemBuilder: (gridCtx, index) {
+                            final item = shortcuts[index];
+                            final badge = item.badgeEvaluator?.call(gameState);
+
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  child: RetroButton(
+                                    backgroundColor: item.color,
+                                    textColor: Colors.black,
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(builder: item.screenBuilder),
+                                      );
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Text(item.icon, style: const TextStyle(fontSize: 16)),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            item.label,
+                                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 9.5),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (badge != null)
+                                  Positioned(
+                                    top: -4,
+                                    right: -2,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.comicRed,
+                                        border: Border.all(color: Colors.white, width: 1),
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                      child: Text(
+                                        badge,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 7.5,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      const SizedBox(height: 12),
+
+                      // Sistem Kontrolleri (Ses & Kariyer)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RetroButton(
+                              backgroundColor: AudioSynthesizer.soundEnabled ? AppColors.neonLime : AppColors.comicRed,
+                              textColor: AudioSynthesizer.soundEnabled ? Colors.black : Colors.white,
+                              onPressed: () {
+                                AudioSynthesizer.toggleSound();
+                                setModalState(() {});
+                                setState(() {});
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(AudioSynthesizer.soundEnabled ? '🔊' : '🔇'),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    AudioSynthesizer.soundEnabled ? 'SES: AÇIK' : 'SES: KAPALI',
+                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: RetroButton(
+                              backgroundColor: AppColors.comicRed,
+                              textColor: Colors.white,
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _showResetConfirmDialog(context);
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('⚠️'),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'SIFIRLA',
+                                    style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -580,3 +600,4 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
     );
   }
 }
+

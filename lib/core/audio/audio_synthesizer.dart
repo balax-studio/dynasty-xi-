@@ -36,6 +36,24 @@ class AudioSynthesizer {
     SystemSound.play(SystemSoundType.alert);
   }
 
+  /// Başarı / Onay Sesi
+  static void playSuccess() {
+    if (!soundEnabled) return;
+    SystemSound.play(SystemSoundType.alert);
+  }
+
+  /// Başarısızlık / Ret Sesi
+  static void playFailure() {
+    if (!soundEnabled) return;
+    SystemSound.play(SystemSoundType.alert);
+  }
+
+  /// Para / Kasa Harcama Sesi
+  static void playMoney() {
+    if (!soundEnabled) return;
+    SystemSound.play(SystemSoundType.click);
+  }
+
   static void toggleSound() {
     soundEnabled = !soundEnabled;
   }

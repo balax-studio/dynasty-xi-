@@ -6,6 +6,8 @@ import 'package:futbol/main.dart';
 import 'package:futbol/presentation/widgets/meters_bar_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:futbol/presentation/widgets/retro_pixel_icon.dart';
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -29,12 +31,13 @@ void main() {
 
     expect(find.text('KASA'), findsOneWidget);
     expect(find.text('₣25.0K'), findsOneWidget);
+    expect(find.text('FAN'), findsOneWidget);
     expect(find.text('%65'), findsOneWidget);
+    expect(find.text('MORAL'), findsOneWidget);
     expect(find.text('%70'), findsOneWidget);
+    expect(find.text('GÜVEN'), findsOneWidget);
     expect(find.text('%80'), findsOneWidget);
-    expect(find.textContaining('📢'), findsOneWidget);
-    expect(find.textContaining('👕'), findsOneWidget);
-    expect(find.textContaining('🏛️'), findsOneWidget);
+    expect(find.byType(RetroPixelIcon), findsNWidgets(4));
   });
 
   testWidgets('App renders correctly with ProviderScope and displays FTUE on fresh launch', (tester) async {

@@ -7,7 +7,10 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/economy/financial_statement.dart';
+import '../../domain/economy/sponsorship_contract.dart';
+import '../../domain/entities/game_state.dart';
 import '../widgets/meters_bar_widget.dart';
+import '../widgets/retro_impact_confirm_modal.dart';
 import '../widgets/retro_window.dart';
 import '../widgets/tax_audit_inspection_modal.dart';
 
@@ -457,23 +460,149 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  /// 4. 3-Slot Sponsorluk Masası
-  Widget _buildSponsorshipNegotiationDesk(dynamic gameState, int leagueTier) {
-    final deals = FinancialStatementCalculator.getAvailableSponsorshipDeals(leagueTier)
-        .where((d) => d.slot == _selectedSponsorSlot)
+  /// 4. 3-Slot Sponsorluk Masası & Süreli RPG Sözleşmeleri
+  Widget _buildSponsorshipNegotiationDesk(dynamic rawGameState, int leagueTier) {
+    final gameState = rawGameState is GameState ? rawGameState : null;
+    final activeSponsorships = gameState?.activeSponsorships ?? const <SponsorshipSlot, SponsorshipContract>{};
+    final contracts = SponsorshipCatalog.getAvailableContracts(leagueTier)
+        .where((c) => c.slot == _selectedSponsorSlot)
         .toList();
 
     return RetroWindow(
-      title: '3-SLOT SPONSORLUK MASASI & SÖZLEŞMELER',
+      title: '3-SLOT SPONSORLUK MASASI & RPG SÖZLEŞMELERİ',
       icon: '✍️',
       titleBarColor: AppColors.accentGold,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Slot Seçici Butonları
+          // A. Aktif Sözleşmeler Mini Paneli (3 Slot)
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Text('📋', style: TextStyle(fontSize: 12)),
+                    SizedBox(width: 6),
+                    Text(
+                      'AKTİF SPONSORLUK PROTOKOLLERİ (SLOT DURUMU)',
+                      style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: SponsorshipSlot.values.map((slot) {
+                    final active = activeSponsorships[slot];
+                    final isOccupied = active != null && !active.isExpired;
+
+                    return Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: isOccupied ? AppColors.neoInnerBg : const Color(0xFF1E293B).withValues(alpha: 0.5),
+                          border: Border.all(
+                            color: isOccupied ? AppColors.neonLime.withValues(alpha: 0.6) : Colors.white12,
+                            width: isOccupied ? 1.5 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('${slot.icon} ${slot.label.split(" ").first}', style: const TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.bold)),
+                                if (isOccupied)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    decoration: BoxDecoration(color: AppColors.neonLime, borderRadius: BorderRadius.circular(2)),
+                                    child: Text('${active.weeksRemaining} Hf', style: const TextStyle(color: Colors.black, fontSize: 8, fontWeight: FontWeight.bold)),
+                                  )
+                                else
+                                  const Text('BOŞ', style: TextStyle(color: Colors.white30, fontSize: 8, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            if (isOccupied) ...[
+                              Text(
+                                active.brandName,
+                                style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                '+₣${active.weeklyIncome}/hf',
+                                style: AppTypography.monoNumber(color: AppColors.neonLime).copyWith(fontSize: 9.5, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 22,
+                                child: RetroButton(
+                                  onPressed: () {
+                                    RetroImpactConfirmModal.show(
+                                      context,
+                                      title: 'SÖZLEŞMEYİ FESHET',
+                                      actionTitle: active.brandName,
+                                      description: '${slot.label} anlaşmasını tek taraflı erken feshetmek istiyor musunuz?',
+                                      cashDelta: -active.risk.earlyTerminationPenalty,
+                                      weeklyWageDelta: active.weeklyIncome,
+                                      boardTrustDelta: -2,
+                                      confirmButtonText: 'ERKEN FESHET (-₣${active.risk.earlyTerminationPenalty})',
+                                      confirmButtonColor: AppColors.comicRed,
+                                      onConfirmed: () async {
+                                        final ok = await ref.read(gameStateProvider.notifier).terminateSponsorshipContract(slot);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              backgroundColor: ok ? AppColors.comicRed : Colors.orange,
+                                              content: Text(
+                                                ok
+                                                    ? '⚠️ ${active.brandName} sözleşmesi feshedildi. Slot boşa çıktı.'
+                                                    : '❌ Fesih tazminatı için kasada yeterli nakit yok!',
+                                                style: const TextStyle(color: Colors.white),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    );
+                                  },
+                                  backgroundColor: AppColors.comicRed,
+                                  textColor: Colors.white,
+                                  child: const Text('FESHET', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ] else ...[
+                              const Text('Sözleşme Yok', style: TextStyle(color: Colors.white30, fontSize: 9.5)),
+                              const Text('0 ₣/hf', style: TextStyle(color: Colors.white24, fontSize: 9)),
+                              const SizedBox(height: 4),
+                              const Text('Teklif Seçin ⬇', style: TextStyle(color: AppColors.accentGold, fontSize: 8)),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // B. Slot Seçici Butonları
           Row(
             children: SponsorshipSlot.values.map((slot) {
               final isSelected = _selectedSponsorSlot == slot;
+              final isOccupied = activeSponsorships[slot] != null && !activeSponsorships[slot]!.isExpired;
+
               return Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -486,11 +615,11 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                     backgroundColor: isSelected ? AppColors.accentGold : const Color(0xFF1E293B),
                     textColor: isSelected ? Colors.black : Colors.white,
                     child: Text(
-                      '${slot.icon} ${slot.label.split(" ").first.toUpperCase()}',
+                      '${slot.icon} ${slot.label.split(" ").first.toUpperCase()}${isOccupied ? " (DOLU)" : ""}',
                       style: TextStyle(
-                        fontSize: 9,
+                        fontSize: 8.5,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? Colors.black : Colors.white,
+                        color: isSelected ? Colors.black : (isOccupied ? Colors.white70 : Colors.white),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -501,57 +630,253 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           ),
           const SizedBox(height: 10),
 
-          // Mevcut Sponsorluk Paketleri
-          ...deals.map((deal) {
+          // C. Müsait Teklifler Listesi
+          if (contracts.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(12),
+              alignment: Alignment.center,
+              child: const Text('Bu slot için şu an açık teklif bulunmuyor.', style: TextStyle(color: Colors.white54, fontSize: 11)),
+            ),
+
+          ...contracts.map((contract) {
+            final isSlotOccupied = activeSponsorships[contract.slot] != null && !activeSponsorships[contract.slot]!.isExpired;
+            final isThisBrandActive = activeSponsorships[contract.slot]?.id == contract.id;
+
             return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppColors.neoInnerBg,
-                border: Border.all(color: Colors.white24),
+                border: Border.all(
+                  color: isThisBrandActive
+                      ? AppColors.neonLime
+                      : (isSlotOccupied ? Colors.white12 : AppColors.accentGold.withValues(alpha: 0.4)),
+                  width: isThisBrandActive ? 1.5 : 1,
+                ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(deal.brandIcon, style: const TextStyle(fontSize: 24)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  // 1. Marka Başlığı & Kategori & Süre
+                  Row(
+                    children: [
+                      Text(contract.brandIcon, style: const TextStyle(fontSize: 22)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  contract.brandName,
+                                  style: const TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF334155),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  child: Text(contract.sector, style: const TextStyle(color: Colors.white70, fontSize: 8)),
+                                ),
+                              ],
+                            ),
+                            Text(contract.sector, style: const TextStyle(color: Colors.white60, fontSize: 9.5)),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Text('⏱️ ${contract.durationWeeks} Hf', style: const TextStyle(color: AppColors.accentGold, fontSize: 9, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // 2. Finansal Akışlar (Haftalık & Peşin İmza)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0A0F1D),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(deal.brandName, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                        Text(deal.perkDescription, style: const TextStyle(color: Colors.white60, fontSize: 9.5)),
-                        const SizedBox(height: 4),
                         Row(
                           children: [
-                            Text('+₣${deal.weeklyIncome}/h', style: AppTypography.monoNumber(color: AppColors.neonLime).copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
-                            const SizedBox(width: 8),
-                            Text('İmza Parası: +₣${deal.signingBonus}', style: const TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.bold)),
+                            const Text('Haftalık:', style: TextStyle(color: Colors.white60, fontSize: 9.5)),
+                            const SizedBox(width: 4),
+                            Text('+₣${contract.weeklyIncome}/hf', style: AppTypography.monoNumber(color: AppColors.neonLime).copyWith(fontSize: 11, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            const Text('İmza Parası:', style: TextStyle(color: Colors.white60, fontSize: 9.5)),
+                            const SizedBox(width: 4),
+                            Text('+₣${contract.signingBonus}', style: const TextStyle(color: AppColors.accentGold, fontSize: 11, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  RetroButton(
-                    onPressed: () async {
-                      await ref.read(gameStateProvider.notifier).signSponsorshipDeal(
-                            slot: deal.slot,
-                            weeklyIncome: deal.weeklyIncome,
-                            signingBonus: deal.signingBonus,
-                            brandName: deal.brandName,
-                          );
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: AppColors.neonLime,
-                            content: Text('🎉 ${deal.brandName} ile sponsorluk imzalandı (+₣${deal.signingBonus} kasaya eklendi)!', style: const TextStyle(color: Colors.black)),
+                  const SizedBox(height: 8),
+
+                  // 3. RPG Artı Perk (+) & Eksi Risk (-) Çipleri
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Perk (+)
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF064E3B).withValues(alpha: 0.3),
+                            border: Border.all(color: AppColors.neonLime.withValues(alpha: 0.5)),
                           ),
-                        );
-                      }
-                    },
-                    backgroundColor: AppColors.neonLime,
-                    textColor: Colors.black,
-                    child: const Text('İMZALA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Text('🟢', style: TextStyle(fontSize: 8)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'AVANTAJ (+)',
+                                    style: TextStyle(color: AppColors.neonLime, fontSize: 8.5, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                contract.perk.description,
+                                style: const TextStyle(color: Colors.white70, fontSize: 8.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+
+                      // Risk (-)
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7F1D1D).withValues(alpha: 0.3),
+                            border: Border.all(color: AppColors.comicRed.withValues(alpha: 0.5)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Text('🔴', style: TextStyle(fontSize: 8)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'RİSK / BEDEL (-)',
+                                    style: TextStyle(color: AppColors.comicRed, fontSize: 8.5, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                contract.risk.description,
+                                style: const TextStyle(color: Colors.white70, fontSize: 8.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // 4. Aksiyon Butonu (İncele & İmzala)
+                  SizedBox(
+                    width: double.infinity,
+                    child: isSlotOccupied
+                        ? (isThisBrandActive
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: AppColors.neonLime.withValues(alpha: 0.15),
+                                  border: Border.all(color: AppColors.neonLime),
+                                ),
+                                child: const Text(
+                                  '✓ ŞU ANDA AKTİF SÖZLEŞME',
+                                  style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10),
+                                ),
+                              )
+                            : Container(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.white10,
+                                  border: Border.all(color: Colors.white24),
+                                ),
+                                child: const Text(
+                                  'SLOT DOLU (Önce mevcut sözleşmeyi feshedin)',
+                                  style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold, fontSize: 9.5),
+                                ),
+                              ))
+                        : RetroButton(
+                            onPressed: () {
+                              final totalFan = contract.perk.fanDelta + contract.risk.fanDelta;
+                              final totalTrust = contract.perk.boardTrustDelta + contract.risk.boardTrustDelta;
+                              final totalLocker = contract.perk.lockerRoomDelta;
+
+                              RetroImpactConfirmModal.show(
+                                context,
+                                title: 'SPONSORLUK SÖZLEŞMESİ',
+                                actionTitle: contract.brandName,
+                                description: '${contract.slot.label} için ${contract.durationWeeks} haftalık resmi sponsorluk protokolü',
+                                cashDelta: contract.signingBonus,
+                                weeklyWageDelta: -contract.weeklyIncome,
+                                fanDelta: totalFan,
+                                boardTrustDelta: totalTrust,
+                                moraleDelta: totalLocker,
+                                confirmButtonText: 'SÖZLEŞMEYİ ONAYLA (+₣${contract.signingBonus})',
+                                confirmButtonColor: AppColors.neonLime,
+                                onConfirmed: () async {
+                                  final success = await ref.read(gameStateProvider.notifier).signSponsorshipContract(contract);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: success ? AppColors.neonLime : AppColors.comicRed,
+                                        content: Text(
+                                          success
+                                              ? '🎉 ${contract.brandName} ile resmi sponsorluk imzalandı (+₣${contract.signingBonus} kasaya eklendi)!'
+                                              : '❌ Bu slot için zaten aktif bir sözleşmeniz var!',
+                                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              );
+                            },
+                            backgroundColor: AppColors.neonLime,
+                            textColor: Colors.black,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text('✍️', style: TextStyle(fontSize: 14)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'SÖZLEŞMEYİ İNCELE VE İMZALA (+₣${contract.signingBonus} PEŞİN)',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5),
+                                ),
+                              ],
+                            ),
+                          ),
                   ),
                 ],
               ),

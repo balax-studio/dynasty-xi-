@@ -7,25 +7,17 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/facility.dart';
+import '../../domain/media/newspaper_story_engine.dart';
+import '../../domain/president/president_crisis.dart';
 import '../../domain/progression/daily_quest.dart';
+import '../widgets/club_emblem_widget.dart';
 import '../widgets/decision_card_widget.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/newspaper_headline_widget.dart';
+import '../widgets/retro_pixel_icon.dart';
 import '../widgets/retro_window.dart';
-import '../widgets/stadium_isometric_widget.dart';
-import 'board_room_screen.dart';
-import 'boardroom_summit_screen.dart';
-import 'cup_tournament_screen.dart';
-import 'facility_detail_screen.dart';
-import 'facilities_screen.dart';
-import 'head_coach_hiring_screen.dart';
-import 'match_screen.dart';
-import 'press_conference_screen.dart';
-import 'prestige_screen.dart';
-import '../../domain/president/president_crisis.dart';
 import '../widgets/urgent_phone_call_modal.dart';
-import 'scouting_screen.dart';
-import 'staff_screen.dart';
+import 'match_screen.dart';
 import 'trophy_room_screen.dart';
 
 class OfficeScreen extends ConsumerWidget {
@@ -56,7 +48,13 @@ class OfficeScreen extends ConsumerWidget {
             backgroundColor: AppColors.neoCardBg,
             title: Row(
               children: [
-                Text(club.badgeIcon, style: const TextStyle(fontSize: 20)),
+                ClubEmblemWidget(
+                  clubName: club.name,
+                  clubId: club.id,
+                  badgeIcon: club.badgeIcon,
+                  size: 26,
+                  showShadow: false,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -97,7 +95,7 @@ class OfficeScreen extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      const Text('🏆', style: TextStyle(fontSize: 13)),
+                      const RetroPixelIcon(type: RetroPixelIconType.trophy, size: 14, color: Colors.black),
                       const SizedBox(width: 4),
                       Text(
                         '${gameState.manager.dynastyPoints} DP',
@@ -135,78 +133,11 @@ class OfficeScreen extends ConsumerWidget {
                         const SizedBox(height: 10),
                       ],
 
-                      // Kırmızı Hat / Acil Telefon Kriz Çağrısı Butonu
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: AppColors.win95Grey,
-                          border: Border.all(color: AppColors.comicRed, width: 2),
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            final calls = PresidentCrisisCall.getPredefinedCalls();
-                            final randomCall = calls[DateTime.now().millisecond % calls.length];
-                            UrgentPhoneCallModal.show(context, randomCall);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            child: Row(
-                              children: [
-                                const Text('🔴☎️', style: TextStyle(fontSize: 24)),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'KIRMIZI HAT: BAŞKANLIK ACİL KRİZ MASASI',
-                                        style: AppTypography.label(color: AppColors.comicRed).copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                      const Text(
-                                        'Emniyet, Belediye veya Federasyondan gelen çağrıyı yanıtla',
-                                        style: TextStyle(color: Colors.black87, fontSize: 9.5),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.comicRed,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                  child: const Text(
-                                    'YANITLA',
-                                    style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // 1. Stadyum ve Tesisler İzometrik İllüstrasyonu (§21.3, §48)
-                      InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const FacilityDetailScreen(facilityType: FacilityType.stadium),
-                            ),
-                          );
-                        },
-                        child: StadiumIsometricWidget(
-                          stadiumLevel: club.facilities[FacilityType.stadium]?.level ?? 1,
-                          trainingLevel: club.facilities[FacilityType.trainingGround]?.level ?? 0,
-                          youthLevel: club.facilities[FacilityType.youthAcademy]?.level ?? 0,
-                          clubName: club.name,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+                      // Kırmızı Hat / Acil Telefon Kriz Çağrısı (Yalnızca Kriz Varsa Tetiklenir)
+                      if (gameState.hasActiveCrisis && gameState.activeCrisisCall != null) ...[
+                        _buildActiveCrisisHotlineBanner(context, gameState.activeCrisisCall!),
+                        const SizedBox(height: 10),
+                      ],
 
                       // Haftalık Sezon Teması Banner'ı (§28.2, #100)
                       Container(
@@ -240,21 +171,24 @@ class OfficeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 10),
 
-                      // 2. Sıradaki Maç Penceresi (Windows 95 Window Frame)
+                      // 1. Sıradaki Maç Penceresi (Windows 95 Window Frame)
                       _buildNextMatchWindow(context, ref, gameState, nextFixture),
                       const SizedBox(height: 10),
 
-                      // Basın Manşetleri & Gazete Kupürü (§17.5-1, §66)
-                      NewspaperHeadlineWidget(
-                        outletName: 'FUTBOL GAZETESİ • SON BASKI',
-                        headline: nextFixture.isPlayed
-                            ? (((nextFixture.homeScore ?? 0) > (nextFixture.awayScore ?? 0)) ? 'ZAFERİN ADI ${club.name.toUpperCase()}!' : 'KRİTİK MAÇTA PUAN KAYBI!')
-                            : 'GÖZLER ${nextFixture.matchday}. HAFTA KARŞILAŞMASINDA!',
-                        subhead: nextFixture.isPlayed
-                            ? 'Teknik Direktör taktik planıyla tüm spor kamuoyunun takdirini toplamayı başardı.'
-                            : 'Yönetim ve taraftarlar hafta sonu oynanacak zorlu maç öncesinde takıma tam destek verdi.',
-                        dateString: 'HAFTA ${clock.matchday} • SEZON ${clock.seasonNumber}',
-                        isPositive: true,
+                      // 2. Basın Manşetleri & Gazete Kupürü (§17.5-1, §66)
+                      Builder(
+                        builder: (_) {
+                          final story = NewspaperStoryEngine.generateStory(gameState);
+                          return NewspaperHeadlineWidget(
+                            outletName: story.outletName,
+                            headline: story.headline,
+                            subhead: story.subhead,
+                            dateString: story.dateString,
+                            reporter: story.reporter,
+                            columnQuote: story.columnQuote,
+                            isPositive: story.isPositive,
+                          );
+                        },
                       ),
                       const SizedBox(height: 10),
 
@@ -267,225 +201,7 @@ class OfficeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 10),
 
-                      // 4. BAŞKANLIK MAKAM VE İCRA KURULU (Tam Sayfa Navigasyon)
-                      RetroWindow(
-                        title: 'BAŞKANLIK MAKAMI VE İCRA KURULU',
-                        icon: '🎩',
-                        titleBarColor: AppColors.accentGold,
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RetroButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const HeadCoachHiringScreen()),
-                                      );
-                                    },
-                                    backgroundColor: AppColors.neonLime,
-                                    textColor: Colors.black,
-                                    child: const Column(
-                                      children: [
-                                        Text('👔', style: TextStyle(fontSize: 20)),
-                                        SizedBox(height: 4),
-                                        Text('TEKNİK DİREKTÖR ATAMA', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10.5)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: RetroButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const BoardroomSummitScreen()),
-                                      );
-                                    },
-                                    backgroundColor: AppColors.accentGold,
-                                    textColor: Colors.black,
-                                    child: const Column(
-                                      children: [
-                                        Text('🏛️', style: TextStyle(fontSize: 20)),
-                                        SizedBox(height: 4),
-                                        Text('BAŞKANLIK ZİRVESİ', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10.5)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // 5. Kulüp Merkezi & Turnuvalar (Tam Sayfa Navigasyon)
-                      RetroWindow(
-                        title: 'KULÜP MERKEZİ & TURNUVALAR',
-                        icon: '🏛️',
-                        titleBarColor: AppColors.neoCardBg,
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RetroButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const CupTournamentScreen()),
-                                      );
-                                    },
-                                    backgroundColor: AppColors.accentGold,
-                                    textColor: Colors.black,
-                                    child: const Column(
-                                      children: [
-                                        Text('🏆', style: TextStyle(fontSize: 20)),
-                                        SizedBox(height: 4),
-                                        Text('TÜRKİYE KUPASI', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: RetroButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const PrestigeScreen()),
-                                      );
-                                    },
-                                    backgroundColor: AppColors.neonPink,
-                                    textColor: Colors.black,
-                                    child: const Column(
-                                      children: [
-                                        Text('⭐', style: TextStyle(fontSize: 20)),
-                                        SizedBox(height: 4),
-                                        Text('HANEDAN MAĞAZASI', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RetroButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const StaffScreen()),
-                                      );
-                                    },
-                                    backgroundColor: AppColors.neonLime,
-                                    textColor: Colors.black,
-                                    child: const Column(
-                                      children: [
-                                        Text('👔', style: TextStyle(fontSize: 20)),
-                                        SizedBox(height: 4),
-                                        Text('TEKNİK EKİP', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: RetroButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const BoardRoomScreen()),
-                                      );
-                                    },
-                                    backgroundColor: AppColors.neonCyan,
-                                    textColor: Colors.black,
-                                    child: const Column(
-                                      children: [
-                                        Text('🏛️', style: TextStyle(fontSize: 20)),
-                                        SizedBox(height: 4),
-                                        Text('YÖNETİM KURULU', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RetroButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const PressConferenceScreen()),
-                                      );
-                                    },
-                                    backgroundColor: const Color(0xFFF59E0B),
-                                    textColor: Colors.black,
-                                    child: const Column(
-                                      children: [
-                                        Text('🎙️', style: TextStyle(fontSize: 20)),
-                                        SizedBox(height: 4),
-                                        Text('BASIN SALONU', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: RetroButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const ScoutingScreen()),
-                                      );
-                                    },
-                                    backgroundColor: AppColors.comicYellow,
-                                    textColor: Colors.black,
-                                    child: const Column(
-                                      children: [
-                                        Text('🛰️', style: TextStyle(fontSize: 20)),
-                                        SizedBox(height: 4),
-                                        Text('SCOUT & AKADEMİ', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            RetroButton(
-                              isNeon: true,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const FacilitiesScreen()),
-                                );
-                              },
-                              backgroundColor: AppColors.neonLime,
-                              textColor: Colors.black,
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text('🏟️', style: TextStyle(fontSize: 18)),
-                                  SizedBox(width: 6),
-                                  Text('12 KULÜP TESİSİ & GELİŞTİRME PLANI →', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // 5. Masadaki Karar Kartı (Windows 95 Window Frame)
+                      // 4. Masadaki Karar Kartı (Windows 95 Window Frame)
                       RetroWindow(
                         title: 'MASADAKİ DOSYA — KARAR ANI',
                         icon: '📁',
@@ -503,7 +219,7 @@ class OfficeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 10),
 
-                      // 6. Sezon Hedefleri Penceresi
+                      // 5. Sezon Hedefleri Penceresi
                       RetroWindow(
                         title: 'BAŞKANLIK HEDEF RAPORU',
                         icon: '🎯',
@@ -511,7 +227,7 @@ class OfficeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 10),
 
-                      // 7. Kulüp Bildirim Günlüğü
+                      // 6. Kulüp Bildirim Günlüğü
                       RetroWindow(
                         title: 'KULÜP SİSTEM GÜNLÜĞÜ (SYSTEM.LOG)',
                         icon: '📝',
@@ -684,6 +400,82 @@ class OfficeScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildActiveCrisisHotlineBanner(BuildContext context, PresidentCrisisCall call) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.win95Grey,
+        border: Border.all(color: AppColors.comicRed, width: 2.5),
+      ),
+      child: InkWell(
+        onTap: () {
+          UrgentPhoneCallModal.show(context, call);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              const Text('🔴☎️', style: TextStyle(fontSize: 26)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          color: AppColors.comicRed,
+                          child: const Text(
+                            'ACİL ÇAĞRI GELİYOR',
+                            style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            call.callerTitle.toUpperCase(),
+                            style: AppTypography.label(color: AppColors.comicRed).copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      call.dialogQuote,
+                      style: const TextStyle(color: Colors.black87, fontSize: 10, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.comicRed,
+                  borderRadius: BorderRadius.circular(2),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black45, offset: Offset(2, 2)),
+                  ],
+                ),
+                child: const Text(
+                  'YANITLA 📞',
+                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildNextMatchWindow(
     BuildContext context,
     WidgetRef ref,
@@ -733,7 +525,12 @@ class OfficeScreen extends ConsumerWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      Text(homeBadge, style: const TextStyle(fontSize: 30)),
+                      ClubEmblemWidget(
+                        clubName: homeName,
+                        clubId: isUserHome ? state.userClub.id : oppId,
+                        badgeIcon: homeBadge,
+                        size: 46,
+                      ),
                       const SizedBox(height: 4),
                       Text(
                         homeName.toUpperCase(),
@@ -758,7 +555,12 @@ class OfficeScreen extends ConsumerWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      Text(awayBadge, style: const TextStyle(fontSize: 30)),
+                      ClubEmblemWidget(
+                        clubName: awayName,
+                        clubId: !isUserHome ? state.userClub.id : oppId,
+                        badgeIcon: awayBadge,
+                        size: 46,
+                      ),
                       const SizedBox(height: 4),
                       Text(
                         awayName.toUpperCase(),

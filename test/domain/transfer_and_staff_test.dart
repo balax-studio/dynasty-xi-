@@ -4,6 +4,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:futbol/domain/entities/player.dart';
 import 'package:futbol/domain/economy/transfer_models.dart';
+import 'package:futbol/domain/economy/negotiation_model.dart';
 import 'package:futbol/domain/entities/staff.dart';
 
 void main() {
@@ -77,6 +78,77 @@ void main() {
       expect(physio.injuryRecoverySpeedBonus, greaterThan(0.20));
       expect(scout.potentialAccuracyBonus, equals(5));
       expect(analyst.opponentWeaknessInsightChance, greaterThanOrEqualTo(0.30));
+    });
+
+    test('FreeAgentMarketGenerator produces valid free agent pool', () {
+      final freeAgents = FreeAgentMarketGenerator.generateFreeAgents();
+      expect(freeAgents.length, greaterThanOrEqualTo(4));
+      expect(freeAgents.any((p) => p.position == Position.gk), isTrue);
+      expect(freeAgents.any((p) => p.position == Position.st), isTrue);
+    });
+
+    test('NegotiationState applies agent kickback and clauses correctly', () {
+      const player = Player(
+        id: 'target_star',
+        firstName: 'Kerem',
+        lastName: 'Aktürkoğlu',
+        countryCode: 'TR',
+        age: 25,
+        position: Position.lw,
+        pace: 88,
+        technique: 84,
+        shooting: 82,
+        passing: 80,
+        defending: 40,
+        physical: 72,
+        mentality: 81,
+        potential: 87,
+        weeklyWage: 8000,
+      );
+
+      const swapPlayer = Player(
+        id: 'swap_sub',
+        firstName: 'Efe',
+        lastName: 'Yılmaz',
+        countryCode: 'TR',
+        age: 22,
+        position: Position.lw,
+        pace: 70,
+        technique: 68,
+        shooting: 65,
+        passing: 64,
+        defending: 30,
+        physical: 68,
+        mentality: 70,
+        potential: 75,
+        weeklyWage: 2000,
+      );
+
+      final state = NegotiationState.start(player: player);
+      expect(state.currentPatience, equals(100));
+
+      final stateWithKickback = state.applyAgentKickback(5000);
+      expect(stateWithKickback.hasPaidAgentKickback, isTrue);
+      expect(stateWithKickback.askingWage, lessThan(state.askingWage));
+
+      const clauses = TransferOfferClauses(
+        sellOnPercentage: 20,
+        championshipBonus: 15000,
+        goalBonus: 5000,
+        swapPlayer: swapPlayer,
+        contractYears: 4,
+        signingBonus: 10000,
+      );
+
+      expect(clauses.swapPlayerValue, equals(swapPlayer.marketValue));
+
+      final submitted = stateWithKickback.submitOffer(
+        offeredFee: stateWithKickback.askingFee,
+        offeredWage: stateWithKickback.askingWage,
+        clauses: clauses,
+      );
+
+      expect(submitted.outcome, equals(NegotiationOutcome.accepted));
     });
   });
 }

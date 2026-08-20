@@ -7,6 +7,8 @@ import '../../domain/cards/card_selector.dart';
 import '../../domain/economy/economy_calculator.dart';
 import '../../domain/economy/financial_statement.dart';
 import '../../domain/economy/offline_calculator.dart';
+import '../../domain/economy/negotiation_model.dart';
+import '../../domain/economy/sponsorship_contract.dart';
 import '../../domain/economy/transfer_models.dart';
 import '../../domain/entities/card.dart';
 import '../../domain/entities/club.dart';
@@ -20,8 +22,13 @@ import '../../domain/progression/dynasty_prestige.dart';
 import '../../domain/progression/season_transition.dart';
 import '../../domain/sim/match_engine.dart';
 import '../../domain/rpg/player_dialogue_engine.dart';
+import '../../domain/entities/staff.dart';
+import '../../domain/generation/player_generator.dart';
+import '../../domain/rpg/head_coach_dialogue_engine.dart';
 import '../../domain/president/head_coach.dart';
 import '../../domain/president/boardroom_summit.dart';
+import '../../domain/president/president_crisis.dart';
+import '../../domain/president/crisis_trigger_engine.dart';
 
 final saveRepositoryProvider = Provider<SaveRepository>((ref) => SaveRepository());
 
@@ -219,22 +226,570 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final xpEarned = 30 + (isUserWin ? 50 : (isUserDraw ? 20 : 0));
     final updatedManager = current.manager.addXp(xpEarned);
 
+    // 7. Sponsorluk Süre ve Galibiyet Primleri İlerlemesi
+    final updatedSponsorships = <SponsorshipSlot, SponsorshipContract>{};
+    final sponsorExpiryLogs = <String>[];
+    var extraSponsorCash = 0;
+    int updatedSleeve = current.sleeveSponsorIncome;
+    int updatedStadiumNaming = current.stadiumNamingIncome;
+    int updatedMainShirtIncome = current.userClub.sponsorWeeklyIncome;
+
+    for (final entry in current.activeSponsorships.entries) {
+      final contract = entry.value;
+      if (isUserWin && contract.perk.matchWinBonus > 0) {
+        extraSponsorCash += contract.perk.matchWinBonus;
+      }
+      final remaining = contract.weeksRemaining - 1;
+      if (remaining > 0) {
+        updatedSponsorships[entry.key] = contract.copyWith(weeksRemaining: remaining);
+      } else {
+        // Sözleşme sona erdi
+        sponsorExpiryLogs.add('📢 [${contract.brandName}] ile ${contract.slot.label} sponsorluk sözleşmeniz sona erdi!');
+        switch (contract.slot) {
+          case SponsorshipSlot.mainShirt:
+            updatedMainShirtIncome = 0;
+            break;
+          case SponsorshipSlot.sleeve:
+            updatedSleeve = 0;
+            break;
+          case SponsorshipSlot.stadiumNaming:
+            updatedStadiumNaming = 0;
+            break;
+        }
+      }
+    }
+
+    final finalMeters = extraSponsorCash > 0
+        ? updatedMeters.applyDeltas(deltaCash: extraSponsorCash)
+        : updatedMeters;
+
     final updatedState = current.copyWith(
-      userClub: current.userClub.copyWith(meters: updatedMeters),
+      userClub: current.userClub.copyWith(
+        meters: finalMeters,
+        sponsorWeeklyIncome: updatedMainShirtIncome,
+      ),
       manager: updatedManager,
       currentLeague: updatedLeague,
       clock: nextClock,
       pendingCards: newSessionCards,
+      activeSponsorships: updatedSponsorships,
+      sleeveSponsorIncome: updatedSleeve,
+      stadiumNamingIncome: updatedStadiumNaming,
       notificationLog: [
         'Maç Sonucu: ${current.userClub.name} $userGoals - $oppGoals ${oppClub.name}',
+        if (extraSponsorCash > 0) '💰 Sponsor Galibiyet Primi: +₣$extraSponsorCash hesaba yattı!',
+        ...sponsorExpiryLogs,
         ...current.notificationLog,
       ],
     );
 
-    state = AsyncValue.data(updatedState);
-    await _saveRepository.save(updatedState);
+    final crisis = CrisisTriggerEngine.evaluateCrisis(updatedState);
+    final finalState = updatedState.copyWith(
+      activeCrisisCall: crisis,
+      clearCrisisCall: crisis == null,
+    );
+
+    state = AsyncValue.data(finalState);
+    await _saveRepository.save(finalState);
 
     return result;
+  }
+
+  /// Kırmızı Hat Acil Kriz Çağrısını Çöz
+  Future<void> resolveCrisisCall(CrisisChoice choice) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: choice.cashDelta,
+      deltaFans: choice.fansDelta,
+      deltaLockerRoom: choice.lockerRoomDelta,
+      deltaBoardTrust: choice.boardTrustDelta,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      clearCrisisCall: true,
+      notificationLog: [
+        '🔴 Kırmızı Hat Kriz Çözümü: ${choice.outcomeMessage}',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Kırmızı Hat Çağrısını Ertele / Kapat
+  Future<void> dismissCrisisCall() async {
+    final current = currentState;
+    if (current == null) return;
+
+    final updated = current.copyWith(clearCrisisCall: true);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Dynasty HUD Kısayolunu Sabitle / Çıkar
+  Future<void> toggleShortcutPinned(String shortcutId) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final list = List<String>.from(current.pinnedShortcutIds);
+    if (list.contains(shortcutId)) {
+      list.remove(shortcutId);
+    } else {
+      list.add(shortcutId);
+    }
+
+    final updated = current.copyWith(pinnedShortcutIds: list);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Dynasty HUD Kısayol Listesini Güncelle
+  Future<void> setPinnedShortcuts(List<String> shortcutIds) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final updated = current.copyWith(pinnedShortcutIds: shortcutIds);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Dynasty HUD Kısayollarını Varsayılana Sıfırla
+  Future<void> resetShortcutsToDefault() async {
+    final current = currentState;
+    if (current == null) return;
+
+    final updated = current.copyWith(
+      pinnedShortcutIds: const [
+        'head_coach',
+        'boardroom_summit',
+        'cup_tournament',
+        'prestige',
+        'facilities',
+        'staff',
+        'board_room',
+        'press_conference',
+        'scouting',
+        'trophy_room',
+      ],
+    );
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Teknik Ekip Üyesini Eğitip Geliştir
+  Future<bool> upgradeStaffMember(String staffId) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final staffList = List<StaffMember>.from(current.staff.isEmpty ? StaffGenerator.generateDefaultStaff() : current.staff);
+    final idx = staffList.indexWhere((s) => s.id == staffId);
+    if (idx == -1) return false;
+
+    final staff = staffList[idx];
+    if (staff.level >= 5) return false;
+
+    final cost = staff.level * 2500;
+    if (current.userClub.meters.cash < cost) return false;
+
+    final updatedStaff = staff.copyWith(
+      level: staff.level + 1,
+      weeklySalary: staff.weeklySalary + 400,
+    );
+    staffList[idx] = updatedStaff;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaCash: -cost, deltaBoardTrust: 2);
+    final updated = current.copyWith(
+      staff: staffList,
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      notificationLog: [
+        '🎓 Teknik Ekip: ${staff.name} kursu tamamlayarak Seviye ${staff.level + 1} oldu! (Maliyet: ₣$cost)',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Pazardan Yeni Teknik Ekip Üyesi Transfer Et
+  Future<bool> hireStaffMember(StaffMember newStaff) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    if (current.userClub.meters.cash < newStaff.signingFee) return false;
+
+    final staffList = List<StaffMember>.from(current.staff.isEmpty ? StaffGenerator.generateDefaultStaff() : current.staff);
+    final existingIdx = staffList.indexWhere((s) => s.role == newStaff.role);
+
+    if (existingIdx != -1) {
+      staffList[existingIdx] = newStaff;
+    } else {
+      staffList.add(newStaff);
+    }
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -newStaff.signingFee,
+      deltaBoardTrust: 3,
+      deltaFans: newStaff.role == StaffRole.brandSpecialist ? 5 : 0,
+    );
+
+    final updated = current.copyWith(
+      staff: staffList,
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      notificationLog: [
+        '🤝 Yeni Uzman İmzası: ${newStaff.name} (${newStaff.role.label}) göreve başladı!',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// En İyi 11'i Otomatik Belirle ve Diz
+  Future<void> autoSelectBest11() async {
+    final current = currentState;
+    if (current == null) return;
+
+    final best11Ids = current.userClub.calculateBest11Ids();
+    final allIds = current.userClub.squad.map((p) => p.id).toList();
+    final subs = allIds.where((id) => !best11Ids.contains(id)).toList();
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        starting11Ids: best11Ids,
+        substituteIds: subs,
+      ),
+      notificationLog: [
+        '⚡ Taktik Panosu: En yüksek OVR\'lı ilk 11 otomatik olarak sahaya dizildi.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// İlk 11 ile Yedek Oyuncuyu Takasla
+  Future<void> swapStartingAndBench(String startingPlayerId, String benchPlayerId) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final updatedClub = current.userClub.swapStartingAndBench(startingPlayerId, benchPlayerId);
+    final updated = current.copyWith(userClub: updatedClub);
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// U19 Genç Oyuncusunu A Takıma Yükselt
+  Future<bool> promoteU19Player(Player player) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final updatedU19 = current.userClub.u19Squad.where((p) => p.id != player.id).toList();
+    final promoted = player.copyWith(
+      morale: 95,
+      contractSeasonsLeft: 3,
+      weeklyWage: (player.weeklyWage * 1.5).round(),
+    );
+    final updatedSquad = [...current.userClub.squad, promoted];
+
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaFans: 3, deltaLockerRoom: 2);
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        squad: updatedSquad,
+        u19Squad: updatedU19,
+        meters: updatedMeters,
+      ),
+      notificationLog: [
+        '🌟 A Takıma Yükseltme: Genç yetenek ${player.fullName} (${player.position.code}) A Takım kadrosuna katıldı!',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Altyapı Akademisinden Yeni Genç Yetenek Keşfet / Scout Et
+  Future<bool> scoutNewYouthTalent() async {
+    final current = currentState;
+    if (current == null) return false;
+
+    const scoutCost = 3000;
+    if (current.userClub.meters.cash < scoutCost) return false;
+
+    final academyLevel = current.userClub.getFacilityLevel(FacilityType.youthAcademy);
+    final coachMultiplier = current.headCoach?.archetype.youthMultiplier ?? 1.0;
+
+    final youthPlayer = PlayerGenerator.generateYouthPlayer(
+      rng: _rng,
+      academyLevel: (academyLevel * coachMultiplier).round().clamp(1, 10),
+      seasonNumber: current.clock.seasonNumber,
+    );
+
+    final updatedU19 = [...current.userClub.u19Squad, youthPlayer];
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaCash: -scoutCost, deltaFans: 1);
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        u19Squad: updatedU19,
+        meters: updatedMeters,
+      ),
+      notificationLog: [
+        '🌱 Yeni Akademi Yeteneği: ${youthPlayer.fullName} (${youthPlayer.position.code} - POT: ${youthPlayer.potential}) altyapıya katıldı!',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Teknik Direktör RPG Sohbet Seçeneğini Uygula
+  Future<void> executeCoachDialogueChoice(CoachDialogueOption option) async {
+    final current = currentState;
+    if (current == null || current.headCoach == null) return;
+
+    final coach = current.headCoach!;
+    final updatedCoach = coach.copyWith(
+      reputation: (coach.reputation + option.coachOvrBonus).clamp(40, 99),
+      boardConfidence: (coach.boardConfidence + option.deltaBoardTrust).clamp(0, 100),
+    );
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: option.deltaCash,
+      deltaFans: option.deltaFans,
+      deltaLockerRoom: option.deltaLockerRoom,
+      deltaBoardTrust: option.deltaBoardTrust,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      headCoach: updatedCoach,
+      notificationLog: [
+        '👔 Teknik Direktör Görüşmesi: ${option.resultSummary}',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Başkanlık Özel Primi veya Lüks Hediye Verme
+  Future<bool> givePresidentialBonus(String playerId, int bonusAmount, bool isLuxuryGift) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final cost = isLuxuryGift ? 7500 : bonusAmount;
+    if (current.userClub.meters.cash < cost) return false;
+
+    final squad = current.userClub.squad;
+    final index = squad.indexWhere((p) => p.id == playerId);
+    if (index == -1) return false;
+
+    final targetPlayer = squad[index];
+    final updatedPlayer = targetPlayer.copyWith(
+      morale: (targetPlayer.morale + (isLuxuryGift ? 25 : 18)).clamp(0, 100),
+      loyalty: (targetPlayer.loyalty + (isLuxuryGift ? 15 : 10)).clamp(0, 100),
+      matchBonusOffered: isLuxuryGift ? targetPlayer.matchBonusOffered : bonusAmount,
+      hasLuxuryGift: isLuxuryGift ? true : targetPlayer.hasLuxuryGift,
+    );
+
+    final updatedSquad = List<Player>.from(squad);
+    updatedSquad[index] = updatedPlayer;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -cost,
+      deltaLockerRoom: isLuxuryGift ? -2 : 0, // Hafif kıskançlık riski
+    );
+
+    final actionLabel = isLuxuryGift
+        ? '🎁 Başkanlık Hediyesi: ${targetPlayer.fullName}\'e lüks hediye takdim edildi (+25 Moral, +15 Sadakat).'
+        : '💰 Özel Maç Primi: ${targetPlayer.fullName}\'e ₣$bonusAmount özel galibiyet primi vadedildi.';
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        squad: updatedSquad,
+        meters: updatedMeters,
+      ),
+      notificationLog: [
+        actionLabel,
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Oyuncuya Özel Sırt Numarası Atama
+  Future<void> assignJerseyNumber(String playerId, int newNumber) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final squad = current.userClub.squad;
+    final index = squad.indexWhere((p) => p.id == playerId);
+    if (index == -1) return;
+
+    final targetPlayer = squad[index];
+    final isIconicNumber = newNumber == 10 || newNumber == 7 || newNumber == 9;
+    final updatedPlayer = targetPlayer.copyWith(
+      jerseyNumber: newNumber,
+      morale: (targetPlayer.morale + (isIconicNumber ? 6 : 2)).clamp(0, 100),
+    );
+
+    final updatedSquad = List<Player>.from(squad);
+    updatedSquad[index] = updatedPlayer;
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(squad: updatedSquad),
+      notificationLog: [
+        '🎽 Sırt Numarası: ${targetPlayer.fullName} artık #$newNumber numaralı formayı giyecek.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Disiplinsizlik Sebebiyle Para Cezası Kesme
+  Future<bool> finePlayer(String playerId, int fineAmount) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final squad = current.userClub.squad;
+    final index = squad.indexWhere((p) => p.id == playerId);
+    if (index == -1) return false;
+
+    final targetPlayer = squad[index];
+    final updatedPlayer = targetPlayer.copyWith(
+      morale: (targetPlayer.morale - 12).clamp(10, 100),
+      disciplinaryFinesCount: targetPlayer.disciplinaryFinesCount + 1,
+    );
+
+    final updatedSquad = List<Player>.from(squad);
+    updatedSquad[index] = updatedPlayer;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: fineAmount,
+      deltaBoardTrust: 3, // Yönetim disiplini takdir eder
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        squad: updatedSquad,
+        meters: updatedMeters,
+      ),
+      notificationLog: [
+        '⚖️ Disiplin Cezası: ${targetPlayer.fullName}\'e ₣$fineAmount para cezası kesildi.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Sözleşme Maddelerini Güncelleme
+  Future<void> updateContractClauses(
+    String playerId, {
+    int? releaseClause,
+    int? loyaltyBonus,
+    int? goalBonus,
+    int? cleanSheetBonus,
+  }) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final squad = current.userClub.squad;
+    final index = squad.indexWhere((p) => p.id == playerId);
+    if (index == -1) return;
+
+    final targetPlayer = squad[index];
+    final updatedPlayer = targetPlayer.copyWith(
+      releaseClause: releaseClause ?? targetPlayer.releaseClause,
+      loyaltyBonus: loyaltyBonus ?? targetPlayer.loyaltyBonus,
+      goalBonus: goalBonus ?? targetPlayer.goalBonus,
+      cleanSheetBonus: cleanSheetBonus ?? targetPlayer.cleanSheetBonus,
+    );
+
+    final updatedSquad = List<Player>.from(squad);
+    updatedSquad[index] = updatedPlayer;
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(squad: updatedSquad),
+      notificationLog: [
+        '📝 Sözleşme Maddeleri: ${targetPlayer.fullName} için sözleşme maddeleri güncellendi.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Sözleşme Yenileme
+  Future<bool> renewContract(
+    String playerId, {
+    required int newWeeklyWage,
+    required int additionalSeasons,
+    int signingBonus = 0,
+  }) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    if (signingBonus > 0 && current.userClub.meters.cash < signingBonus) {
+      return false;
+    }
+
+    final squad = current.userClub.squad;
+    final index = squad.indexWhere((p) => p.id == playerId);
+    if (index == -1) return false;
+
+    final targetPlayer = squad[index];
+    final updatedPlayer = targetPlayer.copyWith(
+      weeklyWage: newWeeklyWage,
+      contractSeasonsLeft: targetPlayer.contractSeasonsLeft + additionalSeasons,
+      morale: (targetPlayer.morale + 15).clamp(0, 100),
+      loyalty: (targetPlayer.loyalty + 10).clamp(0, 100),
+    );
+
+    final updatedSquad = List<Player>.from(squad);
+    updatedSquad[index] = updatedPlayer;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -signingBonus,
+      deltaLockerRoom: 2,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        squad: updatedSquad,
+        meters: updatedMeters,
+      ),
+      notificationLog: [
+        '📝 Sözleşme Yenilendi: ${targetPlayer.fullName} ile +$additionalSeasons sezonluk yeni sözleşme imzalandı.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
   }
 
   /// Transfer İmzalama
@@ -280,6 +835,101 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
 
   /// Transfer Satın Alma (signPlayer alias)
   Future<bool> buyPlayer(Player player, int fee, int wage) => signPlayer(player, fee, wage);
+
+  /// Gelişmiş Transfer İmzası (Bonservis, Maaş, Maddeler, Takas Oyuncusu ve İmza Parası)
+  Future<bool> finalizeTransferWithClauses({
+    required Player targetPlayer,
+    required int fee,
+    required int wage,
+    required TransferOfferClauses clauses,
+  }) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final totalCashRequired = fee + clauses.signingBonus;
+    if (current.userClub.meters.cash < totalCashRequired) {
+      return false; // Yetersiz bakiye
+    }
+
+    var updatedSquad = List<Player>.from(current.userClub.squad);
+
+    // Eğer takas oyuncusu verilmişse kadrodan çıkar
+    if (clauses.swapPlayer != null) {
+      if (updatedSquad.length <= 11) return false;
+      updatedSquad.removeWhere((p) => p.id == clauses.swapPlayer!.id);
+    }
+
+    final newPlayer = targetPlayer.copyWith(
+      weeklyWage: wage,
+      contractSeasonsLeft: clauses.contractYears,
+      hasLuxuryGift: false,
+    );
+    updatedSquad.add(newPlayer);
+
+    final updatedMarket = current.transferMarket.where((p) => p.id != targetPlayer.id).toList();
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -totalCashRequired,
+      deltaFans: targetPlayer.ovr >= 80 ? 6 : 2,
+      deltaBoardTrust: targetPlayer.ovr >= 78 ? 3 : 1,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        squad: updatedSquad,
+        substituteIds: [...current.userClub.substituteIds, newPlayer.id],
+        meters: updatedMeters,
+      ),
+      transferMarket: updatedMarket,
+      notificationLog: [
+        '🎉 Anlaşma İmzalandı: ${newPlayer.fullName} (OVR: ${newPlayer.ovr}) kulübümüze katıldı! (Bonservis: ₣$fee, Maaş: ₣$wage/h)',
+        if (clauses.swapPlayer != null)
+          '🤝 Takas Ayrılığı: ${clauses.swapPlayer!.fullName} karşı kulübe transfer oldu.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Yıldız Transferi İmza Töreni ve Basın Lansmanı
+  Future<void> holdGrandSigningCeremony({
+    required Player player,
+    required bool isGrandStadiumShow,
+  }) async {
+    final current = currentState;
+    if (current == null) return;
+
+    if (isGrandStadiumShow) {
+      const cost = 8000;
+      if (current.userClub.meters.cash < cost) return;
+
+      final jerseyRevenue = (player.ovr * 320).clamp(15000, 45000);
+      final netCash = jerseyRevenue - cost;
+
+      final updatedMeters = current.userClub.meters.applyDeltas(
+        deltaCash: netCash,
+        deltaFans: 15,
+        deltaBoardTrust: 4,
+      );
+
+      final updated = current.copyWith(
+        userClub: current.userClub.copyWith(meters: updatedMeters),
+        manager: current.manager.copyWith(
+          dynastyPoints: current.manager.dynastyPoints + 25,
+        ),
+        notificationLog: [
+          '🏟️ Görkemli İmza Töreni: ${player.fullName} stadyumda binlerce taraftar önünde imza attı! Net Forma Geliri: +₣$netCash, Taraftar: +%15, +25 DP',
+          ...current.notificationLog,
+        ],
+      );
+
+      state = AsyncValue.data(updated);
+      await _saveRepository.save(updated);
+    }
+  }
 
   /// Oyuncu Satma / Transfer Listesinden Satış
   Future<bool> sellPlayer(Player player, int salePrice) async {
@@ -676,15 +1326,77 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     await _saveRepository.save(updated);
   }
 
-  /// Sponsorluk Sözleşmesi İmzala (3-Slot)
-  Future<void> signSponsorshipDeal({
-    required SponsorshipSlot slot,
-    required int weeklyIncome,
-    required int signingBonus,
-    required String brandName,
-  }) async {
+  /// Sponsorluk Sözleşmesi İmzala (3-Slot, Anti-Spam & Süreli RPG Sistemi)
+  Future<bool> signSponsorshipContract(SponsorshipContract contract) async {
     final current = currentState;
-    if (current == null) return;
+    if (current == null) return false;
+
+    // Eğer bu slotta zaten aktif bir sözleşme varsa spam ve çakışmayı engelle
+    final active = current.activeSponsorships[contract.slot];
+    if (active != null && !active.isExpired) {
+      return false; // Zaten aktif sözleşme var!
+    }
+
+    final updatedSponsorships = Map<SponsorshipSlot, SponsorshipContract>.from(current.activeSponsorships);
+    updatedSponsorships[contract.slot] = contract;
+
+    Club updatedClub = current.userClub;
+    int updatedSleeve = current.sleeveSponsorIncome;
+    int updatedStadiumNaming = current.stadiumNamingIncome;
+
+    switch (contract.slot) {
+      case SponsorshipSlot.mainShirt:
+        updatedClub = updatedClub.copyWith(sponsorWeeklyIncome: contract.weeklyIncome);
+        break;
+      case SponsorshipSlot.sleeve:
+        updatedSleeve = contract.weeklyIncome;
+        break;
+      case SponsorshipSlot.stadiumNaming:
+        updatedStadiumNaming = contract.weeklyIncome;
+        break;
+    }
+
+    // RPG Metre Etkileri: Perk ve Risk deltas
+    final totalFanDelta = contract.perk.fanDelta + contract.risk.fanDelta;
+    final totalTrustDelta = contract.perk.boardTrustDelta + contract.risk.boardTrustDelta;
+    final totalLockerDelta = contract.perk.lockerRoomDelta;
+
+    final updatedMeters = updatedClub.meters.applyDeltas(
+      deltaCash: contract.signingBonus,
+      deltaFans: totalFanDelta,
+      deltaBoardTrust: totalTrustDelta,
+      deltaLockerRoom: totalLockerDelta,
+    );
+
+    final updated = current.copyWith(
+      userClub: updatedClub.copyWith(meters: updatedMeters),
+      activeSponsorships: updatedSponsorships,
+      sleeveSponsorIncome: updatedSleeve,
+      stadiumNamingIncome: updatedStadiumNaming,
+      notificationLog: [
+        '✍️ Resmi Sponsorluk İmzalandı: ${contract.brandName} (+₣${contract.signingBonus} peşin, +₣${contract.weeklyIncome}/hf, ${contract.durationWeeks} Hafta)',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Mevcut Sponsorluğu Erken Feshet (Tazminatlı)
+  Future<bool> terminateSponsorshipContract(SponsorshipSlot slot) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final active = current.activeSponsorships[slot];
+    if (active == null) return false;
+
+    final penalty = active.risk.earlyTerminationPenalty;
+    if (current.userClub.meters.cash < penalty) return false; // Yetersiz bakiye
+
+    final updatedSponsorships = Map<SponsorshipSlot, SponsorshipContract>.from(current.activeSponsorships);
+    updatedSponsorships.remove(slot);
 
     Club updatedClub = current.userClub;
     int updatedSleeve = current.sleeveSponsorIncome;
@@ -692,30 +1404,58 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
 
     switch (slot) {
       case SponsorshipSlot.mainShirt:
-        updatedClub = updatedClub.copyWith(sponsorWeeklyIncome: weeklyIncome);
+        updatedClub = updatedClub.copyWith(sponsorWeeklyIncome: 0);
         break;
       case SponsorshipSlot.sleeve:
-        updatedSleeve = weeklyIncome;
+        updatedSleeve = 0;
         break;
       case SponsorshipSlot.stadiumNaming:
-        updatedStadiumNaming = weeklyIncome;
+        updatedStadiumNaming = 0;
         break;
     }
 
-    final updatedMeters = updatedClub.meters.applyDeltas(deltaCash: signingBonus, deltaFans: 3);
+    final updatedMeters = updatedClub.meters.applyDeltas(
+      deltaCash: -penalty,
+      deltaBoardTrust: -2,
+    );
 
     final updated = current.copyWith(
       userClub: updatedClub.copyWith(meters: updatedMeters),
+      activeSponsorships: updatedSponsorships,
       sleeveSponsorIncome: updatedSleeve,
       stadiumNamingIncome: updatedStadiumNaming,
       notificationLog: [
-        '✍️ Sponsorluk İmzalandı: $brandName (+₣$signingBonus peşin imza parası, +₣$weeklyIncome/hafta)',
+        '⚠️ Sponsorluk Feshedildi: ${active.brandName} ile sözleşme tek taraflı feshedildi (-₣$penalty tazminat ödendi).',
         ...current.notificationLog,
       ],
     );
 
     state = AsyncValue.data(updated);
     await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Eski Teklif İmzası (Geriye Dönük Uyumluluk)
+  Future<void> signSponsorshipDeal({
+    required SponsorshipSlot slot,
+    required int weeklyIncome,
+    required int signingBonus,
+    required String brandName,
+  }) async {
+    final contract = SponsorshipContract(
+      id: 'legacy_${slot.name}_${DateTime.now().millisecondsSinceEpoch}',
+      brandName: brandName,
+      brandIcon: '✍️',
+      sector: 'Kurumsal',
+      slot: slot,
+      weeklyIncome: weeklyIncome,
+      signingBonus: signingBonus,
+      durationWeeks: 10,
+      weeksRemaining: 10,
+      perk: const SponsorshipPerk(description: 'Standart kulüp sponsorluğu'),
+      risk: const SponsorshipRisk(description: 'Standart fesih şartları'),
+    );
+    await signSponsorshipContract(contract);
   }
 
   /// Banka Kredisi Paketi Çek

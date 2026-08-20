@@ -1,5 +1,5 @@
 // domain/entities/club.dart
-// Pure Dart. Club entity with squad, tactics, facilities, meters, and financial parameters.
+// Pure Dart. Club entity with squad, U19 squad, tactics, facilities, meters, and financial parameters.
 
 import 'facility.dart';
 import 'meter.dart';
@@ -18,6 +18,7 @@ class Club {
   final ClubMeters meters;
   final Map<FacilityType, Facility> facilities;
   final List<Player> squad;
+  final List<Player> u19Squad;
   final List<String> starting11Ids;
   final List<String> substituteIds;
 
@@ -40,6 +41,7 @@ class Club {
     this.meters = const ClubMeters(),
     this.facilities = const {},
     this.squad = const [],
+    this.u19Squad = const [],
     this.starting11Ids = const [],
     this.substituteIds = const [],
     this.formation = '4-3-3',
@@ -86,7 +88,9 @@ class Club {
 
   /// Toplam Haftalık Maaş Yükü
   int get totalWeeklyWages {
-    return squad.fold<int>(0, (sum, p) => sum + p.weeklyWage);
+    final seniorWages = squad.fold<int>(0, (sum, p) => sum + p.weeklyWage);
+    final u19Wages = u19Squad.fold<int>(0, (sum, p) => sum + p.weeklyWage);
+    return seniorWages + u19Wages;
   }
 
   /// Toplam Haftalık Tesis Bakım Masrafı
@@ -105,6 +109,110 @@ class Club {
     return facilities[type]?.level ?? 1;
   }
 
+  /// Otomatik En İyi 11'i Seç (Formasyona ve Mevki OVR'ına Göre)
+  List<String> calculateBest11Ids() {
+    if (squad.isEmpty) return [];
+
+    int reqGk = 1;
+    int reqDef = 4;
+    int reqMid = 3;
+    int reqFwd = 3;
+
+    switch (formation) {
+      case '4-4-2':
+        reqDef = 4;
+        reqMid = 4;
+        reqFwd = 2;
+        break;
+      case '3-5-2':
+        reqDef = 3;
+        reqMid = 5;
+        reqFwd = 2;
+        break;
+      case '4-2-3-1':
+        reqDef = 4;
+        reqMid = 5;
+        reqFwd = 1;
+        break;
+      case '5-3-2':
+        reqDef = 5;
+        reqMid = 3;
+        reqFwd = 2;
+        break;
+      case '4-3-3':
+      default:
+        reqDef = 4;
+        reqMid = 3;
+        reqFwd = 3;
+        break;
+    }
+
+    final available = List<Player>.from(squad.where((p) => !p.isInjured));
+    // OVR azalan sıraya göre sırala
+    available.sort((a, b) => b.ovr.compareTo(a.ovr));
+
+    final selected = <Player>[];
+
+    // 1. Kaleci seç
+    final gks = available.where((p) => p.position.isGoalkeeper).toList();
+    for (var i = 0; i < reqGk && i < gks.length; i++) {
+      selected.add(gks[i]);
+      available.remove(gks[i]);
+    }
+
+    // 2. Defansları seç
+    final defs = available.where((p) => p.position.isDefender).toList();
+    for (var i = 0; i < reqDef && i < defs.length; i++) {
+      selected.add(defs[i]);
+      available.remove(defs[i]);
+    }
+
+    // 3. Orta Sahaları seç
+    final mids = available.where((p) => p.position.isMidfielder).toList();
+    for (var i = 0; i < reqMid && i < mids.length; i++) {
+      selected.add(mids[i]);
+      available.remove(mids[i]);
+    }
+
+    // 4. Forvetleri seç
+    final fwds = available.where((p) => p.position.isForward).toList();
+    for (var i = 0; i < reqFwd && i < fwds.length; i++) {
+      selected.add(fwds[i]);
+      available.remove(fwds[i]);
+    }
+
+    // 5. Eksik kalan olursa en yüksek OVR'lı kalan oyunculardan tamamla
+    while (selected.length < 11 && available.isNotEmpty) {
+      selected.add(available.removeAt(0));
+    }
+
+    return selected.map((p) => p.id).toList();
+  }
+
+  /// İlk 11 ile Yedek Oyuncunun Yerini Değiştir
+  Club swapStartingAndBench(String startingId, String subId) {
+    final currentS11 = List<String>.from(starting11Ids.isEmpty ? starting11.map((p) => p.id) : starting11Ids);
+    final currentSubs = List<String>.from(substituteIds.isEmpty ? substitutes.map((p) => p.id) : substituteIds);
+
+    if (currentS11.contains(startingId)) {
+      final sIdx = currentS11.indexOf(startingId);
+      currentS11[sIdx] = subId;
+
+      if (currentSubs.contains(subId)) {
+        final bIdx = currentSubs.indexOf(subId);
+        currentSubs[bIdx] = startingId;
+      } else {
+        currentSubs.remove(subId);
+        currentSubs.add(startingId);
+      }
+    }
+
+    return copyWith(
+      starting11Ids: currentS11,
+      substituteIds: currentSubs,
+    );
+  }
+
   Club copyWith({
     String? id,
     String? name,
@@ -117,6 +225,7 @@ class Club {
     ClubMeters? meters,
     Map<FacilityType, Facility>? facilities,
     List<Player>? squad,
+    List<Player>? u19Squad,
     List<String>? starting11Ids,
     List<String>? substituteIds,
     String? formation,
@@ -137,6 +246,7 @@ class Club {
       meters: meters ?? this.meters,
       facilities: facilities ?? this.facilities,
       squad: squad ?? this.squad,
+      u19Squad: u19Squad ?? this.u19Squad,
       starting11Ids: starting11Ids ?? this.starting11Ids,
       substituteIds: substituteIds ?? this.substituteIds,
       formation: formation ?? this.formation,
@@ -159,6 +269,7 @@ class Club {
         'meters': meters.toJson(),
         'facilities': facilities.map((k, v) => MapEntry(k.name, v.toJson())),
         'squad': squad.map((p) => p.toJson()).toList(),
+        'u19Squad': u19Squad.map((p) => p.toJson()).toList(),
         'starting11Ids': starting11Ids,
         'substituteIds': substituteIds,
         'formation': formation,
@@ -195,6 +306,10 @@ class Club {
           : const ClubMeters(),
       facilities: facMap,
       squad: (json['squad'] as List<dynamic>?)
+              ?.map((p) => Player.fromJson(p as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      u19Squad: (json['u19Squad'] as List<dynamic>?)
               ?.map((p) => Player.fromJson(p as Map<String, dynamic>))
               .toList() ??
           const [],

@@ -11,9 +11,11 @@ import '../../domain/progression/coaching_license.dart';
 import '../../domain/progression/manager_skill_tree.dart';
 import '../widgets/career_share_dialog.dart';
 import '../widgets/meters_bar_widget.dart';
+import '../widgets/retro_pixel_icon.dart';
 import '../widgets/retro_window.dart';
 import 'affiliate_clubs_screen.dart';
 import 'head_coach_hiring_screen.dart';
+import 'staff_screen.dart';
 import 'trophy_room_screen.dart';
 
 class ManagerScreen extends StatefulWidget {
@@ -96,8 +98,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text('🤝', style: TextStyle(fontSize: 16)),
-                                  SizedBox(width: 6),
+                                  RetroPixelIcon(type: RetroPixelIconType.handshake, size: 16, color: AppColors.accentGold),
+                                  SizedBox(width: 8),
                                   Text('PİLOT TAKIM & UYDU KULÜP AĞI PROTOKOLLERİ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
                                 ],
                               ),
@@ -108,29 +110,138 @@ class _ManagerScreenState extends State<ManagerScreen> {
                           // 1. Menajer Profil Kartı & XP Barı
                           RetroWindow(
                             title: 'KULLANICI VE KARİYER KİMLİĞİ',
-                            icon: '👤',
+                            icon: 'user',
                             child: Column(
                               children: [
                                 _buildProfileCard(manager),
                                 const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: RetroButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (_) => const StaffScreen()),
+                                          );
+                                        },
+                                        backgroundColor: AppColors.win95TitleNavy,
+                                        textColor: Colors.white,
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(vertical: 4.0),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              RetroPixelIcon(type: RetroPixelIconType.suit, size: 15, color: Colors.white),
+                                              SizedBox(width: 6),
+                                              Text('TEKNİK EKİP (STAFF)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: RetroButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (_) => const HeadCoachHiringScreen()),
+                                          );
+                                        },
+                                        backgroundColor: AppColors.neonLime,
+                                        textColor: Colors.black,
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(vertical: 4.0),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              RetroPixelIcon(type: RetroPixelIconType.tacticsBoard, size: 15, color: Colors.black),
+                                              SizedBox(width: 6),
+                                              Text('HOCA TRANSFERİ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // 1.5. Kulüp Teknik Heyeti & Yardımcı Uzmanlar Paneli
+                          RetroWindow(
+                            title: 'KULÜP TEKNİK HEYETİ & ASİSTANLAR (${gameState.staff.length} UZMAN)',
+                            icon: '👔',
+                            titleBarColor: AppColors.win95TitleNavy,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'YARDIMCI KADROSU & UZMANLAR',
+                                      style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 10.5),
+                                    ),
+                                    Text(
+                                      '${gameState.staff.length} / 5 Aktif Kadro',
+                                      style: const TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 6,
+                                  children: gameState.staff.map((s) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black,
+                                        border: Border.all(color: AppColors.win95DarkGrey),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(s.role.icon, style: const TextStyle(fontSize: 12)),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            '${s.name} (Lv.${s.level})',
+                                            style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                                const SizedBox(height: 10),
                                 SizedBox(
                                   width: double.infinity,
                                   child: RetroButton(
                                     onPressed: () {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(builder: (_) => const HeadCoachHiringScreen()),
+                                        MaterialPageRoute(builder: (_) => const StaffScreen()),
                                       );
                                     },
-                                    backgroundColor: AppColors.neonLime,
+                                    backgroundColor: AppColors.accentGold,
                                     textColor: Colors.black,
-                                    child: const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text('👔', style: TextStyle(fontSize: 16)),
-                                        SizedBox(width: 6),
-                                        Text('TEKNİK DİREKTÖR İŞE ALIM & KOVMA MERKEZİ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5)),
-                                      ],
+                                    child: const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 4.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text('👔', style: TextStyle(fontSize: 16)),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'TEKNİK EKİP YÖNETİMİ & UZMAN GELİŞTİR (STAFF)',
+                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),

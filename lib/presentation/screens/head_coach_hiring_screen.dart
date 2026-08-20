@@ -9,6 +9,7 @@ import '../../application/providers/game_state_provider.dart';
 import '../../domain/president/head_coach.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
+import 'head_coach_dialogue_screen.dart';
 
 class HeadCoachHiringScreen extends ConsumerStatefulWidget {
   const HeadCoachHiringScreen({super.key});
@@ -217,6 +218,33 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
             }).toList(),
           ),
           const SizedBox(height: 12),
+
+          // Hocayla RPG Sohbet & Talimat Butonu
+          SizedBox(
+            width: double.infinity,
+            child: RetroButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HeadCoachDialogueScreen()),
+                );
+              },
+              backgroundColor: AppColors.neonLime,
+              textColor: Colors.black,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('💬', style: TextStyle(fontSize: 16)),
+                  SizedBox(width: 8),
+                  Text(
+                    'HOCA İLE BİREBİR SOHBET ET & TALİMAT VER (RPG)',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
 
           // Hocayı Kovma Butonu
           SizedBox(

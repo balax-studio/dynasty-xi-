@@ -11,6 +11,7 @@ import '../../domain/entities/game_state.dart';
 import '../../domain/entities/manager.dart';
 import '../../domain/entities/meter.dart';
 import '../../domain/entities/player.dart';
+import '../../domain/entities/staff.dart';
 import '../../domain/generation/club_generator.dart';
 import '../../domain/generation/player_generator.dart';
 import '../../domain/tournament/cup_tournament.dart';
@@ -86,6 +87,15 @@ class SaveRepository {
       return p;
     }).toList();
 
+    // Başlangıç U19 Genç Takımı (5 Genç Yetenek)
+    final u19Squad = <Player>[
+      PlayerGenerator.generateYouthPlayer(rng: rng, academyLevel: 1, seasonNumber: 1),
+      PlayerGenerator.generateYouthPlayer(rng: rng, academyLevel: 1, seasonNumber: 1),
+      PlayerGenerator.generateYouthPlayer(rng: rng, academyLevel: 1, seasonNumber: 1),
+      PlayerGenerator.generateYouthPlayer(rng: rng, academyLevel: 1, seasonNumber: 1),
+      PlayerGenerator.generateYouthPlayer(rng: rng, academyLevel: 1, seasonNumber: 1),
+    ];
+
     final starting11 = squadWithCaptain.take(11).map((p) => p.id).toList();
     final subs = squadWithCaptain.skip(11).map((p) => p.id).toList();
 
@@ -114,6 +124,7 @@ class SaveRepository {
       ),
       facilities: facMap,
       squad: squadWithCaptain,
+      u19Squad: u19Squad,
       starting11Ids: starting11,
       substituteIds: subs,
       formation: '4-3-3',
@@ -163,6 +174,7 @@ class SaveRepository {
       ftueStep: 0,
       targetLeaguePosition: 5,
       notificationLog: ['Dynasty XI kariyeriniz başladı. Hoş geldiniz hocam!'],
+      staff: StaffGenerator.generateDefaultStaff(),
       cupTournament: CupTournament.generateQuarterFinalTournament(
         userClub: userClub,
         opponents: league.standings

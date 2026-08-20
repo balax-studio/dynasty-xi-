@@ -1,10 +1,8 @@
-// presentation/widgets/meters_bar_widget.dart
-// Retro Windows 95 / Y2K Status Bar with Segmented LED Gauges.
-
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../domain/entities/meter.dart';
+import 'retro_pixel_icon.dart';
 
 class MetersBarWidget extends StatelessWidget {
   final ClubMeters meters;
@@ -37,7 +35,7 @@ class MetersBarWidget extends StatelessWidget {
                   'KASA',
                   '₣${_formatNumber(meters.cash)}',
                   meters.isCashDebt ? AppColors.signalRed : AppColors.neonLime,
-                  '💰',
+                  RetroPixelIconType.cash,
                 ),
               ),
               const SizedBox(width: 6),
@@ -48,7 +46,7 @@ class MetersBarWidget extends StatelessWidget {
                 child: _buildMeterPanel(
                   'FAN',
                   meters.fans,
-                  '📢',
+                  RetroPixelIconType.megaphone,
                   meters.isFansCritical,
                 ),
               ),
@@ -60,7 +58,7 @@ class MetersBarWidget extends StatelessWidget {
                 child: _buildMeterPanel(
                   'MORAL',
                   meters.lockerRoom,
-                  '👕',
+                  RetroPixelIconType.shirt,
                   meters.isLockerRoomCritical,
                 ),
               ),
@@ -72,7 +70,7 @@ class MetersBarWidget extends StatelessWidget {
                 child: _buildMeterPanel(
                   'GÜVEN',
                   meters.boardTrust,
-                  '🏛️',
+                  RetroPixelIconType.capitol,
                   meters.isBoardCritical,
                   warning: meters.isBoardWarning,
                 ),
@@ -105,7 +103,7 @@ class MetersBarWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCashPanel(String label, String value, Color color, String icon) {
+  Widget _buildCashPanel(String label, String value, Color color, RetroPixelIconType iconType) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: const BoxDecoration(
@@ -119,8 +117,13 @@ class MetersBarWidget extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 13)),
-          const SizedBox(width: 4),
+          RetroPixelIcon(
+            type: iconType,
+            size: 14,
+            color: color,
+            secondaryColor: Colors.black,
+          ),
+          const SizedBox(width: 5),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,7 +149,7 @@ class MetersBarWidget extends StatelessWidget {
   Widget _buildMeterPanel(
     String label,
     int value,
-    String icon,
+    RetroPixelIconType iconType,
     bool isCritical, {
     bool warning = false,
   }) {
@@ -173,9 +176,21 @@ class MetersBarWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$icon $label',
-                style: AppTypography.label(color: AppColors.neutral300).copyWith(fontSize: 9),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RetroPixelIcon(
+                    type: iconType,
+                    size: 11,
+                    color: activeColor,
+                    secondaryColor: Colors.black,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    label,
+                    style: AppTypography.label(color: AppColors.neutral300).copyWith(fontSize: 9),
+                  ),
+                ],
               ),
               Text(
                 '%$value',

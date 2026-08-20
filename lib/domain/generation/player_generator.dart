@@ -48,6 +48,18 @@ class PlayerGenerator {
     final personality = rng.pick(PersonalityType.values);
     final weeklyWage = (math.pow(1.35, (center - 40) / 4.2) * 1000 * 0.0038).round().clamp(100, 150000);
 
+    final defaultJersey = position == Position.gk
+        ? 1
+        : (position == Position.st
+            ? 9
+            : (position == Position.am
+                ? 10
+                : (position == Position.lw || position == Position.rw ? 7 : rng.nextIntInRange(2, 35))));
+
+    final faction = playerAge <= 19
+        ? LockerRoomFaction.academyYouth
+        : (rng.nextDoubleInRange(0.0, 1.0) < 0.15 ? LockerRoomFaction.loneWolf : LockerRoomFaction.domesticCore);
+
     return Player(
       id: playerId,
       firstName: firstName,
@@ -70,6 +82,8 @@ class PlayerGenerator {
       contractSeasonsLeft: rng.nextIntInRange(1, 4),
       releaseClause: (weeklyWage * 85),
       faceSeed: 'face_${rng.nextInt(99999)}',
+      jerseyNumber: defaultJersey,
+      faction: faction,
     );
   }
 

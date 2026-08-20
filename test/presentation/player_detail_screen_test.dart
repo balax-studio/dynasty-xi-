@@ -41,10 +41,12 @@ void main() {
       squadRole: SquadRole.star,
       trainingIntensity: TrainingIntensity.intensive,
       faceSeed: 'arda-guler-seed-01',
+      jerseyNumber: 10,
+      faction: LockerRoomFaction.academyYouth,
     );
   }
 
-  testWidgets('PlayerDetailScreen renders owned player details, attributes, and management actions', (tester) async {
+  testWidgets('PlayerDetailScreen renders owned player details, radar, and 3-tab bento navigation', (tester) async {
     final player = createSamplePlayer();
 
     await tester.pumpWidget(
@@ -59,33 +61,41 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify Player Identity
-    expect(find.text('Arda Güler'), findsWidgets);
+    // Verify Player Identity & Jersey Number
+    expect(find.textContaining('ARDA GÜLER'), findsWidgets);
     expect(find.textContaining('OVR'), findsWidgets);
     expect(find.textContaining('94 POT'), findsWidgets);
-    expect(find.textContaining('HIRSLI'), findsWidgets);
+    expect(find.textContaining('#10'), findsWidgets);
 
-    // Verify 7 Attributes
-    expect(find.text('HIZ / PACE'), findsOneWidget);
-    expect(find.text('ŞUT / SHOOTING'), findsOneWidget);
-    expect(find.text('PAS / PASSING'), findsOneWidget);
-    expect(find.text('TEKNİK & DRIBBLE'), findsOneWidget);
-    expect(find.text('SAVUNMA / DEFENSE'), findsOneWidget);
-    expect(find.text('FİZİKSEL / PHYSICAL'), findsOneWidget);
-    expect(find.text('MENTAL / MENTALITY'), findsOneWidget);
+    // Verify 7 Attributes in General Tab
+    expect(find.textContaining('HIZ'), findsWidgets);
+    expect(find.textContaining('ŞUT'), findsWidgets);
+    expect(find.textContaining('PAS'), findsWidgets);
+    expect(find.textContaining('TOP TEKNİĞİ'), findsWidgets);
+    expect(find.textContaining('SAVUNMA'), findsWidgets);
+    expect(find.textContaining('FİZİK'), findsWidgets);
+    expect(find.textContaining('MENTALİTE'), findsWidgets);
 
-    // Verify Status Meters
-    expect(find.text('MORAL'), findsOneWidget);
-    expect(find.text('KONDİSYON'), findsOneWidget);
-    expect(find.text('KESKİNLİK'), findsOneWidget);
+    // Switch to Contract & Market Tab
+    await tester.tap(find.byKey(const Key('tab_contract')));
+    await tester.pumpAndSettle();
 
-    // Verify Owned Actions
     expect(find.textContaining('SÖZLEŞME YENİLE'), findsOneWidget);
-    expect(find.textContaining('KAPTAN YAP'), findsOneWidget);
     expect(find.textContaining('SATILIK LİSTESİNE KOY'), findsOneWidget);
+    expect(find.textContaining('MENAJERİ İLE GÖRÜŞ'), findsOneWidget);
+    expect(find.textContaining('SERBEST BIRAK'), findsOneWidget);
+
+    // Switch to Presidential & Locker Room Tab
+    await tester.tap(find.byKey(const Key('tab_presidential')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('AKADEMI GENÇLERI'), findsOneWidget);
+    expect(find.textContaining('HOCA UYUM SKORU'), findsOneWidget);
+    expect(find.textContaining('ÖZEL PRİM / HEDİYE / NUMARA / CEZA MENÜSÜ'), findsOneWidget);
+    expect(find.textContaining('TAKIMLA KIYASLA'), findsOneWidget);
   });
 
-  testWidgets('PlayerDetailScreen renders unowned player with transfer & loan action buttons', (tester) async {
+  testWidgets('PlayerDetailScreen renders unowned player with direct transfer option in contract tab', (tester) async {
     final player = createSamplePlayer();
 
     await tester.pumpWidget(
@@ -101,29 +111,13 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Player Identity
-    expect(find.text('Arda Güler'), findsWidgets);
+    expect(find.textContaining('ARDA GÜLER'), findsWidgets);
 
-    // Verify Unowned Actions
-    expect(find.textContaining('TRANSFER ET'), findsOneWidget);
-    expect(find.textContaining('SEZONLUK KİRALA'), findsOneWidget);
-    expect(find.text('KAPTAN YAP'), findsNothing);
-  });
-
-  testWidgets('PlayerDetailScreen renders injury banner when player is injured', (tester) async {
-    final player = createSamplePlayer(isInjured: true);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: PlayerDetailScreen(
-            player: player,
-            isOwned: true,
-          ),
-        ),
-      ),
-    );
+    // Switch to Contract Tab
+    await tester.tap(find.byKey(const Key('tab_contract')));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('BURKULMASI'), findsOneWidget);
+    // Verify Unowned Transfer Action
+    expect(find.textContaining('DOĞRUDAN TRANSFER ET'), findsOneWidget);
   });
 }

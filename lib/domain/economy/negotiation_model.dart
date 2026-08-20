@@ -1,5 +1,5 @@
 // domain/economy/negotiation_model.dart
-// Pure Dart. Interactive transfer & contract negotiation engine with patience meters and clauses.
+// Pure Dart. Interactive transfer & contract negotiation engine with patience meters, clauses, swap players, and agent kickbacks.
 
 import 'dart:math' as math;
 import '../entities/player.dart';
@@ -9,6 +9,47 @@ enum NegotiationOutcome {
   counterOffered,
   rejected,
   walkedAway,
+}
+
+class TransferOfferClauses {
+  final int sellOnPercentage; // 0, 10, 20, 30%
+  final int championshipBonus; // e.g. 15000
+  final int goalBonus; // e.g. 5000
+  final Player? swapPlayer; // Kadrodan takas verilen oyuncu
+  final int contractYears; // 1 - 5 yıl
+  final int signingBonus; // İmza parası
+
+  const TransferOfferClauses({
+    this.sellOnPercentage = 0,
+    this.championshipBonus = 0,
+    this.goalBonus = 0,
+    this.swapPlayer,
+    this.contractYears = 3,
+    this.signingBonus = 0,
+  });
+
+  int get swapPlayerValue => swapPlayer?.marketValue ?? 0;
+
+  Map<String, dynamic> toJson() => {
+        'sellOnPercentage': sellOnPercentage,
+        'championshipBonus': championshipBonus,
+        'goalBonus': goalBonus,
+        'swapPlayer': swapPlayer?.toJson(),
+        'contractYears': contractYears,
+        'signingBonus': signingBonus,
+      };
+
+  factory TransferOfferClauses.fromJson(Map<String, dynamic> json) =>
+      TransferOfferClauses(
+        sellOnPercentage: json['sellOnPercentage'] as int? ?? 0,
+        championshipBonus: json['championshipBonus'] as int? ?? 0,
+        goalBonus: json['goalBonus'] as int? ?? 0,
+        swapPlayer: json['swapPlayer'] != null
+            ? Player.fromJson(json['swapPlayer'] as Map<String, dynamic>)
+            : null,
+        contractYears: json['contractYears'] as int? ?? 3,
+        signingBonus: json['signingBonus'] as int? ?? 0,
+      );
 }
 
 class NegotiationState {
@@ -21,6 +62,8 @@ class NegotiationState {
   final int lastOfferedWage;
   final NegotiationOutcome outcome;
   final String statusMessage;
+  final TransferOfferClauses clauses;
+  final bool hasPaidAgentKickback;
 
   const NegotiationState({
     required this.targetPlayer,
@@ -32,6 +75,8 @@ class NegotiationState {
     this.lastOfferedWage = 0,
     this.outcome = NegotiationOutcome.counterOffered,
     this.statusMessage = 'Görüşmeler başladı. Karşı taraf teklifinizi bekliyor.',
+    this.clauses = const TransferOfferClauses(),
+    this.hasPaidAgentKickback = false,
   });
 
   bool get isCompleted =>
@@ -58,37 +103,69 @@ class NegotiationState {
       lastOfferedFee: (baseFee * 0.85).round(),
       lastOfferedWage: baseWage,
       outcome: NegotiationOutcome.counterOffered,
+      clauses: const TransferOfferClauses(),
     );
   }
 
-  /// Teklif Sunma ve Yanıt Hesaplama — Ek C.7
+  /// Menajere Gizli Komisyon & Rüşvet Verme Mekaniği
+  NegotiationState applyAgentKickback(int kickbackAmount) {
+    if (hasPaidAgentKickback) return this;
+    final restoredPatience = (currentPatience + 30).clamp(0, 100);
+    final discountedWage = (askingWage * 0.82).round();
+
+    return copyWith(
+      currentPatience: restoredPatience,
+      askingWage: discountedWage,
+      hasPaidAgentKickback: true,
+      statusMessage:
+          '🍷 Menajere ₣$kickbackAmount gizli komisyon ödendi! Menajer oyuncuyu ikna etti, maaş beklentisi kırıldı ve sabır tazelendi (%$restoredPatience).',
+    );
+  }
+
+  /// Teklif Sunma ve Yanıt Hesaplama — Ek C.7 ve Gelişmiş Maddeler
   NegotiationState submitOffer({
     required int offeredFee,
     required int offeredWage,
     bool includeSellOnClause = false,
+    TransferOfferClauses? clauses,
   }) {
-    final feeRatio = offeredFee / math.max(1, askingFee);
-    final wageRatio = offeredWage / math.max(1, askingWage);
-    final averageRatio = (feeRatio * 0.6 + wageRatio * 0.4);
+    final activeClauses = clauses ??
+        (includeSellOnClause
+            ? const TransferOfferClauses(sellOnPercentage: 20)
+            : this.clauses);
 
-    // Clause bonusu
-    final clauseBonus = includeSellOnClause ? 0.08 : 0.0;
+    final effectiveOfferedFee = offeredFee + activeClauses.swapPlayerValue;
+    final feeRatio = effectiveOfferedFee / math.max(1, askingFee);
+    final wageRatio = offeredWage / math.max(1, askingWage);
+    final averageRatio = (feeRatio * 0.55 + wageRatio * 0.45);
+
+    // Clause bonusları
+    double clauseBonus = 0.0;
+    if (activeClauses.sellOnPercentage > 0) {
+      clauseBonus += (activeClauses.sellOnPercentage / 100.0) * 0.20;
+    }
+    if (activeClauses.championshipBonus > 0) clauseBonus += 0.05;
+    if (activeClauses.goalBonus > 0) clauseBonus += 0.04;
+    if (activeClauses.signingBonus > 0) clauseBonus += 0.06;
+    if (activeClauses.swapPlayer != null) clauseBonus += 0.05;
+
     final totalRatio = averageRatio + clauseBonus;
 
     // Kabul Olasılığı: clamp((teklif/istenen)^2.4, 0.02, 0.97)
     final acceptChance = math.pow(totalRatio, 2.4).toDouble().clamp(0.02, 0.97);
 
-    // Sabır Düşüşü: (1 - teklif/istenen) * 45
-    final patienceLoss = math.max(5, ((1.0 - totalRatio) * 45).round());
+    // Sabır Düşüşü: (1 - teklif/istenen) * 40
+    final patienceLoss = math.max(4, ((1.0 - math.min(1.0, totalRatio)) * 40).round());
     final nextPatience = math.max(0, currentPatience - patienceLoss);
 
-    if (totalRatio >= 0.98 || acceptChance > 0.85) {
+    if (totalRatio >= 0.95 || acceptChance > 0.82) {
       return copyWith(
         lastOfferedFee: offeredFee,
         lastOfferedWage: offeredWage,
         roundsPassed: roundsPassed + 1,
+        clauses: activeClauses,
         outcome: NegotiationOutcome.accepted,
-        statusMessage: 'Anlaşma sağlandı! Kulüp ve oyuncu şartları kabul etti.',
+        statusMessage: '🎉 Anlaşma sağlandı! Kulüp ve futbolcu tüm transfer maddelerini onayladı.',
       );
     }
 
@@ -98,19 +175,20 @@ class NegotiationState {
         lastOfferedWage: offeredWage,
         currentPatience: 0,
         roundsPassed: roundsPassed + 1,
+        clauses: activeClauses,
         outcome: NegotiationOutcome.walkedAway,
-        statusMessage: 'Karşı taraf masadan kalktı! Teklifleriniz ciddiyetsiz bulundu.',
+        statusMessage: '🚪 Karşı taraf masadan kalktı! Teklifleriniz ciddiyetsiz bulundu ve görüşmeler çöktü.',
       );
     }
 
     // Karşı Teklif Üretimi
     final newAskingFee = math.max(
       offeredFee,
-      (askingFee - (askingFee - offeredFee) * 0.40).round(),
+      (askingFee - (askingFee - effectiveOfferedFee) * 0.38).round(),
     );
     final newAskingWage = math.max(
       offeredWage,
-      (askingWage - (askingWage - offeredWage) * 0.35).round(),
+      (askingWage - (askingWage - offeredWage) * 0.32).round(),
     );
 
     return copyWith(
@@ -120,9 +198,10 @@ class NegotiationState {
       lastOfferedWage: offeredWage,
       currentPatience: nextPatience,
       roundsPassed: roundsPassed + 1,
+      clauses: activeClauses,
       outcome: NegotiationOutcome.counterOffered,
       statusMessage:
-          'Karşı taraf yeni bir teklifle döndü. Sabır: %$nextPatience. İstek: ₣${newAskingFee.toString()} bonservis, ₣${newAskingWage.toString()} maaş.',
+          '💬 Karşı taraf yeni bir teklifle döndü. Sabır: %$nextPatience. İstek: ₣${newAskingFee.toString()} bonservis, ₣${newAskingWage.toString()} maaş.',
     );
   }
 
@@ -136,6 +215,8 @@ class NegotiationState {
     int? lastOfferedWage,
     NegotiationOutcome? outcome,
     String? statusMessage,
+    TransferOfferClauses? clauses,
+    bool? hasPaidAgentKickback,
   }) {
     return NegotiationState(
       targetPlayer: targetPlayer ?? this.targetPlayer,
@@ -147,6 +228,8 @@ class NegotiationState {
       lastOfferedWage: lastOfferedWage ?? this.lastOfferedWage,
       outcome: outcome ?? this.outcome,
       statusMessage: statusMessage ?? this.statusMessage,
+      clauses: clauses ?? this.clauses,
+      hasPaidAgentKickback: hasPaidAgentKickback ?? this.hasPaidAgentKickback,
     );
   }
 }
