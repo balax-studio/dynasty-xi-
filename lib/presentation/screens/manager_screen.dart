@@ -1,0 +1,340 @@
+// presentation/screens/manager_screen.dart
+// Manager RPG progression, Level 1-30 XP curve, 5-Branch Skill Tree, and UEFA Coaching Licenses (§13, §14).
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_typography.dart';
+import '../../application/providers/game_state_provider.dart';
+import '../../domain/entities/manager.dart';
+import '../../domain/progression/coaching_license.dart';
+import '../../domain/progression/manager_skill_tree.dart';
+import 'trophy_room_screen.dart';
+import '../widgets/meters_bar_widget.dart';
+import '../widgets/retro_window.dart';
+
+class ManagerScreen extends StatefulWidget {
+  const ManagerScreen({super.key});
+
+  @override
+  State<ManagerScreen> createState() => _ManagerScreenState();
+}
+
+class _ManagerScreenState extends State<ManagerScreen> {
+  late ManagerSkillTree _skillTree;
+  CoachingLicense _currentLicense = CoachingLicense.uefaC;
+
+  @override
+  void initState() {
+    super.initState();
+    _skillTree = ManagerSkillTree.createInitialTree();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (ctx, ref, _) {
+        final stateAsync = ref.watch(gameStateProvider);
+
+        return stateAsync.when(
+          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+          error: (e, _) => Scaffold(body: Center(child: Text('Hata: $e'))),
+          data: (gameState) {
+            final manager = gameState.manager;
+
+            return Scaffold(
+              backgroundColor: AppColors.primaryDeep,
+              appBar: AppBar(
+                backgroundColor: AppColors.win95TitleNavy,
+                title: Text('MENAJER PROFİLİ & RPG YETENEK MATRİSİ', style: AppTypography.h2(color: Colors.white)),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.emoji_events, color: AppColors.accentGold),
+                    tooltip: 'Kupa Odası & Kulüp Müzesi',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TrophyRoomScreen()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              body: Column(
+                children: [
+                  MetersBarWidget(meters: gameState.userClub.meters),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 1. Menajer Profil Kartı & XP Barı
+                          RetroWindow(
+                            title: 'KULLANICI VE KARİYER KİMLİĞİ',
+                            icon: '👤',
+                            child: _buildProfileCard(manager),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // 2. UEFA Antrenörlük Lisansı Modülü (§13.2)
+                          RetroWindow(
+                            title: 'UEFA ANTRENÖRLÜK LİSANSI & AKREDİTASYON',
+                            icon: '📜',
+                            titleBarColor: const Color(0xFF6E5000),
+                            child: Row(
+                              children: [
+                                Text(_currentLicense.badge, style: const TextStyle(fontSize: 32)),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(_currentLicense.title, style: AppTypography.label(color: AppColors.accentGold).copyWith(fontSize: 12)),
+                                      Text(
+                                        'Tüm Yetenek Çarpanı: +%${((_currentLicense.allPerkMultiplier - 1.0) * 100).round()} • İtibar Desteği',
+                                        style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 10),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (_currentLicense != CoachingLicense.uefaPro)
+                                  RetroButton(
+                                    onPressed: () {
+                                      _showLicenseUpgradeDialog(context, ref, manager, gameState.userClub.meters.cash);
+                                    },
+                                    backgroundColor: AppColors.accentGold,
+                                    textColor: Colors.black,
+                                    child: const Text('KURS BAŞLAT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // 3. 5-Branş Yetenek Ağacı
+                          RetroWindow(
+                            title: 'RPG YETENEK AĞACI (5 ANA BRANŞ - 25 PERK)',
+                            icon: '⚡',
+                            titleBarColor: AppColors.win95TitleNavy,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('KULLANILABİLİR YETENEK PUANI:', style: AppTypography.label(color: Colors.white).copyWith(fontSize: 11)),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      color: Colors.black,
+                                      child: Text(
+                                        'PUAN: ${manager.availableSkillPoints}',
+                                        style: AppTypography.label(
+                                          color: manager.availableSkillPoints > 0
+                                              ? AppColors.neonLime
+                                              : AppColors.win95DarkGrey,
+                                        ).copyWith(fontSize: 11),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+
+                                ..._skillTree.branches.map((branch) {
+                                  return _buildBranchSection(context, ref, branch, manager);
+                                }),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildBranchSection(BuildContext context, WidgetRef ref, SkillBranch branch, Manager manager) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141A24),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(branch.type.icon, style: const TextStyle(fontSize: 16)),
+              const SizedBox(width: 6),
+              Text(branch.name.toUpperCase(), style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 11)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Column(
+            children: branch.skills.map((skill) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: skill.isUnlocked ? const Color(0xFF003311) : Colors.black45,
+                  border: Border.all(color: skill.isUnlocked ? AppColors.neonLime : Colors.white12),
+                ),
+                child: Row(
+                  children: [
+                    Text(skill.icon, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(skill.name, style: AppTypography.label(color: skill.isUnlocked ? AppColors.neonLime : Colors.white).copyWith(fontSize: 11)),
+                          Text(skill.description, style: const TextStyle(color: Colors.white70, fontSize: 9)),
+                        ],
+                      ),
+                    ),
+                    if (!skill.isUnlocked)
+                      RetroButton(
+                        onPressed: manager.availableSkillPoints >= skill.costPoints
+                            ? () {
+                                setState(() {
+                                  _skillTree = _skillTree.unlockSkill(
+                                    branchType: branch.type,
+                                    skillId: skill.id,
+                                    availablePoints: manager.availableSkillPoints,
+                                  );
+                                });
+                                ref.read(gameStateProvider.notifier).spendSkillPoint(skill.id);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('⚡ "${skill.name}" yeteneği başarıyla açıldı!')),
+                                );
+                              }
+                            : null,
+                        backgroundColor: manager.availableSkillPoints >= skill.costPoints ? AppColors.neonCyan : Colors.grey,
+                        textColor: Colors.black,
+                        child: Text('${skill.costPoints} TP', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        color: Colors.black,
+                        child: const Text('AÇIK', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 9)),
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLicenseUpgradeDialog(BuildContext context, WidgetRef ref, Manager manager, int cash) {
+    final nextLicense = _currentLicense == CoachingLicense.uefaC
+        ? CoachingLicense.uefaB
+        : (_currentLicense == CoachingLicense.uefaB ? CoachingLicense.uefaA : CoachingLicense.uefaPro);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF141A24),
+        title: Text('UEFA LİSANS KURSU', style: AppTypography.h2(color: AppColors.accentGold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Hedef: ${nextLicense.title}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 6),
+            Text('Gereken Menajer Seviyesi: Sv.${nextLicense.requiredManagerLevel} (Mevcut: Sv.${manager.level})', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+            Text('Kurs Harcı: ₣${nextLicense.courseCost} (Kasa: ₣$cash)', style: const TextStyle(color: AppColors.neonLime, fontSize: 11)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('VAZGEÇ', style: TextStyle(color: Colors.white54)),
+          ),
+          RetroButton(
+            onPressed: (manager.level >= nextLicense.requiredManagerLevel && cash >= nextLicense.courseCost)
+                ? () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _currentLicense = nextLicense;
+                    });
+                    ref.read(gameStateProvider.notifier).claimSponsorReward(-nextLicense.courseCost);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('🎉 Tebrikler! ${nextLicense.title} başarıyla alındı!')),
+                    );
+                  }
+                : null,
+            backgroundColor: AppColors.accentGold,
+            textColor: Colors.black,
+            child: const Text('ÖDE VE BAŞLA'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileCard(Manager manager) {
+    final progress = manager.levelProgress;
+    final nextLvlXp = manager.xpRequiredForNextLevel;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                border: Border.all(color: AppColors.neonLime, width: 2),
+              ),
+              alignment: Alignment.center,
+              child: const Text('👔', style: TextStyle(fontSize: 28)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(manager.name.toUpperCase(), style: AppTypography.h2(color: Colors.white).copyWith(fontSize: 16)),
+                  const SizedBox(height: 2),
+                  Text(
+                    'SEVİYE ${manager.level} TEKNİK DİREKTÖR • ${_currentLicense.badge}',
+                    style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('XP GELİŞİMİ:', style: AppTypography.label(color: Colors.white70).copyWith(fontSize: 10)),
+            Text('${manager.currentXp} / $nextLvlXp XP', style: AppTypography.monoNumber(color: AppColors.neonLime).copyWith(fontSize: 10)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        LinearProgressIndicator(
+          value: progress.clamp(0.0, 1.0),
+          backgroundColor: Colors.black,
+          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.neonLime),
+          minHeight: 8,
+        ),
+      ],
+    );
+  }
+}
