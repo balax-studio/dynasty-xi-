@@ -105,24 +105,27 @@ class FacilitiesScreen extends ConsumerWidget {
     final remainingMinutes = (remainingSeconds / 60).ceil();
     final tierInfo = FacilityTiersData.getTierInfo(fac.type, fac.level);
 
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => FacilityDetailScreen(facilityType: fac.type),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => FacilityDetailScreen(facilityType: fac.type),
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: AppColors.comicBoxDecoration(
+            backgroundColor: const Color(0xFF141A24),
+            borderColor: isUpgrading ? AppColors.neonAmber : Colors.black,
+            shadowColor: isUpgrading ? AppColors.neonAmber : AppColors.neonLime,
+            borderWidth: 2.0,
           ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: AppColors.comicBoxDecoration(
-          backgroundColor: const Color(0xFF141A24),
-          borderColor: isUpgrading ? AppColors.neonAmber : Colors.black,
-          shadowColor: isUpgrading ? AppColors.neonAmber : AppColors.neonLime,
-          borderWidth: 2.0,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
           child: Column(
             children: [
               Row(
@@ -254,6 +257,7 @@ class FacilitiesScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

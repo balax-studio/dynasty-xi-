@@ -347,6 +347,26 @@ class OfficeScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 6),
+                            RetroButton(
+                              isNeon: true,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const FacilitiesScreen()),
+                                );
+                              },
+                              backgroundColor: AppColors.neonLime,
+                              textColor: Colors.black,
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('🏟️', style: TextStyle(fontSize: 18)),
+                                  SizedBox(width: 6),
+                                  Text('12 KULÜP TESİSİ & GELİŞTİRME PLANI →', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
