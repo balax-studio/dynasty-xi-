@@ -1,8 +1,7 @@
 // domain/tournament/continental_cup.dart
 // European Continental Championship Cup for Top League Finishers (§14.5)
 
-import '../entities/club.dart';
-import '../../core/rng/deterministic_rng.dart';
+
 
 class ContinentalMatch {
   final String id;
@@ -135,7 +134,7 @@ class ContinentalCup {
         awayCountry: europeanGiants[4]['country']!,
         awayBadge: europeanGiants[4]['badge']!,
       ),
-      ContinentalMatch(
+      const ContinentalMatch(
         id: 'cont_final',
         stage: 'Büyük Final',
         homeClubName: 'Finalist 1',

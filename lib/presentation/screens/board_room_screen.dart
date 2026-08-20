@@ -9,6 +9,8 @@ import '../../application/providers/game_state_provider.dart';
 import '../../domain/economy/financial_statement.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
+import 'board_faction_screen.dart';
+import 'boardroom_summit_screen.dart';
 
 class BoardRoomScreen extends ConsumerWidget {
   const BoardRoomScreen({super.key});
@@ -51,6 +53,53 @@ class BoardRoomScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // 0. Başkanlık Zirvesi & Sermaye Artırımı Hızlı Erişim Butonu
+                      SizedBox(
+                        width: double.infinity,
+                        child: RetroButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const BoardroomSummitScreen()),
+                            );
+                          },
+                          backgroundColor: AppColors.accentGold,
+                          textColor: Colors.black,
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('🏛️', style: TextStyle(fontSize: 16)),
+                              SizedBox(width: 6),
+                              Text('BAŞKANLIK ZİRVESİ & SERMAYE ARTIRIMI (ÖZEL TOPLANTI)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // 0.5. Yönetim İçi Hizipler & Kulis Odası Butonu
+                      SizedBox(
+                        width: double.infinity,
+                        child: RetroButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const BoardFactionScreen()),
+                            );
+                          },
+                          backgroundColor: AppColors.win95Grey,
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('👔', style: TextStyle(fontSize: 16)),
+                              SizedBox(width: 6),
+                              Text('YÖNETİM İÇİ HİZİPLER & KULİS ODASI (ERKEN SEÇİM / OY ORANLARI)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: AppColors.win95TitleNavy)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
                       // 1. Yönetim Kurulu Güven İndeksi & Kovulma Riski (§12.8)
                       RetroWindow(
                         title: 'BAŞKANLIK GÜVEN & İSTİKRAR İNDEKSİ',
@@ -270,7 +319,7 @@ class BoardRoomScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFF141A24),
+        color: AppColors.neoInnerBg,
         border: Border.all(color: Colors.white24),
       ),
       child: Row(
@@ -432,7 +481,7 @@ class BoardRoomScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFF141A24),
+        color: AppColors.neoInnerBg,
         border: Border.all(color: Colors.white24),
       ),
       child: Column(

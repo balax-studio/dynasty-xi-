@@ -3,7 +3,6 @@
 
 import 'dart:math';
 import '../entities/club.dart';
-import '../sim/match_engine.dart';
 import '../../core/rng/deterministic_rng.dart';
 
 enum CupRound {
@@ -136,7 +135,6 @@ class CupTournament {
     required List<Club> opponents,
     int seed = 42,
   }) {
-    final rng = DeterministicRng(seed);
     final participants = <Club>[userClub, ...opponents.take(7)];
     while (participants.length < 8) {
       participants.add(Club(
@@ -300,7 +298,11 @@ class PlayOffMatch {
     int s3 = rng.nextInt(4);
     int s4 = rng.nextInt(4);
     if (s3 == s4) {
-      if (rng.nextInt(2) == 1) s3 += 1; else s4 += 1;
+      if (rng.nextInt(2) == 1) {
+        s3 += 1;
+      } else {
+        s4 += 1;
+      }
     }
     final winnerId = s3 > s4 ? team3rd.id : team4th.id;
     return PlayOffMatch(

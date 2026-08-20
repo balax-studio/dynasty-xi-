@@ -6,7 +6,6 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../domain/entities/game_state.dart';
 import 'face_avatar_widget.dart';
-import 'retro_button.dart';
 import 'retro_window.dart';
 
 class CareerShareDialog extends StatelessWidget {

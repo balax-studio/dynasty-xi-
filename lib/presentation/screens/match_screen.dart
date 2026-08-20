@@ -14,11 +14,8 @@ import '../../domain/sim/match_engine.dart';
 import '../../domain/sim/match_events.dart';
 import '../../domain/media/press_conference.dart';
 import '../../domain/media/fan_social_buzz.dart';
-import '../../domain/tactics/opposition_scout.dart';
-import '../../domain/match/match_depth_models.dart';
-import '../widgets/opposition_report_dialog.dart';
-import '../widgets/match_reward_dialog.dart';
 import '../widgets/pitch_painter.dart';
+import '../widgets/ref_tunnel_confrontation_dialog.dart';
 
 class MatchScreen extends ConsumerStatefulWidget {
   final bool isLiveMode;
@@ -407,6 +404,23 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                         scrollDirection: Axis.horizontal,
                         child: Row(
                           children: [
+                            ActionChip(
+                              backgroundColor: AppColors.neoInnerBg,
+                              side: const BorderSide(color: AppColors.comicRed, width: 1.5),
+                              label: const Text('⚡ HAKEM ODASI BASKINI', style: TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold)),
+                              onPressed: () {
+                                RefTunnelConfrontationDialog.show(context, (outcome) {
+                                  setState(() {
+                                    visibleEvents.add(MatchEvent(
+                                      minute: currentMinute,
+                                      type: MatchEventType.yellowCard,
+                                      description: '🚨 BAŞKAN KORİDORDA: ${outcome.title}! ${outcome.narrative}',
+                                    ));
+                                  });
+                                });
+                              },
+                            ),
+                            const SizedBox(width: 6),
                             ActionChip(
                               backgroundColor: AppColors.neoInnerBg,
                               side: const BorderSide(color: AppColors.accentGold, width: 1.5),
@@ -837,7 +851,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF141A24),
+                  color: AppColors.neoInnerBg,
                   border: Border.all(color: AppColors.neonCyan),
                   borderRadius: BorderRadius.circular(8),
                 ),

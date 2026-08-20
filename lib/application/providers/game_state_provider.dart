@@ -19,7 +19,9 @@ import '../../domain/progression/daily_quest.dart';
 import '../../domain/progression/dynasty_prestige.dart';
 import '../../domain/progression/season_transition.dart';
 import '../../domain/sim/match_engine.dart';
-import '../../domain/tournament/cup_tournament.dart';
+import '../../domain/rpg/player_dialogue_engine.dart';
+import '../../domain/president/head_coach.dart';
+import '../../domain/president/boardroom_summit.dart';
 
 final saveRepositoryProvider = Provider<SaveRepository>((ref) => SaveRepository());
 
@@ -279,37 +281,6 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
   /// Transfer Satın Alma (signPlayer alias)
   Future<bool> buyPlayer(Player player, int fee, int wage) => signPlayer(player, fee, wage);
 
-  /// Kadro İçi Oyuncu Değiştirme (İlk 11 <-> Yedek)
-  Future<void> swapPlayers(String outPlayerId, String inPlayerId) async {
-    final current = currentState;
-    if (current == null) return;
-
-    final starting = List<String>.from(current.userClub.starting11Ids);
-    final subs = List<String>.from(current.userClub.substituteIds);
-
-    if (starting.contains(outPlayerId)) {
-      starting.remove(outPlayerId);
-      starting.add(inPlayerId);
-      subs.remove(inPlayerId);
-      subs.add(outPlayerId);
-    } else if (starting.contains(inPlayerId)) {
-      starting.remove(inPlayerId);
-      starting.add(outPlayerId);
-      subs.remove(outPlayerId);
-      subs.add(inPlayerId);
-    }
-
-    final updated = current.copyWith(
-      userClub: current.userClub.copyWith(
-        starting11Ids: starting,
-        substituteIds: subs,
-      ),
-    );
-
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-  }
-
   /// Oyuncu Satma / Transfer Listesinden Satış
   Future<bool> sellPlayer(Player player, int salePrice) async {
     final current = currentState;
@@ -415,36 +386,6 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     return true;
   }
 
-  /// Sözleşme Yenileme
-  Future<bool> renewContract(Player player, int newWeeklyWage) async {
-    final current = currentState;
-    if (current == null) return false;
-
-    final updatedSquad = current.userClub.squad.map((p) {
-      if (p.id == player.id) {
-        return p.copyWith(
-          weeklyWage: newWeeklyWage,
-          contractSeasonsLeft: 3,
-          morale: (p.morale + 20).clamp(0, 100),
-          loyalty: (p.loyalty + 15).clamp(0, 100),
-        );
-      }
-      return p;
-    }).toList();
-
-    final updated = current.copyWith(
-      userClub: current.userClub.copyWith(squad: updatedSquad),
-      notificationLog: [
-        'Sözleşme Yenilendi: ${player.fullName} ile 3 yıllık yeni imza atıldı (₣$newWeeklyWage/hafta).',
-        ...current.notificationLog,
-      ],
-    );
-
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-    return true;
-  }
-
   /// Antrenman Yoğunluğu Ata (§9.6)
   Future<void> setPlayerTraining(String playerId, TrainingIntensity intensity) async {
     final current = currentState;
@@ -516,6 +457,141 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     await _saveRepository.save(updated);
   }
 
+  /// Transfer Listesine Koy / Çıkar
+  Future<void> toggleTransferList(String playerId) async {
+    final current = currentState;
+    if (current == null) return;
+
+    String pName = '';
+    bool newListedStatus = false;
+    final updatedSquad = current.userClub.squad.map((p) {
+      if (p.id == playerId) {
+        pName = p.fullName;
+        newListedStatus = !p.isTransferListed;
+        return p.copyWith(isTransferListed: newListedStatus);
+      }
+      return p;
+    }).toList();
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(squad: updatedSquad),
+      notificationLog: [
+        newListedStatus
+            ? '🏷️ $pName transfer listesine konuldu.'
+            : '🏷️ $pName transfer listesinden çıkarıldı.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// RPG Oyuncu Diyalog & Görüşme Sonucunu Uygula
+  Future<void> applyPlayerDialogueResult({
+    required String playerId,
+    required DialogueResult result,
+    required bool isOwned,
+    Player? unownedPlayer,
+  }) async {
+    final current = currentState;
+    if (current == null) return;
+
+    if (isOwned) {
+      String pName = '';
+      final updatedSquad = current.userClub.squad.map((p) {
+        if (p.id == playerId) {
+          pName = p.fullName;
+          int newPace = p.pace;
+          int newTech = p.technique;
+          int newShoot = p.shooting;
+          int newPass = p.passing;
+          int newDef = p.defending;
+          int newPhy = p.physical;
+          int newMen = p.mentality;
+
+          if (result.statBoostAttribute != null && result.statBoostAmount > 0) {
+            switch (result.statBoostAttribute) {
+              case 'PAC':
+                newPace = (p.pace + result.statBoostAmount).clamp(1, 99);
+                break;
+              case 'TEC':
+                newTech = (p.technique + result.statBoostAmount).clamp(1, 99);
+                break;
+              case 'SHO':
+                newShoot = (p.shooting + result.statBoostAmount).clamp(1, 99);
+                break;
+              case 'PAS':
+                newPass = (p.passing + result.statBoostAmount).clamp(1, 99);
+                break;
+              case 'DEF':
+                newDef = (p.defending + result.statBoostAmount).clamp(1, 99);
+                break;
+              case 'PHY':
+                newPhy = (p.physical + result.statBoostAmount).clamp(1, 99);
+                break;
+              case 'MEN':
+                newMen = (p.mentality + result.statBoostAmount).clamp(1, 99);
+                break;
+            }
+          }
+
+          return p.copyWith(
+            morale: (p.morale + result.deltaMorale).clamp(0, 100),
+            loyalty: (p.loyalty + result.deltaLoyalty).clamp(0, 100),
+            form: (p.form + result.deltaForm).clamp(1.0, 10.0),
+            sharpness: (p.sharpness + result.deltaSharpness).clamp(0, 100),
+            fitness: (p.fitness + result.deltaFitness).clamp(0, 100),
+            pace: newPace,
+            technique: newTech,
+            shooting: newShoot,
+            passing: newPass,
+            defending: newDef,
+            physical: newPhy,
+            mentality: newMen,
+          );
+        }
+        return p;
+      }).toList();
+
+      final updatedMeters = current.userClub.meters.applyDeltas(
+        deltaCash: result.deltaCash,
+        deltaLockerRoom: result.deltaLockerRoom,
+      );
+
+      final updated = current.copyWith(
+        userClub: current.userClub.copyWith(
+          squad: updatedSquad,
+          meters: updatedMeters,
+        ),
+        notificationLog: [
+          '🗣️ $pName ile özel görüşme yapıldı: ${result.summaryDeltas.join(", ")}',
+          ...current.notificationLog,
+        ],
+      );
+
+      state = AsyncValue.data(updated);
+      await _saveRepository.save(updated);
+    } else {
+      final name = unownedPlayer?.fullName ?? 'Hedef Oyuncu';
+      final updatedMeters = current.userClub.meters.applyDeltas(
+        deltaCash: result.deltaCash,
+        deltaLockerRoom: result.deltaLockerRoom,
+      );
+
+      final updated = current.copyWith(
+        userClub: current.userClub.copyWith(meters: updatedMeters),
+        notificationLog: [
+          '🗣️ $name ile transfer mülakatı: ${result.summaryDeltas.join(", ")}',
+          ...current.notificationLog,
+        ],
+      );
+
+      state = AsyncValue.data(updated);
+      await _saveRepository.save(updated);
+    }
+  }
+
   /// Günlük Görev Ödülü Topla (§17.3)
   Future<bool> claimDailyQuest(String questId) async {
     final current = currentState;
@@ -555,35 +631,17 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
   }
 
   /// Banka Kredisi Çek (§A.7)
-  Future<bool> takeBankLoan(int principalAmount) async {
-    final current = currentState;
-    if (current == null || current.activeLoan != null) return false;
-
-    final newLoan = BankLoan(
-      principalAmount: principalAmount,
-      interestRate: 0.10,
-      totalWeeks: 8,
-      remainingWeeks: 8,
-    );
-
-    final updatedMeters = current.userClub.meters.applyDeltas(
-      deltaCash: principalAmount,
-      deltaBoardTrust: -3,
-    );
-
-    final updated = current.copyWith(
-      userClub: current.userClub.copyWith(meters: updatedMeters),
-      activeLoan: newLoan,
-      notificationLog: [
-        '🏦 Banka Kredisi Onaylandı: Kasaya +₣$principalAmount aktarıldı (Haftalık ödeme: ₣${newLoan.weeklyPayment}).',
-        ...current.notificationLog,
-      ],
-    );
-
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-    return true;
-  }
+  Future<bool> takeBankLoan(int principalAmount) => takeBankLoanPackage(
+        BankLoanPackage(
+          id: 'board_loan_$principalAmount',
+          name: 'Banka Kredisi',
+          principalAmount: principalAmount,
+          interestRate: 0.10,
+          totalWeeks: 8,
+          icon: '🏦',
+          description: 'Yönetim Kurulu Kredisi',
+        ),
+      );
 
   /// Sponsor Gelirlerini Güncelle (§15.2)
   Future<void> updateSponsors({int? sleeve, int? stadiumNaming}) async {
@@ -597,6 +655,302 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
 
     state = AsyncValue.data(updated);
     await _saveRepository.save(updated);
+  }
+
+  /// Bilet Fiyatı Ayarla (§15.1)
+  Future<void> setTicketPrice(int price) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final updatedClub = current.userClub.copyWith(ticketPrice: price);
+    final updated = current.copyWith(
+      userClub: updatedClub,
+      ticketPrice: price,
+      notificationLog: [
+        '🎟️ Bilet Fiyatı Güncellendi: Maç başı ₣$price olarak belirlendi.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Sponsorluk Sözleşmesi İmzala (3-Slot)
+  Future<void> signSponsorshipDeal({
+    required SponsorshipSlot slot,
+    required int weeklyIncome,
+    required int signingBonus,
+    required String brandName,
+  }) async {
+    final current = currentState;
+    if (current == null) return;
+
+    Club updatedClub = current.userClub;
+    int updatedSleeve = current.sleeveSponsorIncome;
+    int updatedStadiumNaming = current.stadiumNamingIncome;
+
+    switch (slot) {
+      case SponsorshipSlot.mainShirt:
+        updatedClub = updatedClub.copyWith(sponsorWeeklyIncome: weeklyIncome);
+        break;
+      case SponsorshipSlot.sleeve:
+        updatedSleeve = weeklyIncome;
+        break;
+      case SponsorshipSlot.stadiumNaming:
+        updatedStadiumNaming = weeklyIncome;
+        break;
+    }
+
+    final updatedMeters = updatedClub.meters.applyDeltas(deltaCash: signingBonus, deltaFans: 3);
+
+    final updated = current.copyWith(
+      userClub: updatedClub.copyWith(meters: updatedMeters),
+      sleeveSponsorIncome: updatedSleeve,
+      stadiumNamingIncome: updatedStadiumNaming,
+      notificationLog: [
+        '✍️ Sponsorluk İmzalandı: $brandName (+₣$signingBonus peşin imza parası, +₣$weeklyIncome/hafta)',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Banka Kredisi Paketi Çek
+  Future<bool> takeBankLoanPackage(BankLoanPackage package) async {
+    final current = currentState;
+    if (current == null || current.activeLoan != null) return false;
+
+    final newLoan = BankLoan(
+      principalAmount: package.principalAmount,
+      interestRate: package.interestRate,
+      totalWeeks: package.totalWeeks,
+      remainingWeeks: package.totalWeeks,
+    );
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: package.principalAmount,
+      deltaBoardTrust: -2,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      activeLoan: newLoan,
+      notificationLog: [
+        '🏦 ${package.name} Onaylandı: Kasaya +₣${package.principalAmount} aktarıldı (Haftalık ödeme: ₣${newLoan.weeklyPayment}).',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Banka Kredisini Erken Kapat (İndirimli)
+  Future<bool> repayBankLoanEarly() async {
+    final current = currentState;
+    if (current == null || current.activeLoan == null) return false;
+
+    final loan = current.activeLoan!;
+    final cost = loan.earlyRepaymentDiscountedAmount;
+
+    if (current.userClub.meters.cash < cost) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -cost,
+      deltaBoardTrust: 4,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      activeLoan: null,
+      notificationLog: [
+        '🎉 Banka Kredisi Erken Kapatıldı! ₣$cost ödendi ve kulüp tüm faiz yükümlülüğünden kurtuldu.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Hazine Vadeli Mevduat Hesabına Para Yatır
+  Future<bool> depositToTreasury(int amount) async {
+    final current = currentState;
+    if (current == null || amount <= 0) return false;
+    if (current.userClub.meters.cash < amount) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaCash: -amount);
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      treasuryDeposit: current.treasuryDeposit + amount,
+      notificationLog: [
+        '📈 Kulüp Hazinesine ₣$amount vadeli mevduat yatırıldı (Haftalık %2.5 bileşik faiz).',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Hazine Vadeli Mevduat Hesabından Para Çek
+  Future<bool> withdrawFromTreasury(int amount) async {
+    final current = currentState;
+    if (current == null || amount <= 0) return false;
+    if (current.treasuryDeposit < amount) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaCash: amount);
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      treasuryDeposit: current.treasuryDeposit - amount,
+      notificationLog: [
+        '📉 Kulüp Hazinesinden ₣$amount nakit çekilerek kulüp kasasına aktarıldı.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Yeni Teknik Direktör İşe Al (§15.4)
+  Future<bool> hireHeadCoach(HeadCoach coach) async {
+    final current = currentState;
+    if (current == null) return false;
+    if (current.userClub.meters.cash < coach.signingFee) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -coach.signingFee,
+      deltaBoardTrust: 4,
+      deltaFans: coach.archetype.fanBoost,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      headCoach: coach,
+      notificationLog: [
+        '👔 Yeni Teknik Direktör Göreve Getirildi: ${coach.fullName} (${coach.archetype.label})',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Teknik Direktörü Görevden Al / Kov (§15.4)
+  Future<bool> fireHeadCoach() async {
+    final current = currentState;
+    if (current == null || current.headCoach == null) return false;
+
+    final coach = current.headCoach!;
+    final severance = coach.severancePay;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -severance,
+      deltaBoardTrust: -3,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      clearHeadCoach: true,
+      notificationLog: [
+        '🚨 Teknik Direktör ${coach.fullName} Görevden Alındı (₣$severance fesih tazminatı ödendi).',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Teknik Direktöre Kulüp Vizyonu Dikte Et
+  Future<void> dictateCoachVision(CoachVision vision) async {
+    final current = currentState;
+    if (current == null || current.headCoach == null) return;
+
+    final updatedCoach = current.headCoach!.copyWith(activeVision: vision);
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaFans: vision.deltaFans);
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      headCoach: updatedCoach,
+      notificationLog: [
+        '📋 Teknik Direktöre Yeni Kulüp Vizyonu Dikte Edildi: ${vision.label}',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Başkanlık Sermaye Enjeksiyonu / Şahsi Hibe (§15.5)
+  Future<bool> injectPresidentCapital(CapitalInjectionOption option) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: option.cashAmount,
+      deltaBoardTrust: option.boardTrustBonus,
+      deltaFans: option.fanBonus,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      notificationLog: [
+        '🏛️ Başkanlık Sermaye Enjeksiyonu: Kasaya +₣${option.cashAmount} aktarıldı (${option.title}).',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// VIP Loca Kiralama Satışı (§15.5)
+  Future<bool> sellVipBox(String boxId) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    VipBoxDeal? soldBox;
+    final updatedBoxes = current.vipBoxDeals.map((b) {
+      if (b.id == boxId && !b.isSold) {
+        soldBox = b.copyWith(isSold: true);
+        return soldBox!;
+      }
+      return b;
+    }).toList();
+
+    if (soldBox == null) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: soldBox!.seasonPrice,
+      deltaBoardTrust: 3,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      vipBoxDeals: updatedBoxes,
+      notificationLog: [
+        '🥂 VIP Protokol Locası Kiralandı: ${soldBox!.companyName} (+₣${soldBox!.seasonPrice} peşin gelir).',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
   }
 
   /// Birikmiş Çevrimdışı Geliri Kasaya Aktar (§17.3 D1)
@@ -712,24 +1066,6 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     }
   }
 
-  /// Stadyum Bilet Fiyatı Güncelleme
-  Future<void> updateTicketPrice(int newPrice) async {
-    final current = currentState;
-    if (current == null) return;
-
-    final clampedPrice = newPrice.clamp(5, 50);
-    final updated = current.copyWith(
-      userClub: current.userClub.copyWith(ticketPrice: clampedPrice),
-      notificationLog: [
-        'Stadyum Bilet Fiyatı Güncellendi: ₣$clampedPrice',
-        ...current.notificationLog,
-      ],
-    );
-
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-  }
-
   /// Taktik ve Kadro Dizilişi Değiştirme
   Future<void> updateTactics({
     String? formation,
@@ -746,40 +1082,6 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         tacticalStyle: style,
         starting11Ids: starting11Ids,
         substituteIds: substituteIds,
-      ),
-    );
-
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-  }
-
-  /// Kadroda İlk 11 ile Yedek Oyuncuyu Değiştirme
-  Future<void> swapLineupPlayers({
-    required String inPlayerId,
-    required String outPlayerId,
-  }) async {
-    final current = currentState;
-    if (current == null) return;
-
-    final currentStarting = List<String>.from(current.userClub.starting11Ids);
-    final currentSubs = List<String>.from(current.userClub.substituteIds);
-
-    if (currentStarting.contains(outPlayerId) && currentSubs.contains(inPlayerId)) {
-      currentStarting.remove(outPlayerId);
-      currentStarting.add(inPlayerId);
-      currentSubs.remove(inPlayerId);
-      currentSubs.add(outPlayerId);
-    } else if (currentSubs.contains(outPlayerId) && currentStarting.contains(inPlayerId)) {
-      currentSubs.remove(outPlayerId);
-      currentSubs.add(inPlayerId);
-      currentStarting.remove(inPlayerId);
-      currentStarting.add(outPlayerId);
-    }
-
-    final updated = current.copyWith(
-      userClub: current.userClub.copyWith(
-        starting11Ids: currentStarting,
-        substituteIds: currentSubs,
       ),
     );
 
@@ -829,39 +1131,6 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       notificationLog: [
         'Yönetim Kurulu Kararı: Kasaya ek ₣$amount bütçe aktarıldı. (Yönetim Güveni -12)',
-        ...current.notificationLog,
-      ],
-    );
-
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-    return true;
-  }
-
-  /// Yeni Teknik Direktör İşe Alma (Başkan Eylemi)
-  Future<bool> hireHeadCoach({
-    required String coachName,
-    required String tacticalStyle,
-    required String formation,
-    required int weeklySalary,
-  }) async {
-    final current = currentState;
-    if (current == null) return false;
-
-    final updatedClub = current.userClub.copyWith(
-      formation: formation,
-      tacticalStyle: tacticalStyle,
-    );
-
-    final updatedMeters = current.userClub.meters.applyDeltas(
-      deltaLockerRoom: 8,
-      deltaBoardTrust: 5,
-    );
-
-    final updated = current.copyWith(
-      userClub: updatedClub.copyWith(meters: updatedMeters),
-      notificationLog: [
-        'Yeni Teknik Direktör: $coachName göreve başladı ($formation - $tacticalStyle).',
         ...current.notificationLog,
       ],
     );
@@ -962,23 +1231,6 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     await checkFacilityUpgrades();
   }
 
-  /// Menajer Yetenek Ağacı Kilidi Açma
-  Future<bool> unlockPerk(String perkId) async {
-    final current = currentState;
-    if (current == null) return false;
-    if (current.manager.availableSkillPoints <= 0) return false;
-    if (current.manager.hasPerk(perkId)) return false;
-
-    final updatedManager = current.manager.copyWith(
-      unlockedPerkIds: [...current.manager.unlockedPerkIds, perkId],
-    );
-
-    final updated = current.copyWith(manager: updatedManager);
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-    return true;
-  }
-
   /// FTUE Adımını İlerletme
   Future<void> advanceFtue() async {
     final current = currentState;
@@ -1029,7 +1281,6 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     if (match.isPlayed) return;
 
     final isHome = match.homeClubId == current.userClub.id;
-    final oppName = isHome ? match.awayClubName : match.homeClubName;
 
     // Simulate cup match with random determinism
     final userGoals = 1 + _rng.nextInt(3);
@@ -1118,89 +1369,12 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     await _saveRepository.save(updated);
   }
 
-  /// Bilet Fiyatı Ayarlama
-  Future<void> setTicketPrice(int price) async {
-    final current = currentState;
-    if (current == null) return;
-
-    final updated = current.copyWith(
-      ticketPrice: price,
-      userClub: current.userClub.copyWith(ticketPrice: price),
-    );
-
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-  }
-
   /// Galibiyet Primi Ayarlama
   Future<void> setWinBonus(int bonus) async {
     final current = currentState;
     if (current == null) return;
 
     final updated = current.copyWith(winBonusPerMatch: bonus);
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-  }
-
-  /// Oyuncu Antrenman Yoğunluğunu Değiştirme
-  Future<void> setTrainingIntensity(String playerId, TrainingIntensity intensity) async {
-    final current = currentState;
-    if (current == null) return;
-
-    final updatedSquad = current.userClub.squad.map((p) {
-      if (p.id == playerId) {
-        return p.copyWith(trainingIntensity: intensity);
-      }
-      return p;
-    }).toList();
-
-    final updated = current.copyWith(
-      userClub: current.userClub.copyWith(squad: updatedSquad),
-    );
-
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-  }
-
-  /// Oyuncuya Kadro Rolü Vaat Etme
-  Future<void> setPromisedRole(String playerId, SquadRole role) async {
-    final current = currentState;
-    if (current == null) return;
-
-    final updatedSquad = current.userClub.squad.map((p) {
-      if (p.id == playerId) {
-        return p.copyWith(squadRole: role);
-      }
-      return p;
-    }).toList();
-
-    final updated = current.copyWith(
-      userClub: current.userClub.copyWith(squad: updatedSquad),
-    );
-
-    state = AsyncValue.data(updated);
-    await _saveRepository.save(updated);
-  }
-
-  /// Takım Kaptanını Değiştirme
-  Future<void> setClubCaptain(String playerId) async {
-    final current = currentState;
-    if (current == null) return;
-
-    final updatedSquad = current.userClub.squad.map((p) {
-      return p.copyWith(isCaptain: p.id == playerId);
-    }).toList();
-
-    final captain = updatedSquad.firstWhere((p) => p.id == playerId, orElse: () => updatedSquad.first);
-
-    final updated = current.copyWith(
-      userClub: current.userClub.copyWith(squad: updatedSquad),
-      notificationLog: [
-        'Yeni Kaptan: ${captain.fullName} takım kaptanı olarak atandı.',
-        ...current.notificationLog,
-      ],
-    );
-
     state = AsyncValue.data(updated);
     await _saveRepository.save(updated);
   }
@@ -1322,7 +1496,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       secondaryColorHex: '#F59E0B',
       leagueTier: 20,
       isUserClub: true,
-      meters: ClubMeters(
+      meters: const ClubMeters(
         cash: 15000,
         fans: 35,
         lockerRoom: 45,
@@ -1364,6 +1538,51 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       ],
     );
 
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Metre Değerlerini Doğrudan Ayarlama (Başkanlık RPG Eylemleri)
+  Future<void> adjustCash(int delta) async {
+    final current = currentState;
+    if (current == null) return;
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaCash: delta);
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+    );
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  Future<void> adjustFans(int delta) async {
+    final current = currentState;
+    if (current == null) return;
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaFans: delta);
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+    );
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  Future<void> adjustLockerRoom(int delta) async {
+    final current = currentState;
+    if (current == null) return;
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaLockerRoom: delta);
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+    );
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  Future<void> adjustBoardTrust(int delta) async {
+    final current = currentState;
+    if (current == null) return;
+    final updatedMeters = current.userClub.meters.applyDeltas(deltaBoardTrust: delta);
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+    );
     state = AsyncValue.data(updated);
     await _saveRepository.save(updated);
   }

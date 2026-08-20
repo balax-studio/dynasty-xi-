@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../domain/tactics/opposition_scout.dart';
-import 'retro_button.dart';
 import 'retro_window.dart';
 
 class OppositionReportDialog extends StatelessWidget {

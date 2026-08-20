@@ -12,6 +12,8 @@ import '../../domain/progression/manager_skill_tree.dart';
 import '../widgets/career_share_dialog.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
+import 'affiliate_clubs_screen.dart';
+import 'head_coach_hiring_screen.dart';
 import 'trophy_room_screen.dart';
 
 class ManagerScreen extends StatefulWidget {
@@ -80,11 +82,60 @@ class _ManagerScreenState extends State<ManagerScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 0. Pilot Takım Ağ Protokolleri Butonu
+                          SizedBox(
+                            width: double.infinity,
+                            child: RetroButton(
+                              backgroundColor: AppColors.win95TitleNavy,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const AffiliateClubsScreen()),
+                                );
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('🤝', style: TextStyle(fontSize: 16)),
+                                  SizedBox(width: 6),
+                                  Text('PİLOT TAKIM & UYDU KULÜP AĞI PROTOKOLLERİ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
                           // 1. Menajer Profil Kartı & XP Barı
                           RetroWindow(
                             title: 'KULLANICI VE KARİYER KİMLİĞİ',
                             icon: '👤',
-                            child: _buildProfileCard(manager),
+                            child: Column(
+                              children: [
+                                _buildProfileCard(manager),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: RetroButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const HeadCoachHiringScreen()),
+                                      );
+                                    },
+                                    backgroundColor: AppColors.neonLime,
+                                    textColor: Colors.black,
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text('👔', style: TextStyle(fontSize: 16)),
+                                        SizedBox(width: 6),
+                                        Text('TEKNİK DİREKTÖR İŞE ALIM & KOVMA MERKEZİ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 10),
 
@@ -175,7 +226,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFF141A24),
+        color: AppColors.neoInnerBg,
         border: Border.all(color: Colors.white24),
       ),
       child: Column(
@@ -256,7 +307,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF141A24),
+        backgroundColor: AppColors.neoCardBg,
         title: Text('UEFA LİSANS KURSU', style: AppTypography.h2(color: AppColors.accentGold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,

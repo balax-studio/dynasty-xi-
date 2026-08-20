@@ -17,17 +17,19 @@ class PlayerNaturalSummary {
     // Role & Personality
     if (player.personality == PersonalityType.leader) {
       sentences.add('Soyunma odasının doğal lideri ve gençlerin akıl hocası.');
-    } else if (player.personality == PersonalityType.ego) {
-      sentences.add('Yüksek yetenekli ancak ilgi ve ilk 11 garantisi bekliyor.');
+    } else if (player.personality == PersonalityType.ambitious) {
+      sentences.add('Yüksek yetenekli ancak sürekli başarı ve ilk 11 garantisi bekliyor.');
     } else if (player.personality == PersonalityType.rebel) {
       sentences.add('Taktik disiplinsizliğe meyilli; sert uyarılara tepki verebilir.');
     } else if (player.personality == PersonalityType.loyal) {
       sentences.add('Kulübe son derece bağlı, transfer tekliflerini geri çeviriyor.');
+    } else if (player.personality == PersonalityType.mercenary) {
+      sentences.add('Maaş ve prim beklentisi yüksek, kazancı düştüğünde morali bozuluyor.');
     }
 
     // Fitness & Injury
     if (player.isInjured) {
-      sentences.add('Şu an ${player.injuryDetail?.type.title ?? "sakatlık"} sebebiyle tedavi altında.');
+      sentences.add('Şu an ${player.injuryType ?? "sakatlık"} sebebiyle tedavi altında (${player.injuryMatchesLeft} maç).');
     } else if (player.fitness < 60) {
       sentences.add('Fiziksel olarak yorgun; rotasyonda dinlendirilmesi önerilir.');
     } else {

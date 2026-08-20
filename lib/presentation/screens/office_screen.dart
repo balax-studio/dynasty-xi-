@@ -14,13 +14,16 @@ import '../widgets/newspaper_headline_widget.dart';
 import '../widgets/retro_window.dart';
 import '../widgets/stadium_isometric_widget.dart';
 import 'board_room_screen.dart';
+import 'boardroom_summit_screen.dart';
 import 'cup_tournament_screen.dart';
 import 'facility_detail_screen.dart';
 import 'facilities_screen.dart';
+import 'head_coach_hiring_screen.dart';
 import 'match_screen.dart';
 import 'press_conference_screen.dart';
 import 'prestige_screen.dart';
-import 'sacked_screen.dart';
+import '../../domain/president/president_crisis.dart';
+import '../widgets/urgent_phone_call_modal.dart';
 import 'scouting_screen.dart';
 import 'staff_screen.dart';
 import 'trophy_room_screen.dart';
@@ -132,6 +135,61 @@ class OfficeScreen extends ConsumerWidget {
                         const SizedBox(height: 10),
                       ],
 
+                      // Kırmızı Hat / Acil Telefon Kriz Çağrısı Butonu
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.win95Grey,
+                          border: Border.all(color: AppColors.comicRed, width: 2),
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            final calls = PresidentCrisisCall.getPredefinedCalls();
+                            final randomCall = calls[DateTime.now().millisecond % calls.length];
+                            UrgentPhoneCallModal.show(context, randomCall);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            child: Row(
+                              children: [
+                                const Text('🔴☎️', style: TextStyle(fontSize: 24)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'KIRMIZI HAT: BAŞKANLIK ACİL KRİZ MASASI',
+                                        style: AppTypography.label(color: AppColors.comicRed).copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      const Text(
+                                        'Emniyet, Belediye veya Federasyondan gelen çağrıyı yanıtla',
+                                        style: TextStyle(color: Colors.black87, fontSize: 9.5),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.comicRed,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  child: const Text(
+                                    'YANITLA',
+                                    style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
                       // 1. Stadyum ve Tesisler İzometrik İllüstrasyonu (§21.3, §48)
                       InkWell(
                         onTap: () {
@@ -209,7 +267,62 @@ class OfficeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 10),
 
-                      // 4. Başkanlık Odası, Kupa & Departmanlar (Tam Sayfa Navigasyon)
+                      // 4. BAŞKANLIK MAKAM VE İCRA KURULU (Tam Sayfa Navigasyon)
+                      RetroWindow(
+                        title: 'BAŞKANLIK MAKAMI VE İCRA KURULU',
+                        icon: '🎩',
+                        titleBarColor: AppColors.accentGold,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RetroButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const HeadCoachHiringScreen()),
+                                      );
+                                    },
+                                    backgroundColor: AppColors.neonLime,
+                                    textColor: Colors.black,
+                                    child: const Column(
+                                      children: [
+                                        Text('👔', style: TextStyle(fontSize: 20)),
+                                        SizedBox(height: 4),
+                                        Text('TEKNİK DİREKTÖR ATAMA', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10.5)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: RetroButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const BoardroomSummitScreen()),
+                                      );
+                                    },
+                                    backgroundColor: AppColors.accentGold,
+                                    textColor: Colors.black,
+                                    child: const Column(
+                                      children: [
+                                        Text('🏛️', style: TextStyle(fontSize: 20)),
+                                        SizedBox(height: 4),
+                                        Text('BAŞKANLIK ZİRVESİ', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10.5)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // 5. Kulüp Merkezi & Turnuvalar (Tam Sayfa Navigasyon)
                       RetroWindow(
                         title: 'KULÜP MERKEZİ & TURNUVALAR',
                         icon: '🏛️',
@@ -503,7 +616,7 @@ class OfficeScreen extends ConsumerWidget {
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF141A24),
+            color: AppColors.neoInnerBg,
             border: Border.all(color: q.isClaimed ? Colors.white12 : (q.isCompleted ? AppColors.neonLime : Colors.white24)),
           ),
           child: Row(

@@ -75,7 +75,7 @@ class SeasonSummaryDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF141A24),
+                  color: AppColors.neoInnerBg,
                   border: Border(
                     top: BorderSide(color: AppColors.win95DarkGrey, width: 1.5),
                     left: BorderSide(color: AppColors.win95DarkGrey, width: 1.5),

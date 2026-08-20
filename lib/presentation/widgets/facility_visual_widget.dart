@@ -133,14 +133,14 @@ class _FacilityVisualWidgetState extends State<FacilityVisualWidget> with Single
                       color: AppColors.neonAmber,
                       border: Border.all(color: Colors.black, width: 1.5),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('⚠️', style: TextStyle(fontSize: 12)),
-                        const SizedBox(width: 4),
+                        Text('⚠️', style: TextStyle(fontSize: 12)),
+                        SizedBox(width: 4),
                         Text(
                           'İNŞAAT DEVAM EDİYOR',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.black,
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
@@ -278,13 +278,13 @@ class _FacilityCanvasPainter extends CustomPainter {
 
   void _drawSkyAndHorizon(Canvas canvas, Size size) {
     final skyPaint = Paint()
-      ..shader = LinearGradient(
+      ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFF060B12),
-          const Color(0xFF0F1B2B),
-          const Color(0xFF1B2C44),
+          Color(0xFF060B12),
+          Color(0xFF0F1B2B),
+          Color(0xFF1B2C44),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.65));
 
@@ -751,7 +751,7 @@ class _FacilityCanvasPainter extends CustomPainter {
     canvas.drawCircle(Offset(craneTop.dx + 30, hookY), 3.5, Paint()..color = const Color(0xFFF59E0B));
 
     // Welding Sparks
-    final sparkCount = 6;
+    const sparkCount = 6;
     for (int i = 0; i < sparkCount; i++) {
       final angle = (animValue * 6 * math.pi) + (i * (math.pi / 3));
       final sparkDist = 8 + (i * 2.0);

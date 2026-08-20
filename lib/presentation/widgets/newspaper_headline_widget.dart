@@ -2,7 +2,6 @@
 // Retro Newspaper Headlines & Gazete Kupürü Widget (§17.5-1, §21.3)
 
 import 'package:flutter/material.dart';
-import '../../app/theme/app_colors.dart';
 
 class NewspaperHeadlineWidget extends StatelessWidget {
   final String outletName; // e.g. "FANATİK MANŞET", "FOTOMAÇ", "HÜRRİYET SPOR"

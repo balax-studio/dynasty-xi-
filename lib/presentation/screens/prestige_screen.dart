@@ -8,6 +8,7 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/progression/dynasty_prestige.dart';
 import '../widgets/retro_window.dart';
+import 'president_luxury_lifestyle_screen.dart';
 
 class PrestigeScreen extends ConsumerWidget {
   const PrestigeScreen({super.key});
@@ -64,6 +65,30 @@ class PrestigeScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: 12),
+
+                // Başkanın Şahsi Lüks Yaşamı & Varlıkları Butonu
+                SizedBox(
+                  width: double.infinity,
+                  child: RetroButton(
+                    backgroundColor: AppColors.accentGold,
+                    textColor: Colors.black,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PresidentLuxuryLifestyleScreen()),
+                      );
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('👑', style: TextStyle(fontSize: 16)),
+                        SizedBox(width: 6),
+                        Text('BAŞKANIN LÜKS YAŞAMI & ŞAHSİ ENVANTERİ (JET, YAT, YALI)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 14),
 
                 // 2. Legacy Perks List
@@ -78,7 +103,7 @@ class PrestigeScreen extends ConsumerWidget {
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF141A24),
+                      color: AppColors.neoInnerBg,
                       border: Border.all(
                         color: isUnlocked ? AppColors.neonLime : (canAfford ? AppColors.accentGold : Colors.white24),
                         width: isUnlocked ? 2 : 1,

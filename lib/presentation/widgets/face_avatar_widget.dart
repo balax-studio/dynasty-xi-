@@ -51,13 +51,13 @@ class _FacePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
-    final h = size.height;
     final unit = w / 16.0;
 
     final skinPaint = Paint()..color = face.skinColor;
     final hairPaint = Paint()..color = face.hairColor;
     final eyePaint = Paint()..color = face.eyeColor;
     final pupilPaint = Paint()..color = Colors.black;
+    final scleraPaint = Paint()..color = Colors.white;
     final mouthPaint = Paint()..color = const Color(0xFF881337);
     final shadowPaint = Paint()..color = Colors.black.withValues(alpha: 0.15);
 
@@ -113,12 +113,12 @@ class _FacePainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(9 * unit, 5 * unit, 2.5 * unit, 0.7 * unit), hairPaint);
 
     // Left Eye
-    canvas.drawRect(Rect.fromLTWH(5 * unit, 6 * unit, 2 * unit, 1.5 * unit), Colors.white as dynamic);
+    canvas.drawRect(Rect.fromLTWH(5 * unit, 6 * unit, 2 * unit, 1.5 * unit), scleraPaint);
     canvas.drawRect(Rect.fromLTWH(5.5 * unit, 6.2 * unit, 1.2 * unit, 1.2 * unit), eyePaint);
     canvas.drawRect(Rect.fromLTWH(5.8 * unit, 6.5 * unit, 0.6 * unit, 0.6 * unit), pupilPaint);
 
     // Right Eye
-    canvas.drawRect(Rect.fromLTWH(9 * unit, 6 * unit, 2 * unit, 1.5 * unit), Colors.white as dynamic);
+    canvas.drawRect(Rect.fromLTWH(9 * unit, 6 * unit, 2 * unit, 1.5 * unit), scleraPaint);
     canvas.drawRect(Rect.fromLTWH(9.3 * unit, 6.2 * unit, 1.2 * unit, 1.2 * unit), eyePaint);
     canvas.drawRect(Rect.fromLTWH(9.6 * unit, 6.5 * unit, 0.6 * unit, 0.6 * unit), pupilPaint);
 

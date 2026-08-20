@@ -12,6 +12,7 @@ import '../../domain/match/match_depth_models.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
 import '../widgets/season_summary_dialog.dart';
+import 'clubs_association_summit_screen.dart';
 
 class LeagueScreen extends StatefulWidget {
   const LeagueScreen({super.key});
@@ -68,6 +69,29 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
               body: Column(
                 children: [
                   MetersBarWidget(meters: gameState.userClub.meters),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: RetroButton(
+                        backgroundColor: AppColors.win95TitleNavy,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const ClubsAssociationSummitScreen()),
+                          );
+                        },
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('🏛️', style: TextStyle(fontSize: 16)),
+                            SizedBox(width: 6),
+                            Text('KULÜPLER BİRLİĞİ VAKFI ZİRVESİ & HAVUZ OYLAMASI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: TabBarView(
                       controller: _tabController,
@@ -129,7 +153,7 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
                   margin: const EdgeInsets.only(bottom: 4),
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isUserClub ? const Color(0xFF003311) : const Color(0xFF141A24),
+                    color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
                     border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
                   ),
                   child: Row(
@@ -166,7 +190,7 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
           RetroWindow(
             title: 'LİG ASİST KRALLIĞI (OYUN KURUCULAR)',
             icon: '👟',
-            titleBarColor: const Color(0xFF1E3A8A),
+            titleBarColor: AppColors.win95TitleNavy,
             child: Column(
               children: assists.asMap().entries.map((entry) {
                 final rank = entry.key + 1;
@@ -177,7 +201,7 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
                   margin: const EdgeInsets.only(bottom: 4),
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isUserClub ? const Color(0xFF003311) : const Color(0xFF141A24),
+                    color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
                     border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
                   ),
                   child: Row(

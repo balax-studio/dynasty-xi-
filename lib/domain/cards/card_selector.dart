@@ -50,7 +50,7 @@ class CardSelector {
       weight *= 2.8;
     }
     if (state.userClub.meters.cash <= 8000 &&
-        (card.category == CardCategory.financial || card.category == CardCategory.sponsor)) {
+        (card.category == CardCategory.finance || card.category == CardCategory.sponsor)) {
       weight *= 2.5;
     }
     if (state.userClub.meters.lockerRoom <= 35 &&

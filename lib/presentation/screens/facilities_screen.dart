@@ -8,8 +8,8 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/facility.dart';
 import '../../domain/entities/facility_tiers_data.dart';
+import '../widgets/contractor_tender_modal.dart';
 import '../widgets/meters_bar_widget.dart';
-import '../widgets/retro_button.dart';
 import '../widgets/retro_window.dart';
 import 'facility_detail_screen.dart';
 
@@ -69,6 +69,42 @@ class FacilitiesScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 8),
+
+                      // Başkanlık Müteahhit İhalesi Butonu
+                      SizedBox(
+                        width: double.infinity,
+                        child: RetroButton(
+                          onPressed: () {
+                            ContractorTenderModal.show(
+                              context,
+                              facilityType: FacilityType.stadium,
+                              baseCost: 50000,
+                              onSelected: (cost, weeks, name) {
+                                ref.read(gameStateProvider.notifier).adjustCash(-cost);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppColors.primaryDeep,
+                                    content: Text(
+                                      '🏗️ $name ile $weeks haftalık ihale sözleşmesi imzalandı (-₣$cost)!',
+                                      style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          backgroundColor: AppColors.win95Grey,
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('🏗️', style: TextStyle(fontSize: 16)),
+                              SizedBox(width: 6),
+                              Text('BAŞKANLIK MÜTEAHHİT İHALESİ & İMAR KOMİSYONU AÇ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: AppColors.win95TitleNavy)),
+                            ],
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 10),
 
                       RetroWindow(
@@ -119,7 +155,7 @@ class FacilitiesScreen extends ConsumerWidget {
         child: Container(
           margin: const EdgeInsets.only(bottom: 8),
           decoration: AppColors.comicBoxDecoration(
-            backgroundColor: const Color(0xFF141A24),
+            backgroundColor: AppColors.neoInnerBg,
             borderColor: isUpgrading ? AppColors.neonAmber : Colors.black,
             shadowColor: isUpgrading ? AppColors.neonAmber : AppColors.neonLime,
             borderWidth: 2.0,

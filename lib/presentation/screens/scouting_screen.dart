@@ -9,8 +9,10 @@ import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/facility.dart';
 import '../../domain/entities/player.dart';
 import '../../domain/generation/scout_service.dart';
+import 'player_detail_screen.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
+import 'grassroots_tournament_screen.dart';
 
 class ScoutingScreen extends StatefulWidget {
   const ScoutingScreen({super.key});
@@ -88,6 +90,29 @@ class _ScoutingScreenState extends State<ScoutingScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 0. Başkanlık Amatör Scouting Turnuvası Butonu
+                          SizedBox(
+                            width: double.infinity,
+                            child: RetroButton(
+                              backgroundColor: AppColors.win95TitleNavy,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const GrassrootsTournamentScreen()),
+                                );
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('⭐', style: TextStyle(fontSize: 16)),
+                                  SizedBox(width: 6),
+                                  Text('BAŞKANLIK GELECEĞİN YILDIZLARI TURNUVASI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
                           // 1. Keşif Süresi ve Doğruluk Modu Seçici (§10.4)
                           RetroWindow(
                             title: 'SCOUT GÖREV DERİNLİĞİ & SÜRESİ',
@@ -238,7 +263,7 @@ class _ScoutingScreenState extends State<ScoutingScreen> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFF141A24),
+        color: AppColors.neoInnerBg,
         border: Border.all(color: Colors.white24),
       ),
       child: Row(
@@ -270,90 +295,103 @@ class _ScoutingScreenState extends State<ScoutingScreen> {
     final minPot = (p.potential - _lastAccuracyMargin).clamp(50, 99);
     final maxPot = (p.potential + _lastAccuracyMargin).clamp(50, 99);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: isWonderkid ? const Color(0xFF2E2405) : const Color(0xFF141A24),
-        border: Border.all(color: isWonderkid ? AppColors.accentGold : Colors.white24, width: isWonderkid ? 1.5 : 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PlayerDetailScreen(player: p, isOwned: false),
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isWonderkid ? const Color(0xFF2E2405) : AppColors.neoInnerBg,
+            border: Border.all(color: isWonderkid ? AppColors.accentGold : Colors.white24, width: isWonderkid ? 1.5 : 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                color: Colors.black,
-                child: Text(p.position.code, style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 12)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    color: Colors.black,
+                    child: Text(p.position.code, style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (isWonderkid) const Text('🌟 ', style: TextStyle(fontSize: 12)),
-                        Expanded(
-                          child: Text(
-                            p.fullName,
-                            style: AppTypography.label(color: isWonderkid ? AppColors.accentGold : Colors.white).copyWith(fontSize: 12),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        Row(
+                          children: [
+                            if (isWonderkid) const Text('🌟 ', style: TextStyle(fontSize: 12)),
+                            Expanded(
+                              child: Text(
+                                p.fullName,
+                                style: AppTypography.label(color: isWonderkid ? AppColors.accentGold : Colors.white).copyWith(fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '${p.age} Yaş • ${p.personality.label} • OVR: ${p.ovr} • Tahmini POT: $minPot-$maxPot',
+                          style: const TextStyle(color: Colors.white70, fontSize: 10),
                         ),
                       ],
                     ),
-                    Text(
-                      '${p.age} Yaş • ${p.personality.label} • OVR: ${p.ovr} • Tahmini POT: $minPot-$maxPot',
-                      style: const TextStyle(color: Colors.white70, fontSize: 10),
-                    ),
-                  ],
-                ),
+                  ),
+                  Column(
+                    children: [
+                      Text('₣${p.weeklyWage}/h', style: const TextStyle(color: AppColors.neonLime, fontSize: 11, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
               ),
-              Column(
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Text('₣${p.weeklyWage}/h', style: const TextStyle(color: AppColors.neonLime, fontSize: 11, fontWeight: FontWeight.bold)),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _discoveredProspects.remove(p);
+                      });
+                    },
+                    child: const Text('RAPORU SİL', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                  ),
+                  const SizedBox(width: 8),
+                  RetroButton(
+                    onPressed: () async {
+                      final ok = await ref.read(gameStateProvider.notifier).buyPlayer(p, 0, p.weeklyWage);
+                      if (context.mounted) {
+                        if (ok) {
+                          setState(() => _discoveredProspects.remove(p));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('🎉 ${p.fullName} A Takım kadrosuna eklendi!')),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('⚠️ Kadro ekleme başarısız oldu.')),
+                          );
+                        }
+                      }
+                    },
+                    backgroundColor: AppColors.neonLime,
+                    textColor: Colors.black,
+                    child: const Text('KADROYA KAT (ÜCRETSİZ)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                  ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _discoveredProspects.remove(p);
-                  });
-                },
-                child: const Text('RAPORU SİL', style: TextStyle(color: Colors.white38, fontSize: 10)),
-              ),
-              const SizedBox(width: 8),
-              RetroButton(
-                onPressed: () async {
-                  final ok = await ref.read(gameStateProvider.notifier).buyPlayer(p, 0, p.weeklyWage);
-                  if (context.mounted) {
-                    if (ok) {
-                      setState(() => _discoveredProspects.remove(p));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('🎉 ${p.fullName} A Takım kadrosuna eklendi!')),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('⚠️ Kadro ekleme başarısız oldu.')),
-                      );
-                    }
-                  }
-                },
-                backgroundColor: AppColors.neonLime,
-                textColor: Colors.black,
-                child: const Text('KADROYA KAT (ÜCRETSİZ)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

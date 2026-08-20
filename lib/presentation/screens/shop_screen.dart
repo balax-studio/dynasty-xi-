@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
+import '../widgets/counterfeit_raid_modal.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
 
@@ -23,7 +24,7 @@ class ShopScreen extends ConsumerWidget {
         return Scaffold(
           backgroundColor: AppColors.primaryDeep,
           appBar: AppBar(
-            backgroundColor: AppColors.win95TitleNavy,
+            backgroundColor: AppColors.neoCardBg,
             title: Text('CYBER SHOP & SEZON BİLETİ BORSASI', style: AppTypography.h2(color: Colors.white)),
           ),
           body: Column(
@@ -35,11 +36,29 @@ class ShopScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // 0. Korsan Ürünle Mücadele Butonu
+                      SizedBox(
+                        width: double.infinity,
+                        child: RetroButton(
+                          backgroundColor: AppColors.comicRed,
+                          onPressed: () => CounterfeitRaidModal.show(context),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('👮‍♂️', style: TextStyle(fontSize: 16)),
+                              SizedBox(width: 6),
+                              Text('KORSAN ÜRÜN & SEYYAR SATICI OPERASYONU', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
                       // 1. Sezon Bileti (Dynasty Pass) Penceresi
                       RetroWindow(
                         title: 'DYNASTY PASS SEZON KART PROVİZYONU',
                         icon: '🎫',
-                        titleBarColor: const Color(0xFF6E5000),
+                        titleBarColor: AppColors.win95TitleNavy,
                         child: _buildSeasonPassBanner(context),
                       ),
                       const SizedBox(height: 10),
@@ -208,7 +227,7 @@ class ShopScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: const BoxDecoration(
-        color: Color(0xFF141A24),
+        color: AppColors.neoInnerBg,
         border: Border(
           top: BorderSide(color: AppColors.win95DarkGrey, width: 1.5),
           left: BorderSide(color: AppColors.win95DarkGrey, width: 1.5),
@@ -252,7 +271,7 @@ class ShopScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: AppColors.comicBoxDecoration(
-        backgroundColor: const Color(0xFF141A24),
+        backgroundColor: AppColors.neoInnerBg,
         borderColor: isPopular ? AppColors.neonPink : Colors.black,
         shadowColor: isPopular ? AppColors.neonPink : AppColors.neonCyan,
         borderWidth: 2.0,

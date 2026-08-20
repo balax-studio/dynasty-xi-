@@ -25,7 +25,7 @@ class ContractRenewalDialog extends StatefulWidget {
 
 class _ContractRenewalDialogState extends State<ContractRenewalDialog> {
   late int _offeredWage;
-  int _contractWeeks = 42; // 2 seasons default
+  final int _contractWeeks = 42; // 2 seasons default
   SquadRole _promisedRole = SquadRole.first11;
   int _signingBonus = 5000;
 

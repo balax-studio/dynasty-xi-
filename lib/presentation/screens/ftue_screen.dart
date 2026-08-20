@@ -8,8 +8,10 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/facility.dart';
 import '../../domain/entities/player.dart';
+import '../../domain/president/president_origin.dart';
 import '../widgets/decision_card_widget.dart';
 import '../widgets/meters_bar_widget.dart';
+import '../widgets/president_origin_selection_widget.dart';
 import '../widgets/retro_window.dart';
 
 class FtueScreen extends ConsumerStatefulWidget {
@@ -26,6 +28,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
   final TextEditingController _clubNameController = TextEditingController(text: 'Angora Gücü');
   final TextEditingController _managerNameController = TextEditingController(text: 'Hoca');
   String _selectedBadge = '🛡️';
+  PresidentOriginType _selectedOrigin = PresidentOriginType.industrialist;
 
   @override
   void dispose() {
@@ -302,19 +305,48 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
+
+          // Başkanlık Kökeni Seçimi
+          PresidentOriginSelectionWidget(
+            selectedOrigin: _selectedOrigin,
+            onOriginSelected: (origin) {
+              setState(() => _selectedOrigin = origin);
+            },
+          ),
+          const SizedBox(height: 24),
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                ref.read(gameStateProvider.notifier).updateClubProfile(
+                final allOrigins = PresidentOrigin.getAllOrigins();
+                final chosenOrigin = allOrigins.firstWhere((o) => o.type == _selectedOrigin);
+                final notifier = ref.read(gameStateProvider.notifier);
+
+                notifier.updateClubProfile(
                       clubName: _clubNameController.text.trim().isNotEmpty ? _clubNameController.text.trim() : null,
                       managerName: _managerNameController.text.trim().isNotEmpty ? _managerNameController.text.trim() : null,
                       badgeIcon: _selectedBadge,
                     );
+
+                // Köken avantajlarını kasaya yansıt
+                if (chosenOrigin.startingCashBonus > 0) {
+                  notifier.claimSponsorReward(chosenOrigin.startingCashBonus);
+                }
+                if (chosenOrigin.startingBoardTrustBonus != 0) {
+                  notifier.adjustBoardTrust(chosenOrigin.startingBoardTrustBonus);
+                }
+                if (chosenOrigin.startingFansBonus != 0) {
+                  notifier.adjustFans(chosenOrigin.startingFansBonus);
+                }
+                if (chosenOrigin.startingLockerRoomBonus != 0) {
+                  notifier.adjustLockerRoom(chosenOrigin.startingLockerRoomBonus);
+                }
+
                 _nextStep();
               },
-              child: const Text('KİMLİĞİ ONAYLA'),
+              child: const Text('BAŞKANLIK KİMLİĞİNİ & KULÜBÜ ONAYLA'),
             ),
           ),
         ],

@@ -1,8 +1,7 @@
 // domain/entities/staff.dart
-// Backroom staff specialists: Head Coach, Assistant Manager, Head Physio, Chief Scout, Data Analyst (§8.2, §13)
+// Backroom staff specialists: Assistant Manager, Head Physio, Chief Scout, Data Analyst (§8.2, §13)
 
 enum StaffRole {
-  headCoach('Teknik Direktör', '👔', 'Taktik kurguyu ve maç içi taktik hamleleri yönetir.'),
   assistantManager('Asistan Menajer', '📋', 'Antrenman verimini artırır, rotasyon tavsiyesi verir.'),
   headPhysio('Baş Fizyoterapist', '🏥', 'Sakatlık sürelerini kısaltır ve kondisyonu korur.'),
   chiefScout('Şef Scout', '🔍', 'Oyuncu potansiyel tahmin kesinliğini artırır.'),
@@ -62,14 +61,6 @@ class StaffMember {
 class StaffGenerator {
   static List<StaffMember> generateDefaultStaff() {
     return const [
-      StaffMember(
-        id: 'staff_coach_1',
-        role: StaffRole.headCoach,
-        name: 'Sergen Hoca',
-        level: 2,
-        weeklySalary: 3500,
-        specialtyDescription: 'Hücum futbolu ve genç yetenek parlatma.',
-      ),
       StaffMember(
         id: 'staff_asst_1',
         role: StaffRole.assistantManager,

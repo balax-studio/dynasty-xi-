@@ -10,10 +10,8 @@ enum CardCategory {
   medical('Sağlık & Tıp', '🏥'),
   transfer('Transfer & Menajer', '💼'),
   scouting('Scout', '🔍'),
-  financial('Finans', '💰'),
   finance('Finans', '💰'),
-  academy('Altyapı', '🌱'),
-  youth('Gençlik', '🌱'),
+  youth('Gençlik & Altyapı', '🌱'),
   sponsor('Sponsorluk', '🤝'),
   personal('Kişisel', '⭐'),
   crisis('Kriz', '⚠️');

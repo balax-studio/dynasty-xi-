@@ -8,6 +8,7 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
+import 'midnight_tv_debate_screen.dart';
 
 class PressConferenceScreen extends StatefulWidget {
   const PressConferenceScreen({super.key});
@@ -145,6 +146,29 @@ class _PressConferenceScreenState extends State<PressConferenceScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 0. Gece 02:00 Canlı Yayın Düellosu Butonu
+                          SizedBox(
+                            width: double.infinity,
+                            child: RetroButton(
+                              backgroundColor: AppColors.comicRed,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const MidnightTvDebateScreen()),
+                                );
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('📺', style: TextStyle(fontSize: 16)),
+                                  SizedBox(width: 6),
+                                  Text('GECE 02:00 CANLI YAYIN DÜELLOSU & TELEFON BAĞLANTISI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
                           // 1. Basın Odası Başlık Frame
                           RetroWindow(
                             title: 'CANLI BASIN TOPLANTISI SALONU',
@@ -195,7 +219,7 @@ class _PressConferenceScreenState extends State<PressConferenceScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF141A24),
+                                    color: AppColors.neoInnerBg,
                                     border: Border.all(color: Colors.white24, width: 1.5),
                                   ),
                                   child: Text(

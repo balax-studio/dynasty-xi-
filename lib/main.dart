@@ -11,6 +11,7 @@ import 'application/providers/game_state_provider.dart';
 import 'core/audio/audio_synthesizer.dart';
 import 'presentation/screens/board_room_screen.dart';
 import 'presentation/screens/facilities_screen.dart';
+import 'presentation/screens/finance_screen.dart';
 import 'presentation/screens/ftue_screen.dart';
 import 'presentation/screens/league_screen.dart';
 import 'presentation/screens/manager_screen.dart';
@@ -62,6 +63,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
     OfficeScreen(),
     SquadScreen(),
     TransferScreen(),
+    FinanceScreen(),
     FacilitiesScreen(),
     LeagueScreen(),
     ManagerScreen(),
@@ -183,6 +185,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
       (icon: '🏢', label: 'OFİS'),
       (icon: '⚽', label: 'KADRO'),
       (icon: '🔍', label: 'TRANSFER'),
+      (icon: '💰', label: 'FİNANS'),
       (icon: '🏗️', label: 'TESİS'),
       (icon: '🏆', label: 'LİG'),
       (icon: '👔', label: 'MENAJER'),
@@ -398,7 +401,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
                               setModalState(() {
                                 currentTicketPrice = val.round();
                               });
-                              ref.read(gameStateProvider.notifier).updateTicketPrice(val.round());
+                              ref.read(gameStateProvider.notifier).setTicketPrice(val.round());
                             },
                           ),
                         ],

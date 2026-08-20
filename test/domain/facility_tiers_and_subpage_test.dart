@@ -8,7 +8,6 @@ import 'package:futbol/domain/entities/facility.dart';
 import 'package:futbol/domain/entities/facility_tiers_data.dart';
 import 'package:futbol/presentation/widgets/facility_visual_widget.dart';
 import 'package:futbol/presentation/screens/facility_detail_screen.dart';
-import 'package:futbol/application/providers/game_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

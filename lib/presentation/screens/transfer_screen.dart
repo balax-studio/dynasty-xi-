@@ -9,10 +9,11 @@ import '../../application/providers/game_state_provider.dart';
 import '../../domain/economy/negotiation_model.dart';
 import '../../domain/economy/transfer_models.dart';
 import '../../domain/entities/player.dart';
+import 'player_detail_screen.dart';
 import '../widgets/contract_renewal_dialog.dart';
 import '../widgets/meters_bar_widget.dart';
-import '../widgets/retro_button.dart';
 import '../widgets/retro_window.dart';
+import 'transfer_hijack_screen.dart';
 
 class TransferScreen extends StatelessWidget {
   const TransferScreen({super.key});
@@ -62,6 +63,29 @@ class TransferScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // 0. Transfer Çalımı Butonu
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: RetroButton(
+                                    backgroundColor: AppColors.comicRed,
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const TransferHijackScreen()),
+                                      );
+                                    },
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text('✈️', style: TextStyle(fontSize: 16)),
+                                        SizedBox(width: 6),
+                                        Text('SON DAKİKA TRANSFER ÇALIMI & OTEL BASKINI MASASI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+
                                 RetroWindow(
                                   title: 'SCOUT BİLGİ VE İSTİHBARAT AKIŞI',
                                   icon: '🛰️',
@@ -211,66 +235,79 @@ class TransferScreen extends StatelessWidget {
     final p = deal.player;
     final rarityColor = AppColors.getRarityColor(p.stars);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141A24),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PlayerDetailScreen(player: p, isOwned: false),
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.neoInnerBg,
+            border: Border.all(color: Colors.white24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                color: Colors.black,
-                child: Text(p.position.code, style: TextStyle(color: rarityColor, fontWeight: FontWeight.bold, fontSize: 12)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(p.fullName, style: AppTypography.label(color: Colors.white).copyWith(fontSize: 12)),
-                    Text(
-                      'Kulüp: ${deal.parentClubName} • OVR: ${p.ovr} • POT: ${p.potential}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 10),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              Row(
                 children: [
-                  Text('₣${deal.weeklyWageToPay}/h', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 11)),
-                  Text('(%${(deal.borrowingClubWageShare * 100).round()} Maaş Payı)', style: const TextStyle(color: Colors.white54, fontSize: 9)),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    color: Colors.black,
+                    child: Text(p.position.code, style: TextStyle(color: rarityColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(p.fullName, style: AppTypography.label(color: Colors.white).copyWith(fontSize: 12)),
+                        Text(
+                          'Kulüp: ${deal.parentClubName} • OVR: ${p.ovr} • POT: ${p.potential}',
+                          style: const TextStyle(color: Colors.white70, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('₣${deal.weeklyWageToPay}/h', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 11)),
+                      Text('(%${(deal.borrowingClubWageShare * 100).round()} Maaş Payı)', style: const TextStyle(color: Colors.white54, fontSize: 9)),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Opsiyon: ₣${deal.buyoutClause}', style: const TextStyle(color: AppColors.accentGold, fontSize: 10)),
+                  RetroButton(
+                    onPressed: () async {
+                      final ok = await ref.read(gameStateProvider.notifier).buyPlayer(p, 0, deal.weeklyWageToPay);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(ok ? '🎉 ${p.fullName} 1 sezonluğuna kiralandı!' : '⚠️ Kiralama başarısız oldu.')),
+                        );
+                      }
+                    },
+                    backgroundColor: AppColors.neonCyan,
+                    textColor: Colors.black,
+                    child: const Text('KİRALA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                  ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Opsiyon: ₣${deal.buyoutClause}', style: const TextStyle(color: AppColors.accentGold, fontSize: 10)),
-              RetroButton(
-                onPressed: () async {
-                  final ok = await ref.read(gameStateProvider.notifier).buyPlayer(p, 0, deal.weeklyWageToPay);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(ok ? '🎉 ${p.fullName} 1 sezonluğuna kiralandı!' : '⚠️ Kiralama başarısız oldu.')),
-                    );
-                  }
-                },
-                backgroundColor: AppColors.neonCyan,
-                textColor: Colors.black,
-                child: const Text('KİRALA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -278,17 +315,114 @@ class TransferScreen extends StatelessWidget {
   Widget _buildMarketPlayerCard(BuildContext context, WidgetRef ref, Player p, dynamic gameState) {
     final rarityColor = AppColors.getRarityColor(p.stars);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141A24),
-        border: Border.all(color: Colors.white24),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PlayerDetailScreen(player: p, isOwned: false),
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.neoInnerBg,
+            border: Border.all(color: Colors.white24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    color: Colors.black,
+                    child: Text(p.position.code, style: TextStyle(color: rarityColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(p.fullName, style: AppTypography.label(color: Colors.white).copyWith(fontSize: 12)),
+                        Text(
+                          '${p.age} Yaş • ${p.personality.label} • ${p.stars}★',
+                          style: const TextStyle(color: Colors.white70, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    color: Colors.black,
+                    child: Text(
+                      '${p.ovr}',
+                      style: AppTypography.monoNumber(color: rarityColor).copyWith(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Piyasa: ₣${p.marketValue}', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 11)),
+                  Row(
+                    children: [
+                      RetroButton(
+                        onPressed: () {
+                          _showSwapPlayerModal(context, ref, p, gameState);
+                        },
+                        backgroundColor: AppColors.accentGold,
+                        textColor: Colors.black,
+                        child: const Text('TAKAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                      ),
+                      const SizedBox(width: 6),
+                      RetroButton(
+                        onPressed: () {
+                          _showNegotiationModal(context, ref, p, gameState);
+                        },
+                        backgroundColor: AppColors.neonLime,
+                        textColor: Colors.black,
+                        child: const Text('PAZARLIK YAP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    );
+  }
+
+  Widget _buildSellableSquadPlayerCard(BuildContext context, WidgetRef ref, Player p, dynamic gameState) {
+    final rarityColor = AppColors.getRarityColor(p.stars);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PlayerDetailScreen(player: p, isOwned: true),
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.neoInnerBg,
+            border: Border.all(color: Colors.white24),
+          ),
+          child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
@@ -301,118 +435,47 @@ class TransferScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(p.fullName, style: AppTypography.label(color: Colors.white).copyWith(fontSize: 12)),
-                    Text(
-                      '${p.age} Yaş • ${p.personality.label} • ${p.stars}★',
-                      style: const TextStyle(color: Colors.white70, fontSize: 10),
-                    ),
+                    Text('${p.age} Yaş • ${p.ovr} OVR • ₣${p.weeklyWage}/h', style: const TextStyle(color: Colors.white70, fontSize: 10)),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                color: Colors.black,
-                child: Text(
-                  '${p.ovr}',
-                  style: AppTypography.monoNumber(color: rarityColor).copyWith(fontSize: 14),
-                ),
+              RetroButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => ContractRenewalDialog(
+                      player: p,
+                      onContractSigned: (newWage, contractWeeks, role, signingBonus) {
+                        final seasons = (contractWeeks / 21).round().clamp(1, 5);
+                        ref.read(gameStateProvider.notifier).renewPlayerContract(p.id, seasons, newWage);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('✍️ ${p.fullName} ile sözleşme yenilendi!')),
+                        );
+                      },
+                    ),
+                  );
+                },
+                backgroundColor: AppColors.neonCyan,
+                textColor: Colors.black,
+                child: const Text('SÖZLEŞME', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9)),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Piyasa: ₣${p.marketValue}', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 11)),
-              Row(
-                children: [
-                  RetroButton(
-                    onPressed: () {
-                      _showSwapPlayerModal(context, ref, p, gameState);
-                    },
-                    backgroundColor: AppColors.accentGold,
-                    textColor: Colors.black,
-                    child: const Text('TAKAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                  ),
-                  const SizedBox(width: 6),
-                  RetroButton(
-                    onPressed: () {
-                      _showNegotiationModal(context, ref, p, gameState);
-                    },
-                    backgroundColor: AppColors.neonLime,
-                    textColor: Colors.black,
-                    child: const Text('PAZARLIK YAP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSellableSquadPlayerCard(BuildContext context, WidgetRef ref, Player p, dynamic gameState) {
-    final rarityColor = AppColors.getRarityColor(p.stars);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141A24),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            color: Colors.black,
-            child: Text(p.position.code, style: TextStyle(color: rarityColor, fontWeight: FontWeight.bold, fontSize: 12)),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(p.fullName, style: AppTypography.label(color: Colors.white).copyWith(fontSize: 12)),
-                Text('${p.age} Yaş • ${p.ovr} OVR • ₣${p.weeklyWage}/h', style: const TextStyle(color: Colors.white70, fontSize: 10)),
-              ],
-            ),
-          ),
-          RetroButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => ContractRenewalDialog(
-                  player: p,
-                  onContractSigned: (newWage, contractWeeks, role, signingBonus) {
-                    final seasons = (contractWeeks / 21).round().clamp(1, 5);
-                    ref.read(gameStateProvider.notifier).renewPlayerContract(p.id, seasons, newWage);
+              const SizedBox(width: 4),
+              RetroButton(
+                onPressed: () async {
+                  final ok = await ref.read(gameStateProvider.notifier).sellPlayer(p, p.marketValue);
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('✍️ ${p.fullName} ile sözleşme yenilendi!')),
+                      SnackBar(content: Text(ok ? '💰 ${p.fullName} ₣${p.marketValue} bedelle satıldı!' : '⚠️ Satış başarısız: Minimum kadro şartı.')),
                     );
-                  },
-                ),
-              );
-            },
-            backgroundColor: AppColors.neonCyan,
-            textColor: Colors.black,
-            child: const Text('SÖZLEŞME', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9)),
+                  }
+                },
+                backgroundColor: AppColors.neonLime,
+                textColor: Colors.black,
+                child: Text('₣${p.marketValue}\nSAT', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9)),
+              ),
+            ],
           ),
-          const SizedBox(width: 4),
-          RetroButton(
-            onPressed: () async {
-              final ok = await ref.read(gameStateProvider.notifier).sellPlayer(p, p.marketValue);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(ok ? '💰 ${p.fullName} ₣${p.marketValue} bedelle satıldı!' : '⚠️ Satış başarısız: Minimum kadro şartı.')),
-                );
-              }
-            },
-            backgroundColor: AppColors.neonLime,
-            textColor: Colors.black,
-            child: Text('₣${p.marketValue}\nSAT', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9)),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -421,7 +484,7 @@ class TransferScreen extends StatelessWidget {
     final squad = gameState.userClub.squad as List<Player>;
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF141A24),
+      backgroundColor: AppColors.neoCardBg,
       builder: (ctx) {
         return Padding(
           padding: const EdgeInsets.all(16.0),
@@ -440,7 +503,7 @@ class TransferScreen extends StatelessWidget {
                     final sp = squad[idx];
                     final diff = targetPlayer.marketValue - sp.marketValue;
                     return Card(
-                      color: const Color(0xFF1E293B),
+                      color: AppColors.neoInnerBg,
                       child: ListTile(
                         leading: Text(sp.position.code, style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold)),
                         title: Text(sp.fullName, style: const TextStyle(color: Colors.white, fontSize: 12)),
@@ -481,7 +544,7 @@ class TransferScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF141A24),
+      backgroundColor: AppColors.neoCardBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

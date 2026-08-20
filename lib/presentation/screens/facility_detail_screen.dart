@@ -10,7 +10,6 @@ import '../../domain/entities/facility.dart';
 import '../../domain/entities/facility_tiers_data.dart';
 import '../widgets/facility_visual_widget.dart';
 import '../widgets/meters_bar_widget.dart';
-import '../widgets/retro_button.dart';
 import '../widgets/retro_window.dart';
 
 class FacilityDetailScreen extends ConsumerStatefulWidget {
@@ -283,7 +282,7 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                                 final isSelected = activeTier == tierNum;
 
                                 Color borderColor = AppColors.win95DarkGrey;
-                                Color bgColor = const Color(0xFF141A24);
+                                Color bgColor = AppColors.neoInnerBg;
                                 if (isSelected) {
                                   borderColor = AppColors.neonLime;
                                   bgColor = const Color(0xFF1E3A8A);
@@ -398,7 +397,7 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: AppColors.comicBoxDecoration(
-                            backgroundColor: const Color(0xFF141A24),
+                            backgroundColor: AppColors.neoInnerBg,
                             borderColor: canAfford ? AppColors.neonLime : AppColors.signalRed,
                             shadowColor: canAfford ? AppColors.neonLime : Colors.black,
                           ),

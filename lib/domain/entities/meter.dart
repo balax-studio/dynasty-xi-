@@ -39,16 +39,25 @@ class ClubMeters {
     final nextFans = (fans + deltaFans).clamp(0, 100);
     final nextLockerRoom = (lockerRoom + deltaLockerRoom).clamp(0, 100);
     final nextBoardTrust = (boardTrust + deltaBoardTrust).clamp(0, 100);
-
-    final isCritical = nextBoardTrust <= criticalThreshold;
-    final nextConsecutive = isCritical ? consecutiveCriticalMatches + 1 : 0;
-    final nextIsSacked = nextBoardTrust <= 0 || nextConsecutive > graceMatchesAllowed;
+    final nextIsSacked = nextBoardTrust <= 0 || consecutiveCriticalMatches > graceMatchesAllowed;
 
     return ClubMeters(
       cash: nextCash,
       fans: nextFans,
       lockerRoom: nextLockerRoom,
       boardTrust: nextBoardTrust,
+      consecutiveCriticalMatches: consecutiveCriticalMatches,
+      isSacked: nextIsSacked,
+    );
+  }
+
+  /// Evaluates consecutive critical match streak after a fixture is played
+  ClubMeters onMatchCompleted() {
+    final isCritical = boardTrust <= criticalThreshold;
+    final nextConsecutive = isCritical ? consecutiveCriticalMatches + 1 : 0;
+    final nextIsSacked = boardTrust <= 0 || nextConsecutive > graceMatchesAllowed;
+
+    return copyWith(
       consecutiveCriticalMatches: nextConsecutive,
       isSacked: nextIsSacked,
     );

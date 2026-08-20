@@ -5,6 +5,8 @@ import '../../core/time/game_clock.dart';
 import '../economy/financial_statement.dart';
 import '../economy/transfer_models.dart';
 import '../liveops/season_theme.dart';
+import '../president/boardroom_summit.dart';
+import '../president/head_coach.dart';
 import '../progression/daily_quest.dart';
 import '../progression/dynasty_prestige.dart';
 import '../tournament/cup_tournament.dart';
@@ -46,6 +48,8 @@ class GameState {
   final int ticketPrice;
   final int winBonusPerMatch;
   final List<LoanDeal> activeLoanDeals;
+  final HeadCoach? headCoach;
+  final List<VipBoxDeal> vipBoxDeals;
 
   const GameState({
     required this.userClub,
@@ -75,7 +79,12 @@ class GameState {
     this.ticketPrice = 25,
     this.winBonusPerMatch = 0,
     this.activeLoanDeals = const [],
+    this.treasuryDeposit = 0,
+    this.headCoach,
+    this.vipBoxDeals = const [],
   });
+
+  final int treasuryDeposit;
 
   bool get isUnderSackingThreat => userClub.meters.boardTrust < 30;
   SeasonThemeType get currentSeasonTheme => SeasonThemeService.getThemeForMatchday(clock.matchday);
@@ -109,6 +118,10 @@ class GameState {
     int? ticketPrice,
     int? winBonusPerMatch,
     List<LoanDeal>? activeLoanDeals,
+    int? treasuryDeposit,
+    HeadCoach? headCoach,
+    bool clearHeadCoach = false,
+    List<VipBoxDeal>? vipBoxDeals,
   }) {
     return GameState(
       userClub: userClub ?? this.userClub,
@@ -138,6 +151,9 @@ class GameState {
       ticketPrice: ticketPrice ?? this.ticketPrice,
       winBonusPerMatch: winBonusPerMatch ?? this.winBonusPerMatch,
       activeLoanDeals: activeLoanDeals ?? this.activeLoanDeals,
+      treasuryDeposit: treasuryDeposit ?? this.treasuryDeposit,
+      headCoach: clearHeadCoach ? null : (headCoach ?? this.headCoach),
+      vipBoxDeals: vipBoxDeals ?? this.vipBoxDeals,
     );
   }
 
@@ -169,6 +185,9 @@ class GameState {
         'ticketPrice': ticketPrice,
         'winBonusPerMatch': winBonusPerMatch,
         'activeLoanDeals': activeLoanDeals.map((l) => l.toJson()).toList(),
+        'treasuryDeposit': treasuryDeposit,
+        'headCoach': headCoach?.toJson(),
+        'vipBoxDeals': vipBoxDeals.map((v) => v.toJson()).toList(),
       };
 
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -215,6 +234,15 @@ class GameState {
     final activeLoan = json['activeLoan'] != null
         ? BankLoan.fromJson(json['activeLoan'] as Map<String, dynamic>)
         : null;
+
+    final headCoach = json['headCoach'] != null
+        ? HeadCoach.fromJson(json['headCoach'] as Map<String, dynamic>)
+        : null;
+
+    final vipBoxDeals = (json['vipBoxDeals'] as List<dynamic>?)
+            ?.map((v) => VipBoxDeal.fromJson(v as Map<String, dynamic>))
+            .toList() ??
+        BoardroomCatalog.getInitialVipBoxes();
 
     final cupTournament = json['cupTournament'] != null
         ? CupTournament.fromJson(json['cupTournament'] as Map<String, dynamic>)
@@ -263,6 +291,9 @@ class GameState {
       ticketPrice: json['ticketPrice'] as int? ?? 25,
       winBonusPerMatch: json['winBonusPerMatch'] as int? ?? 0,
       activeLoanDeals: activeLoanDeals,
+      treasuryDeposit: json['treasuryDeposit'] as int? ?? 0,
+      headCoach: headCoach,
+      vipBoxDeals: vipBoxDeals,
     );
   }
 }

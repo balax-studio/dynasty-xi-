@@ -6,7 +6,6 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../domain/match/match_depth_models.dart';
 import 'face_avatar_widget.dart';
-import 'retro_button.dart';
 import 'retro_window.dart';
 
 class MatchRewardDialog extends StatelessWidget {
@@ -78,7 +77,7 @@ class MatchRewardDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF141A24),
+                  color: AppColors.neoInnerBg,
                   border: Border.all(color: Colors.white24),
                 ),
                 child: Column(

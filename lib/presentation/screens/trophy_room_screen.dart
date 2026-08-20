@@ -8,7 +8,7 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/achievement.dart';
 import '../../domain/progression/museum_records.dart';
-import '../widgets/retro_button.dart';
+import '../widgets/president_statue_unveiling_modal.dart';
 import '../widgets/retro_window.dart';
 import 'prestige_screen.dart';
 
@@ -67,11 +67,30 @@ class TrophyRoomScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Heykel Dikme Butonu
+                    SizedBox(
+                      width: double.infinity,
+                      child: RetroButton(
+                        backgroundColor: AppColors.accentGold,
+                        textColor: Colors.black,
+                        onPressed: () => PresidentStatueUnveilingModal.show(context),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('🗿', style: TextStyle(fontSize: 16)),
+                            SizedBox(width: 6),
+                            Text('STADYUM MEYDANINA HEYKEL DİKME TÖRENİ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
                     // 1. Hanedan Puanı Penceresi
                     RetroWindow(
                       title: 'HANEDAN BAŞARI VE SKOR TABLOSU',
                       icon: '🏛️',
-                      titleBarColor: const Color(0xFF6E5000),
+                      titleBarColor: AppColors.win95TitleNavy,
                       child: Row(
                         children: [
                           const Text('🏆', style: TextStyle(fontSize: 40)),
@@ -156,7 +175,7 @@ class TrophyRoomScreen extends StatelessWidget {
                     RetroWindow(
                       title: 'KULÜP TARİHİ REKORLAR MÜZESİ',
                       icon: '📜',
-                      titleBarColor: const Color(0xFF1E3A8A),
+                      titleBarColor: AppColors.win95TitleNavy,
                       child: Column(
                         children: [
                           _buildRecordTile('EN FARKLI GALİBİYET', '${records.biggestWinScore} vs ${records.biggestWinOpponent}', '⚽'),
@@ -186,7 +205,7 @@ class TrophyRoomScreen extends StatelessWidget {
                             margin: const EdgeInsets.only(bottom: 6),
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: isUnlocked ? const Color(0xFF1B2A1E) : const Color(0xFF141A24),
+                              color: isUnlocked ? AppColors.neoInnerBg : AppColors.neoCardBg,
                               border: Border(
                                 top: BorderSide(color: isUnlocked ? AppColors.neonLime : AppColors.win95DarkGrey, width: 1.5),
                                 left: BorderSide(color: isUnlocked ? AppColors.neonLime : AppColors.win95DarkGrey, width: 1.5),
@@ -259,9 +278,9 @@ class TrophyRoomScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141A24),
-        border: Border.all(color: Colors.white12),
+      decoration: const BoxDecoration(
+        color: AppColors.neoInnerBg,
+        border: Border.fromBorderSide(BorderSide(color: Colors.white12)),
       ),
       child: Row(
         children: [

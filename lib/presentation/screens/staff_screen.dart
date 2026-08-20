@@ -7,8 +7,11 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/staff.dart';
+import '../../domain/president/head_coach.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
+import 'head_coach_hiring_screen.dart';
+import 'legal_defense_screen.dart';
 
 class StaffScreen extends StatefulWidget {
   const StaffScreen({super.key});
@@ -37,13 +40,8 @@ class _StaffScreenState extends State<StaffScreen> {
           error: (e, _) => Scaffold(body: Center(child: Text('Hata: $e'))),
           data: (gameState) {
             final club = gameState.userClub;
-
-            final availableCoaches = [
-              (name: 'Kemal Hoca', ovr: 78, style: 'Baskılı', formation: '3-5-2', wage: 1800, badge: '🔥'),
-              (name: 'Rikardo Hoca', ovr: 85, style: 'Ofansif', formation: '4-3-3', wage: 2500, badge: '⚽'),
-              (name: 'Mehmet Hoca', ovr: 71, style: 'Defansif', formation: '5-3-2', wage: 1200, badge: '🛡️'),
-              (name: 'Carlos Hoca', ovr: 88, style: 'Kontra Atak', formation: '4-2-3-1', wage: 3200, badge: '⚡'),
-            ];
+            final headCoach = gameState.headCoach;
+            final availableCoaches = HeadCoachCatalog.getCandidateCoaches();
 
             return Scaffold(
               backgroundColor: AppColors.primaryDeep,
@@ -60,6 +58,29 @@ class _StaffScreenState extends State<StaffScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 0. Kulüp Hukuk Bürosu & Tahkim Kurulu Butonu
+                          SizedBox(
+                            width: double.infinity,
+                            child: RetroButton(
+                              backgroundColor: AppColors.win95TitleNavy,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const LegalDefenseScreen()),
+                                );
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('⚖️', style: TextStyle(fontSize: 16)),
+                                  SizedBox(width: 6),
+                                  Text('KULÜP HUKUK BÜROSU & TAHKİM KURULU İTİRAZLARI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
                           // 1. Mevcut Teknik Direktör Penceresi
                           RetroWindow(
                             title: 'FAAL TEKNİK DİREKTÖR (HEAD COACH)',
@@ -86,12 +107,12 @@ class _StaffScreenState extends State<StaffScreen> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'SERGEN HOCA (BAŞ ANTRENÖR)',
+                                            headCoach?.fullName ?? 'SERGEN HOCA (BAŞ ANTRENÖR)',
                                             style: AppTypography.label(color: Colors.white).copyWith(fontSize: 14),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            'OYNATTIĞI DİZİLİŞ: ${club.formation} • OYUN FELSEFESİ: ${club.tacticalStyle.toUpperCase()}',
+                                            'OYNATTIĞI DİZİLİŞ: ${club.formation} • FELSEFE: ${(headCoach?.tacticalStyle ?? club.tacticalStyle).toUpperCase()}',
                                             style: AppTypography.bodySmall(color: AppColors.neonLime).copyWith(fontSize: 10),
                                           ),
                                         ],
@@ -101,7 +122,7 @@ class _StaffScreenState extends State<StaffScreen> {
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       color: Colors.black,
                                       child: Text(
-                                        '79 OVR',
+                                        '${headCoach?.reputation ?? 79} OVR',
                                         style: AppTypography.monoNumber(color: AppColors.accentGold).copyWith(fontSize: 16),
                                       ),
                                     ),
@@ -111,9 +132,25 @@ class _StaffScreenState extends State<StaffScreen> {
                                 const Divider(color: AppColors.win95DarkGrey, height: 1),
                                 const SizedBox(height: 10),
 
-                                Text(
-                                  'BAŞKANLIK TALİMATI (BAŞKAN DİREKTİFİ):',
-                                  style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 10),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'BAŞKANLIK TALİMATI (BAŞKAN DİREKTİFİ):',
+                                      style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 10),
+                                    ),
+                                    RetroButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => const HeadCoachHiringScreen()),
+                                        );
+                                      },
+                                      backgroundColor: AppColors.accentGold,
+                                      textColor: Colors.black,
+                                      child: const Text('DETAYLI YÖNETİM & VİZYON', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
@@ -141,12 +178,12 @@ class _StaffScreenState extends State<StaffScreen> {
                             icon: '🔬',
                             titleBarColor: const Color(0xFF1E3A8A),
                             child: Column(
-                              children: _staffMembers.where((s) => s.role != StaffRole.headCoach).map((staff) {
+                              children: _staffMembers.map((staff) {
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 8),
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF141A24),
+                                    color: AppColors.neoInnerBg,
                                     border: Border.all(color: Colors.white24),
                                   ),
                                   child: Row(
@@ -236,12 +273,12 @@ class _StaffScreenState extends State<StaffScreen> {
                             titleBarColor: AppColors.neoCardBg,
                             child: Column(
                               children: availableCoaches.map((c) {
-                                final isCurrent = c.formation == club.formation && c.style == club.tacticalStyle;
+                                final isCurrent = headCoach?.id == c.id;
 
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 8),
                                   decoration: const BoxDecoration(
-                                    color: Color(0xFF141A24),
+                                    color: AppColors.neoInnerBg,
                                     border: Border(
                                       top: BorderSide(color: AppColors.win95DarkGrey, width: 1.5),
                                       left: BorderSide(color: AppColors.win95DarkGrey, width: 1.5),
@@ -253,18 +290,18 @@ class _StaffScreenState extends State<StaffScreen> {
                                     padding: const EdgeInsets.all(8),
                                     child: Row(
                                       children: [
-                                        Text(c.badge, style: const TextStyle(fontSize: 24)),
+                                        Text(c.archetype.icon, style: const TextStyle(fontSize: 24)),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                c.name.toUpperCase(),
+                                                c.fullName.toUpperCase(),
                                                 style: AppTypography.label(color: Colors.white).copyWith(fontSize: 12),
                                               ),
                                               Text(
-                                                'FELSEFE: ${c.formation} ${c.style.toUpperCase()} • MAAŞ: ₣${c.wage}/h',
+                                                'FELSEFE: ${c.tacticalStyle.toUpperCase()} • MAAŞ: ₣${c.weeklyWage}/h',
                                                 style: AppTypography.bodySmall(color: AppColors.accentGold).copyWith(fontSize: 10),
                                               ),
                                             ],
@@ -274,7 +311,7 @@ class _StaffScreenState extends State<StaffScreen> {
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                           color: Colors.black,
                                           child: Text(
-                                            '${c.ovr}',
+                                            '${c.reputation}',
                                             style: AppTypography.monoNumber(color: AppColors.neonLime).copyWith(fontSize: 15),
                                           ),
                                         ),
@@ -283,21 +320,16 @@ class _StaffScreenState extends State<StaffScreen> {
                                           onPressed: isCurrent
                                               ? null
                                               : () async {
-                                                  final ok = await ref.read(gameStateProvider.notifier).hireHeadCoach(
-                                                        coachName: c.name,
-                                                        tacticalStyle: c.style,
-                                                        formation: c.formation,
-                                                        weeklySalary: c.wage,
-                                                      );
+                                                  final ok = await ref.read(gameStateProvider.notifier).hireHeadCoach(c);
                                                   if (context.mounted && ok) {
                                                     ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(content: Text('👔 ${c.name} yeni teknik direktörünüz olarak göreve başladı!')),
+                                                      SnackBar(content: Text('👔 ${c.fullName} yeni teknik direktörünüz olarak göreve başladı!')),
                                                     );
                                                   }
                                                 },
                                           backgroundColor: isCurrent ? AppColors.neutral700 : AppColors.neonLime,
                                           textColor: isCurrent ? Colors.white54 : Colors.black,
-                                          child: Text(isCurrent ? 'GÖREVDE' : 'ANLAŞ (₣${c.wage})'),
+                                          child: Text(isCurrent ? 'GÖREVDE' : 'ANLAŞ (₣${c.signingFee})'),
                                         ),
                                       ],
                                     ),
