@@ -33,7 +33,7 @@ class RefTunnelConfrontationDialog extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: RetroWindow(
-        title: '⚡ DEVRE ARASI KORİDOR BASKINI',
+        title: 'BOLT DEVRE ARASI KORİDOR BASKINI',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -49,7 +49,7 @@ class RefTunnelConfrontationDialog extends ConsumerWidget {
                   ),
                   child: const Row(
                     children: [
-                      Text('🚪👨‍⚖️', style: TextStyle(fontSize: 32)),
+                      Text('[HUKUK]', style: TextStyle(fontSize: 32)),
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -66,7 +66,7 @@ class RefTunnelConfrontationDialog extends ConsumerWidget {
                   context: context,
                   ref: ref,
                   index: 0,
-                  title: '🔥 Sert Gözdağı Ver ("Bu Şehirden Çıkamazsın")',
+                  title: '[FORM] Sert Gözdağı Ver ("Bu Şehirden Çıkamazsın")',
                   desc: 'Hakem korkar (+Hakem Etkisi), ancak TFF 40.000 € ceza keser.',
                 ),
                 const SizedBox(height: 8),
@@ -75,7 +75,7 @@ class RefTunnelConfrontationDialog extends ConsumerWidget {
                   context: context,
                   ref: ref,
                   index: 1,
-                  title: '📜 Diplomatik & Kural Hatası Uyarısı Yap',
+                  title: ' Diplomatik & Kural Hatası Uyarısı Yap',
                   desc: 'Tabletten pozisyonu göster. Hakem tarafsızlaşır, ceza riski olmaz.',
                 ),
                 const SizedBox(height: 8),
@@ -84,7 +84,7 @@ class RefTunnelConfrontationDialog extends ConsumerWidget {
                   context: context,
                   ref: ref,
                   index: 2,
-                  title: '💥 Hakem Odası Kapısını Tekmele & Kameralara Konuş',
+                  title: ' Hakem Odası Kapısını Tekmele & Kameralara Konuş',
                   desc: 'Büyük skandal çıkar. Takım kenetlenir (+Soyunma), 60.000 € para cezası gelir.',
                 ),
                 const SizedBox(height: 10),

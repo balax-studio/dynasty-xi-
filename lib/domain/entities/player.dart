@@ -5,16 +5,16 @@ import 'dart:math' as math;
 import 'position_weights.dart';
 
 enum Position {
-  gk('Kaleci', 'GK', '🧤'),
-  cb('Stoper', 'CB', '🛡️'),
-  lb('Sol Bek', 'LB', '🛡️'),
-  rb('Sağ Bek', 'RB', '🛡️'),
-  dm('Ön Libero', 'DM', '⚙️'),
-  cm('Merkez Orta Saha', 'CM', '🎯'),
-  am('Ofansif Orta Saha', 'AM', '🪄'),
-  lw('Sol Kanat', 'LW', '⚡'),
-  rw('Sağ Kanat', 'RW', '⚡'),
-  st('Santrfor', 'ST', '⚽');
+  gk('Kaleci', 'GK', ''),
+  cb('Stoper', 'CB', 'SHIELD'),
+  lb('Sol Bek', 'LB', 'SHIELD'),
+  rb('Sağ Bek', 'RB', 'SHIELD'),
+  dm('Ön Libero', 'DM', ''),
+  cm('Merkez Orta Saha', 'CM', '[HEDEF]'),
+  am('Ofansif Orta Saha', 'AM', ''),
+  lw('Sol Kanat', 'LW', 'BOLT'),
+  rw('Sağ Kanat', 'RW', 'BOLT'),
+  st('Santrfor', 'ST', '[GOL]');
 
   final String label;
   final String code;
@@ -62,10 +62,10 @@ enum TrainingIntensity {
 }
 
 enum LockerRoomFaction {
-  domesticCore('Yerli Çekirdek', '🇹🇷', 'Takımın yerli ve kıdemli omurgası.'),
-  foreignLegion('Yabancı Lejyonu', '🌍', 'Yüksek maaşlı uluslararası yıldızlar.'),
-  academyYouth('Akademi Gençleri', '🌱', 'Altyapıdan yetişen aç ve hırslı yetenekler.'),
-  loneWolf('Bağımsız Profesyonel', '🐺', 'Kliklerden uzak, sadece işine odaklanan.');
+  domesticCore('Yerli Çekirdek', '', 'Takımın yerli ve kıdemli omurgası.'),
+  foreignLegion('Yabancı Lejyonu', '', 'Yüksek maaşlı uluslararası yıldızlar.'),
+  academyYouth('Akademi Gençleri', '', 'Altyapıdan yetişen aç ve hırslı yetenekler.'),
+  loneWolf('Bağımsız Profesyonel', 'WOLF', 'Kliklerden uzak, sadece işine odaklanan.');
 
   final String label;
   final String icon;
@@ -282,17 +282,17 @@ class Player {
 
   String get naturalLanguageSummary {
     final buffer = StringBuffer();
-    if (isCaptain) buffer.write('🛡️ Takım Kaptanı. ');
+    if (isCaptain) buffer.write('SHIELD Takım Kaptanı. ');
     if (wantsTransfer) {
-      buffer.write('⚠️ Yeterli süre alamadığı veya mutsuz olduğu için ayrılmak istiyor. ');
+      buffer.write('[UYARI] Yeterli süre alamadığı veya mutsuz olduğu için ayrılmak istiyor. ');
     } else if (morale >= 85) {
-      buffer.write('🔥 Takımda çok mutlu ve motive. ');
+      buffer.write('[FORM] Takımda çok mutlu ve motive. ');
     }
-    if (goals > 3) buffer.write('⚽ Bu sezon $goals gol kaydetti. ');
-    if (assists > 2) buffer.write('👟 $assists asist yaptı. ');
+    if (goals > 3) buffer.write('[GOL] Bu sezon $goals gol kaydetti. ');
+    if (assists > 2) buffer.write(' $assists asist yaptı. ');
     if (recentRatings.isNotEmpty) {
       final avg = recentRatings.reduce((a, b) => a + b) / recentRatings.length;
-      buffer.write('📊 Son maç ortalaması: ${avg.toStringAsFixed(1)}. ');
+      buffer.write('[GRAFIK] Son maç ortalaması: ${avg.toStringAsFixed(1)}. ');
     }
     buffer.write('Kişilik: ${personality.label}.');
     return buffer.toString().trim();
@@ -353,7 +353,7 @@ class Player {
     );
   }
 
-  /// Yıldız Derecelendirmesi (1★ - 5★+)
+  /// Yıldız Derecelendirmesi (1 - 5+)
   int get stars {
     final currentOvr = ovr;
     if (currentOvr < 55) return 1;
@@ -366,11 +366,11 @@ class Player {
   /// Nadirlik Rengi Adı
   String get rarityLabel {
     final s = stars;
-    if (s == 1) return 'Amatör (1★)';
-    if (s == 2) return 'Profesyonel (2★)';
-    if (s == 3) return 'Kaliteli (3★)';
-    if (s == 4) return 'Yıldız (4★)';
-    return ovr >= 93 ? 'İkon (5★+)' : 'Efsane (5★)';
+    if (s == 1) return 'Amatör (1)';
+    if (s == 2) return 'Profesyonel (2)';
+    if (s == 3) return 'Kaliteli (3)';
+    if (s == 4) return 'Yıldız (4)';
+    return ovr >= 93 ? 'İkon (5+)' : 'Efsane (5)';
   }
 
   /// Lig Kademesine Göre Piyasa Değeri Formülü — §9.9

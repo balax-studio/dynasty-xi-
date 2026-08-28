@@ -44,7 +44,7 @@ class NewspaperHeadlineWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Text('📰', style: TextStyle(fontSize: 14)),
+                  const Text('[MANSET]', style: TextStyle(fontSize: 14)),
                   const SizedBox(width: 6),
                   Text(
                     outletName.toUpperCase(),

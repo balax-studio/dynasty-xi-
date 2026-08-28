@@ -44,7 +44,7 @@ class StadiumIsometricWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               color: Colors.black.withValues(alpha: 0.8),
               child: Text(
-                '🏟️ ${clubName.toUpperCase()} ARENA (SEVİYE $stadiumLevel)',
+                ' ${clubName.toUpperCase()} ARENA (SEVİYE $stadiumLevel)',
                 style: const TextStyle(color: AppColors.neonLime, fontSize: 9, fontWeight: FontWeight.bold),
               ),
             ),

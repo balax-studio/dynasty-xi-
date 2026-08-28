@@ -47,12 +47,12 @@ class AppColors {
   static const Color neutral50 = Color(0xFFF1F5F9);
 
   // Nadirlik Renkleri (16-Bit Arcade RPG)
-  static const Color rarityAmateur = Color(0xFF9E9E9E); // 1★ Gri
-  static const Color rarityPro = neonLime; // 2★ Neon Yeşil
-  static const Color rarityQuality = neonCyan; // 3★ Elektrik Mavi
-  static const Color rarityStar = Color(0xFFD946EF); // 4★ Siber Fuşya
-  static const Color rarityLegend = accentGold; // 5★ Piksel Altın
-  static const Color rarityIcon = Color(0xFFFFFFFF); // 5★+ Elmas Beyazı
+  static const Color rarityAmateur = Color(0xFF9E9E9E); // 1 Gri
+  static const Color rarityPro = neonLime; // 2 Neon Yeşil
+  static const Color rarityQuality = neonCyan; // 3 Elektrik Mavi
+  static const Color rarityStar = Color(0xFFD946EF); // 4 Siber Fuşya
+  static const Color rarityLegend = accentGold; // 5 Piksel Altın
+  static const Color rarityIcon = Color(0xFFFFFFFF); // 5+ Elmas Beyazı
 
   static Color getRarityColor(int stars) {
     switch (stars) {

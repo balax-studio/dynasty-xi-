@@ -5,9 +5,9 @@ import '../entities/club.dart';
 import '../entities/facility.dart';
 
 enum SponsorshipSlot {
-  mainShirt('Ana Göğüs Sponsoru', '👕'),
-  sleeve('Kol & Sırt Sponsoru', '🎽'),
-  stadiumNaming('Stadyum İsim Hakkı', '🏟️');
+  mainShirt('Ana Göğüs Sponsoru', '[GÖĞÜS]'),
+  sleeve('Kol & Sırt Sponsoru', '[KOL]'),
+  stadiumNaming('Stadyum İsim Hakkı', '[STADYUM]');
 
   final String label;
   final String icon;
@@ -246,7 +246,7 @@ class FinancialStatementCalculator {
         id: 'main_cyber_telecom',
         slot: SponsorshipSlot.mainShirt,
         brandName: 'CyberTel Global',
-        brandIcon: '📡',
+        brandIcon: '',
         weeklyIncome: 4500,
         signingBonus: 10000,
         minLeagueTier: 20,
@@ -256,7 +256,7 @@ class FinancialStatementCalculator {
         id: 'main_apex_crypto',
         slot: SponsorshipSlot.mainShirt,
         brandName: 'Apex Vault Finans',
-        brandIcon: '🪙',
+        brandIcon: '',
         weeklyIncome: 7200,
         signingBonus: 25000,
         minLeagueTier: 15,
@@ -266,7 +266,7 @@ class FinancialStatementCalculator {
         id: 'main_dynasty_aero',
         slot: SponsorshipSlot.mainShirt,
         brandName: 'Dynasty Havayolları',
-        brandIcon: '✈️',
+        brandIcon: '',
         weeklyIncome: 12500,
         signingBonus: 50000,
         minLeagueTier: 8,
@@ -278,7 +278,7 @@ class FinancialStatementCalculator {
         id: 'sleeve_retro_energy',
         slot: SponsorshipSlot.sleeve,
         brandName: 'VoltBit Enerji İçeceği',
-        brandIcon: '⚡',
+        brandIcon: 'BOLT',
         weeklyIncome: 1800,
         signingBonus: 4000,
         minLeagueTier: 20,
@@ -288,7 +288,7 @@ class FinancialStatementCalculator {
         id: 'sleeve_titan_auto',
         slot: SponsorshipSlot.sleeve,
         brandName: 'Titan Otomotiv',
-        brandIcon: '🏎️',
+        brandIcon: '',
         weeklyIncome: 3400,
         signingBonus: 8500,
         minLeagueTier: 14,
@@ -300,7 +300,7 @@ class FinancialStatementCalculator {
         id: 'stadium_arena_plus',
         slot: SponsorshipSlot.stadiumNaming,
         brandName: 'Nexus Cyber Arena',
-        brandIcon: '🏟️',
+        brandIcon: '',
         weeklyIncome: 3500,
         signingBonus: 15000,
         minLeagueTier: 20,
@@ -310,7 +310,7 @@ class FinancialStatementCalculator {
         id: 'stadium_glory_dome',
         slot: SponsorshipSlot.stadiumNaming,
         brandName: 'Glory Quantum Park',
-        brandIcon: '🌌',
+        brandIcon: '',
         weeklyIncome: 6500,
         signingBonus: 35000,
         minLeagueTier: 10,
@@ -328,7 +328,7 @@ class FinancialStatementCalculator {
         principalAmount: 15000,
         interestRate: 0.08,
         totalWeeks: 8,
-        icon: '💵',
+        icon: '[TL]',
         description: 'Acil transferler ve oyuncu maaşları için düşük faizli hızlı avans.',
       ),
       const BankLoanPackage(
@@ -337,7 +337,7 @@ class FinancialStatementCalculator {
         principalAmount: 50000,
         interestRate: 0.12,
         totalWeeks: 12,
-        icon: '🏗️',
+        icon: '[TESİS]',
         description: 'Stadyum ve gençlik akademisi inşaatlarını finanse etmek için orta vadeli kredi.',
       ),
       const BankLoanPackage(
@@ -346,7 +346,7 @@ class FinancialStatementCalculator {
         principalAmount: 120000,
         interestRate: 0.15,
         totalWeeks: 16,
-        icon: '🏛️',
+        icon: '[YÖNETİM]',
         description: 'Büyük transfer bütçesi ve şampiyonluk hamlesi için maksimum fonlama.',
       ),
     ];

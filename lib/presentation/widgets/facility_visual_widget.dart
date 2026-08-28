@@ -136,7 +136,7 @@ class _FacilityVisualWidgetState extends State<FacilityVisualWidget> with Single
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('⚠️', style: TextStyle(fontSize: 12)),
+                        Text('[UYARI]', style: TextStyle(fontSize: 12)),
                         SizedBox(width: 4),
                         Text(
                           'İNŞAAT DEVAM EDİYOR',
@@ -161,7 +161,7 @@ class _FacilityVisualWidgetState extends State<FacilityVisualWidget> with Single
                       border: Border.all(color: Colors.black, width: 1.5),
                     ),
                     child: const Text(
-                      '★ MAKSİMUM HANEDAN SEVİYESİ ★',
+                      ' MAKSİMUM HANEDAN SEVİYESİ ',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 9,

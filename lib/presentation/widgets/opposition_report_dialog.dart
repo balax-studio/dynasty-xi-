@@ -19,7 +19,7 @@ class OppositionReportDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: RetroWindow(
         title: 'SCOUT ANALİZİ: ${report.opponentClubName.toUpperCase()}',
-        icon: '🛰️',
+        icon: '',
         titleBarColor: const Color(0xFF1E3A8A),
         child: SingleChildScrollView(
           child: Column(
@@ -53,7 +53,7 @@ class OppositionReportDialog extends StatelessWidget {
                 color: const Color(0xFF1F1D14),
                 child: Row(
                   children: [
-                    const Text('⚠️', style: TextStyle(fontSize: 20)),
+                    const Text('[UYARI]', style: TextStyle(fontSize: 20)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
@@ -77,7 +77,7 @@ class OppositionReportDialog extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('🎯 TESPİT EDİLEN ZAYIF NOKTA:', style: TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold)),
+                    const Text('[HEDEF] TESPİT EDİLEN ZAYIF NOKTA:', style: TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 2),
                     Text(report.primaryWeakness, style: const TextStyle(color: Colors.white, fontSize: 11)),
                   ],
@@ -93,7 +93,7 @@ class OppositionReportDialog extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('💡 ÖNERİLEN KARŞI TAKTİK:', style: TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold)),
+                    const Text(' ÖNERİLEN KARŞI TAKTİK:', style: TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 2),
                     Text(report.recommendedCounterTactic, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                   ],

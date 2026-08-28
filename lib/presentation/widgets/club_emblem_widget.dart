@@ -122,12 +122,12 @@ class ClubEmblemWidget extends StatelessWidget {
   }
 
   String _resolveEmblemSymbol(String? badgeIcon, Random rng) {
-    if (badgeIcon != null && badgeIcon.trim().isNotEmpty && badgeIcon != '🛡️') {
+    if (badgeIcon != null && badgeIcon.trim().isNotEmpty && badgeIcon != 'SHIELD') {
       return badgeIcon.trim();
     }
 
     const symbols = [
-      '🦅', '🦁', '🐺', '⚡', '⚓', '⚔️', '🏰', '👑', '🔥', '🌊', '🏆', '⭐', '🛡️', '🐅', '🐉', '🏹'
+      'EAGLE', 'LION', 'WOLF', 'BOLT', 'ANCHOR', 'SWORDS', 'CASTLE', 'CROWN', '[FORM]', '', '[KUPA]', 'STAR', 'SHIELD', '', 'DRAGON', ''
     ];
     return symbols[rng.nextInt(symbols.length)];
   }
@@ -284,25 +284,98 @@ class _ClubEmblemPainter extends CustomPainter {
   }
 
   void _drawSymbol(Canvas canvas, double w, double h) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: symbol,
-        style: TextStyle(
-          fontSize: w * 0.46,
-          shadows: const [
-            Shadow(color: Colors.black, offset: Offset(1, 1), blurRadius: 1),
-          ],
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
+    final sym = symbol.toUpperCase().trim();
+    final fillPaint = Paint()
+      ..color = secondaryColor
+      ..style = PaintingStyle.fill;
+    final strokePaint = Paint()
+      ..color = secondaryColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6;
 
-    textPainter.layout();
-    final offset = Offset(
-      (w - textPainter.width) / 2,
-      (h - textPainter.height) / 2 - (shape == EmblemShape.classicShield ? h * 0.05 : 0),
-    );
-    textPainter.paint(canvas, offset);
+    final centerY = h * (shape == EmblemShape.classicShield ? 0.45 : 0.5);
+
+    if (sym.contains('BOLT') || sym.contains('LIGHTNING')) {
+      final bolt = Path()
+        ..moveTo(w * 0.54, centerY - h * 0.22)
+        ..lineTo(w * 0.36, centerY - h * 0.02)
+        ..lineTo(w * 0.50, centerY - h * 0.02)
+        ..lineTo(w * 0.44, centerY + h * 0.24)
+        ..lineTo(w * 0.66, centerY - h * 0.06)
+        ..lineTo(w * 0.52, centerY - h * 0.06)
+        ..close();
+      canvas.drawPath(bolt, fillPaint);
+    } else if (sym.contains('STAR')) {
+      final star = Path()
+        ..moveTo(w * 0.5, centerY - h * 0.2)
+        ..lineTo(w * 0.57, centerY - h * 0.06)
+        ..lineTo(w * 0.72, centerY - h * 0.06)
+        ..lineTo(w * 0.60, centerY + h * 0.04)
+        ..lineTo(w * 0.65, centerY + h * 0.2)
+        ..lineTo(w * 0.5, centerY + h * 0.1)
+        ..lineTo(w * 0.35, centerY + h * 0.2)
+        ..lineTo(w * 0.40, centerY + h * 0.04)
+        ..lineTo(w * 0.28, centerY - h * 0.06)
+        ..lineTo(w * 0.43, centerY - h * 0.06)
+        ..close();
+      canvas.drawPath(star, fillPaint);
+    } else if (sym.contains('CROWN')) {
+      final crown = Path()
+        ..moveTo(w * 0.3, centerY + h * 0.14)
+        ..lineTo(w * 0.3, centerY - h * 0.12)
+        ..lineTo(w * 0.42, centerY - h * 0.02)
+        ..lineTo(w * 0.5, centerY - h * 0.18)
+        ..lineTo(w * 0.58, centerY - h * 0.02)
+        ..lineTo(w * 0.7, centerY - h * 0.12)
+        ..lineTo(w * 0.7, centerY + h * 0.14)
+        ..close();
+      canvas.drawPath(crown, fillPaint);
+      canvas.drawRect(Rect.fromLTWH(w * 0.3, centerY + h * 0.14, w * 0.4, h * 0.04), Paint()..color = Colors.black);
+    } else if (sym.contains('FLAME')) {
+      final flame = Path()
+        ..moveTo(w * 0.5, centerY - h * 0.22)
+        ..quadraticBezierTo(w * 0.72, centerY - h * 0.02, w * 0.72, centerY + h * 0.14)
+        ..arcToPoint(Offset(w * 0.28, centerY + h * 0.14), radius: Radius.circular(w * 0.22))
+        ..quadraticBezierTo(w * 0.28, centerY - h * 0.02, w * 0.5, centerY - h * 0.22)
+        ..close();
+      canvas.drawPath(flame, fillPaint);
+    } else if (sym.contains('SWORD')) {
+      canvas.drawLine(Offset(w * 0.32, centerY - h * 0.18), Offset(w * 0.68, centerY + h * 0.18), strokePaint..strokeWidth = 2.0);
+      canvas.drawLine(Offset(w * 0.68, centerY - h * 0.18), Offset(w * 0.32, centerY + h * 0.18), strokePaint..strokeWidth = 2.0);
+    } else if (sym.contains('SHIELD')) {
+      final sh = Path()
+        ..moveTo(w * 0.32, centerY - h * 0.16)
+        ..lineTo(w * 0.68, centerY - h * 0.16)
+        ..lineTo(w * 0.68, centerY + h * 0.04)
+        ..quadraticBezierTo(w * 0.5, centerY + h * 0.22, w * 0.5, centerY + h * 0.22)
+        ..quadraticBezierTo(w * 0.32, centerY + h * 0.04, w * 0.32, centerY + h * 0.04)
+        ..close();
+      canvas.drawPath(sh, strokePaint);
+    } else {
+      // Geometric Monogram Initial
+      final initial = sym.isNotEmpty ? sym[0] : 'X';
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: initial,
+          style: TextStyle(
+            color: secondaryColor,
+            fontSize: w * 0.42,
+            fontWeight: FontWeight.w900,
+            fontFamily: 'monospace',
+            shadows: const [
+              Shadow(color: Colors.black, offset: Offset(1, 1), blurRadius: 2),
+            ],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      final offset = Offset(
+        (w - textPainter.width) / 2,
+        centerY - (textPainter.height / 2),
+      );
+      textPainter.paint(canvas, offset);
+    }
   }
 
   @override

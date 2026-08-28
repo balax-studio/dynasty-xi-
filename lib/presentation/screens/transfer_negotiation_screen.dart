@@ -111,7 +111,7 @@ class _TransferNegotiationScreenState
     const kickbackCost = 5000;
     if (currentCash < kickbackCost) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠️ Kasada yeterli bakiye yok! (Gereken: ₣5.000)')),
+        const SnackBar(content: Text('[UYARI] Kasada yeterli bakiye yok! (Gereken: ₣5.000)')),
       );
       return;
     }
@@ -142,7 +142,7 @@ class _TransferNegotiationScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: AppColors.signalRed,
-          content: Text('⚠️ Yetersiz bakiye veya transfer gerçekleştirilemedi!'),
+          content: Text('[UYARI] Yetersiz bakiye veya transfer gerçekleştirilemedi!'),
         ),
       );
     }

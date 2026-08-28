@@ -37,7 +37,7 @@ class U19SquadScreen extends ConsumerWidget {
             ),
             title: Row(
               children: [
-                const Text('🌱', style: TextStyle(fontSize: 20)),
+                const Text('[U19]', style: TextStyle(fontSize: 12, color: AppColors.neonLime, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -66,7 +66,7 @@ class U19SquadScreen extends ConsumerWidget {
                       // 1. Yeni Yetenek Keşif Butonu
                       RetroWindow(
                         title: 'AKADEMİ SCOUT RADARI & YETENEK AVI',
-                        icon: '🔍',
+                        icon: '[ARAMA]',
                         titleBarColor: AppColors.win95TitleNavy,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,8 +90,8 @@ class U19SquadScreen extends ConsumerWidget {
                                         backgroundColor: ok ? AppColors.neonLime : AppColors.comicRed,
                                         content: Text(
                                           ok
-                                              ? '🌱 Yeni genç yetenek keşfedildi ve U19 kadrosuna dahil edildi!'
-                                              : '⚠️ Yetersiz bütçe! (Gereken: ₣3.000)',
+                                              ? ' Yeni genç yetenek keşfedildi ve U19 kadrosuna dahil edildi!'
+                                              : '[UYARI] Yetersiz bütçe! (Gereken: ₣3.000)',
                                           style: TextStyle(color: ok ? Colors.black : Colors.white, fontWeight: FontWeight.bold),
                                         ),
                                       ),
@@ -101,7 +101,7 @@ class U19SquadScreen extends ConsumerWidget {
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text('🔍', style: TextStyle(fontSize: 16)),
+                                    Text('[ARAMA]', style: TextStyle(fontSize: 16)),
                                     SizedBox(width: 6),
                                     Text(
                                       'YENİ GENÇ YETENEK SCOUT ET (₣3.000)',
@@ -119,7 +119,7 @@ class U19SquadScreen extends ConsumerWidget {
                       // 2. U19 Oyuncu Listesi
                       RetroWindow(
                         title: 'U19 KADROSU LİSTESİ (${u19.length} OYUNCU)',
-                        icon: '📋',
+                        icon: '[RAPOR]',
                         titleBarColor: AppColors.neoCardBg,
                         child: u19.isEmpty
                             ? Container(
@@ -219,7 +219,7 @@ class U19SquadScreen extends ConsumerWidget {
                                                     SnackBar(
                                                       backgroundColor: AppColors.neonLime,
                                                       content: Text(
-                                                        '🌟 ${player.fullName} başarıyla A Takıma yükseltildi!',
+                                                        'STAR ${player.fullName} başarıyla A Takıma yükseltildi!',
                                                         style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                                                       ),
                                                     ),

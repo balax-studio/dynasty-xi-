@@ -8,6 +8,7 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../core/audio/audio_synthesizer.dart';
 import '../../domain/entities/player.dart';
+import '../../domain/progression/player_natural_summary.dart';
 import '../widgets/contract_renewal_dialog.dart';
 import '../widgets/face_avatar_widget.dart';
 import '../widgets/meters_bar_widget.dart';
@@ -247,7 +248,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
   Widget _buildHeaderIdentityCard(Player p, Color rarityColor, bool isStarting11) {
     return RetroWindow(
       title: 'FUTBOLCU KİMLİK KARTI & LİSANS',
-      icon: '🪪',
+      icon: '',
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -269,7 +270,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                     if (p.isCaptain)
                       const Padding(
                         padding: EdgeInsets.only(right: 4),
-                        child: Text('🛡️', style: TextStyle(fontSize: 15)),
+                        child: Text('SHIELD', style: TextStyle(fontSize: 15)),
                       ),
                     Expanded(
                       child: Text(
@@ -290,11 +291,11 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                     _buildTag(p.countryCode, AppColors.neonCyan),
                     if (widget.isOwned)
                       _buildTag(
-                        isStarting11 ? '⚡ İLK 11' : '🛋️ YEDEK',
+                        isStarting11 ? 'BOLT İLK 11' : ' YEDEK',
                         isStarting11 ? AppColors.neonLime : Colors.white54,
                       ),
-                    if (p.isYouthProduct) _buildTag('⭐ ALTYAPI', AppColors.accentGold),
-                    if (p.isTransferListed) _buildTag('🏷️ SATILIK', AppColors.comicRed),
+                    if (p.isYouthProduct) _buildTag('STAR ALTYAPI', AppColors.accentGold),
+                    if (p.isTransferListed) _buildTag('[ETIKET] SATILIK', AppColors.comicRed),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -306,7 +307,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                       style: AppTypography.monoNumber(color: AppColors.accentGold).copyWith(fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 6),
-                    Text('★' * p.stars, style: const TextStyle(color: Color(0xFFFFD700), fontSize: 11)),
+                    Text('' * p.stars, style: const TextStyle(color: Color(0xFFFFD700), fontSize: 11)),
                   ],
                 ),
               ],
@@ -324,8 +325,37 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
         // 6 Eksenli Hexagonal Siber Radar Grafiği
         RetroWindow(
           title: '6 EKSENLİ NİTELİK VE BECERİ RADARI',
-          icon: '🕸️',
+          icon: '',
           child: PlayerRadarChartWidget(player: p),
+        ),
+        const SizedBox(height: 10),
+
+        // Teknik Direktör & Scout Değerlendirme Raporu (§21.4)
+        RetroWindow(
+          title: 'TEKNİK DİREKTÖR & SCOUT DEĞERLENDİRME RAPORU',
+          icon: '[RAPOR]',
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            color: Colors.black,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('[RAPOR]', style: TextStyle(fontSize: 10, color: AppColors.neonLime, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    PlayerNaturalSummary.generateSummary(p),
+                    style: const TextStyle(
+                      color: AppColors.neonLime,
+                      fontSize: 11,
+                      height: 1.35,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 10),
 
@@ -336,7 +366,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
         // Sezonluk Gelişim Çizgi Grafiği
         RetroWindow(
           title: 'SEZONLUK GELİŞİM VE REYTİNG EĞRİSİ',
-          icon: '📈',
+          icon: '[ARTIS]',
           child: PlayerGrowthChartWidget(
             seasonRatings: p.seasonRatings.isNotEmpty ? p.seasonRatings : [p.ovr - 3, p.ovr - 2, p.ovr - 1],
             currentOvr: p.ovr,
@@ -358,7 +388,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
       children: [
         RetroWindow(
           title: 'SÖZLEŞME & MALİ HÜKÜMLER',
-          icon: '💰',
+          icon: '[KASA]',
           child: Column(
             children: [
               _buildFinanceRow('Haftalık Maaş', '₣${p.weeklyWage}', isHighlight: true),
@@ -377,7 +407,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
         // Aksiyon Butonları
         RetroWindow(
           title: widget.isOwned ? 'KULÜP SÖZLEŞME VE TRANSFER İŞLEMLERİ' : 'TRANSFER VE KİRALAMA MASASI',
-          icon: '🤝',
+          icon: '[ANLASMA]',
           titleBarColor: AppColors.accentGold,
           child: widget.isOwned
               ? Column(
@@ -405,7 +435,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                             },
                             backgroundColor: AppColors.neonLime,
                             textColor: Colors.black,
-                            child: const Text('📝 SÖZLEŞME YENİLE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                            child: const Text(' SÖZLEŞME YENİLE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -417,7 +447,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                             backgroundColor: p.isTransferListed ? AppColors.comicYellow : AppColors.comicRed,
                             textColor: Colors.white,
                             child: Text(
-                              p.isTransferListed ? '🏷️ LİSTEDEN ÇIKAR' : '🏷️ SATILIK LİSTESİNE KOY',
+                              p.isTransferListed ? '[ETIKET] LİSTEDEN ÇIKAR' : '[ETIKET] SATILIK LİSTESİNE KOY',
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5),
                             ),
                           ),
@@ -437,7 +467,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                             },
                             backgroundColor: AppColors.win95TitleNavy,
                             textColor: Colors.white,
-                            child: const Text('💼 MENAJERİ İLE GÖRÜŞ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                            child: const Text('[MENAJER] MENAJERİ İLE GÖRÜŞ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -449,7 +479,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                             },
                             backgroundColor: const Color(0xFF334155),
                             textColor: AppColors.comicRed,
-                            child: const Text('❌ SERBEST BIRAK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                            child: const Text('[RED] SERBEST BIRAK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                           ),
                         ),
                       ],
@@ -470,7 +500,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                               }
                             : null,
                         child: Text(
-                          '💰 DOĞRUDAN TRANSFER ET (₣${p.marketValue})',
+                          '[KASA] DOĞRUDAN TRANSFER ET (₣${p.marketValue})',
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
                         ),
                       ),
@@ -498,7 +528,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
         // 1. Soyunma Odası Kliği ve Hoca Uyum Durumu
         RetroWindow(
           title: 'SOYUNMA ODASI KLİĞİ VE HOCA KİMYASI',
-          icon: '👥',
+          icon: '[TARAFTAR]',
           titleBarColor: AppColors.win95TitleNavy,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,7 +579,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
         // 2. Başkanlık Doğrudan Müdahale ve Prim Kartı
         RetroWindow(
           title: 'BAŞKANLIK DOĞRUDAN MÜDAHALE MERKEZİ',
-          icon: '👑',
+          icon: 'CROWN',
           titleBarColor: AppColors.accentGold,
           child: Column(
             children: [
@@ -566,7 +596,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('👑', style: TextStyle(fontSize: 16)),
+                        Text('CROWN', style: TextStyle(fontSize: 16)),
                         SizedBox(width: 8),
                         Text(
                           'ÖZEL PRİM / HEDİYE / NUMARA / CEZA MENÜSÜ',
@@ -587,7 +617,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                       onPressed: () {
                         PlayerComparisonModal.show(context, p, squad);
                       },
-                      child: const Text('⚖️ TAKIMLA KIYASLA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
+                      child: const Text('[HUKUK] TAKIMLA KIYASLA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -601,7 +631,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                           MaterialPageRoute(builder: (_) => PlayerDialogueScreen(player: p)),
                         );
                       },
-                      child: const Text('💬 BİREBİR GÖRÜŞ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
+                      child: const Text('[MESAJ] BİREBİR GÖRÜŞ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
                     ),
                   ),
                 ],
@@ -616,7 +646,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                     await ref.read(gameStateProvider.notifier).setPlayerCaptain(p.id);
                   },
                   child: Text(
-                    p.isCaptain ? '🛡️ KAPTANLIK BANDINI AL' : '🛡️ TAKIM KAPTANI YAP',
+                    p.isCaptain ? 'SHIELD KAPTANLIK BANDINI AL' : 'SHIELD TAKIM KAPTANI YAP',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
                   ),
                 ),
@@ -632,7 +662,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
   Widget _buildAttributesWindow(Player p) {
     return RetroWindow(
       title: '7 ÇEKİRDEK FUTBOLCU NİTELİĞİ (1 - 99)',
-      icon: '⚡',
+      icon: 'BOLT',
       child: Column(
         children: [
           _buildAttrBar('HIZ & ÇEVİKLİK (PAC)', p.pace),
@@ -688,7 +718,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
   Widget _buildSeasonStatsWindow(Player p) {
     return RetroWindow(
       title: 'SEZONLUK MAÇ PERFORMANSI',
-      icon: '📊',
+      icon: '[GRAFIK]',
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [

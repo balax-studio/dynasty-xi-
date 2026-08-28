@@ -23,7 +23,7 @@ class HostileTakeoverRescueModal extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: RetroWindow(
-        title: '💼 ACİL KULÜP KURTARMA VE SERMAYE ARTIRIMI',
+        title: '[MENAJER] ACİL KULÜP KURTARMA VE SERMAYE ARTIRIMI',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -36,7 +36,7 @@ class HostileTakeoverRescueModal extends ConsumerWidget {
                   color: Colors.black,
                   child: const Row(
                     children: [
-                      Text('🏦🚨', style: TextStyle(fontSize: 26)),
+                      Text('[ACIL]', style: TextStyle(fontSize: 26)),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -63,7 +63,7 @@ class HostileTakeoverRescueModal extends ConsumerWidget {
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            '💰 ŞAHSİ SERVETTEN ₣250.000 HİBE EDİLDİ! Kayyum tehlikesi savuşturuldu, güven tazelendi!',
+                            '[KASA] ŞAHSİ SERVETTEN ₣250.000 HİBE EDİLDİ! Kayyum tehlikesi savuşturuldu, güven tazelendi!',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -88,7 +88,7 @@ class HostileTakeoverRescueModal extends ConsumerWidget {
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            '🌍 KÖRFEZ YATIRIM FONUNA %25 HİSSE SATILDI (+₣500K Kasaya Girdi)!',
+                            ' KÖRFEZ YATIRIM FONUNA %25 HİSSE SATILDI (+₣500K Kasaya Girdi)!',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),

@@ -27,10 +27,17 @@ class BoardRoomScreen extends ConsumerWidget {
         final boardTrust = club.meters.boardTrust;
         final activeLoan = gameState.activeLoan;
 
+        int sleeveIncome = gameState.sleeveSponsorIncome;
+        int stadiumIncome = gameState.stadiumNamingIncome;
+        final sleeveContract = gameState.activeSponsorships[SponsorshipSlot.sleeve];
+        if (sleeveContract != null) sleeveIncome = sleeveContract.weeklyIncome;
+        final stadiumContract = gameState.activeSponsorships[SponsorshipSlot.stadiumNaming];
+        if (stadiumContract != null) stadiumIncome = stadiumContract.weeklyIncome;
+
         final statement = FinancialStatementCalculator.calculateWeeklyStatement(
           club: club,
-          sleeveSponsorIncome: gameState.sleeveSponsorIncome,
-          stadiumNamingIncome: gameState.stadiumNamingIncome,
+          sleeveSponsorIncome: sleeveIncome,
+          stadiumNamingIncome: stadiumIncome,
           activeLoanWeeklyRepayment: activeLoan?.weeklyPayment ?? 0,
         );
 
@@ -68,7 +75,7 @@ class BoardRoomScreen extends ConsumerWidget {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('🏛️', style: TextStyle(fontSize: 16)),
+                              Text('[YÖNETİM]', style: TextStyle(fontSize: 16)),
                               SizedBox(width: 6),
                               Text('BAŞKANLIK ZİRVESİ & SERMAYE ARTIRIMI (ÖZEL TOPLANTI)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5)),
                             ],
@@ -91,7 +98,7 @@ class BoardRoomScreen extends ConsumerWidget {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('👔', style: TextStyle(fontSize: 16)),
+                              Text('[HİZİP]', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.win95TitleNavy)),
                               SizedBox(width: 6),
                               Text('YÖNETİM İÇİ HİZİPLER & KULİS ODASI (ERKEN SEÇİM / OY ORANLARI)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: AppColors.win95TitleNavy)),
                             ],
@@ -103,7 +110,7 @@ class BoardRoomScreen extends ConsumerWidget {
                       // 1. Yönetim Kurulu Güven İndeksi & Kovulma Riski (§12.8)
                       RetroWindow(
                         title: 'BAŞKANLIK GÜVEN & İSTİKRAR İNDEKSİ',
-                        icon: '🏛️',
+                        icon: '[YÖNETİM]',
                         child: Column(
                           children: [
                             Row(
@@ -126,7 +133,7 @@ class BoardRoomScreen extends ConsumerWidget {
                                     border: Border.all(color: trustColor, width: 2),
                                   ),
                                   child: Text(
-                                    boardTrust >= 70 ? 'GÜVEN TAM' : (boardTrust >= 40 ? 'SALLANTIDA' : '⚠️ KOVULMA TEHLİKESİ!'),
+                                    boardTrust >= 70 ? 'GÜVEN TAM' : (boardTrust >= 40 ? 'SALLANTIDA' : '[UYARI] KOVULMA TEHLİKESİ!'),
                                     style: AppTypography.label(color: trustColor).copyWith(fontSize: 11, fontWeight: FontWeight.bold),
                                   ),
                                 ),
@@ -142,7 +149,7 @@ class BoardRoomScreen extends ConsumerWidget {
                             if (boardTrust < 30) ...[
                               const SizedBox(height: 8),
                               const Text(
-                                '⚠️ DİKKAT: Güven %30 altına indi. 2 mağlubiyet daha alırsanız yönetim kurulu sözleşmenizi tek taraflı feshedecektir!',
+                                '[UYARI] DİKKAT: Güven %30 altına indi. 2 mağlubiyet daha alırsanız yönetim kurulu sözleşmenizi tek taraflı feshedecektir!',
                                 style: TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold),
                               ),
                             ],
@@ -154,7 +161,7 @@ class BoardRoomScreen extends ConsumerWidget {
                       // 2. Haftalık Mali Bütçe Raporu (§15.2, §15.3)
                       RetroWindow(
                         title: 'HAFTALIK MALİ GELİR / GİDER BİLANÇOSU',
-                        icon: '📊',
+                        icon: '[GRAFIK]',
                         titleBarColor: const Color(0xFF0F3826),
                         child: _buildFinancialStatementWidget(context, statement),
                       ),
@@ -163,7 +170,7 @@ class BoardRoomScreen extends ConsumerWidget {
                       // 3. 3-Slot Sponsorluk Yönetimi (§15.2)
                       RetroWindow(
                         title: 'KULÜP SPONSORLUK YÖNETİMİ (3 SLOT)',
-                        icon: '🤝',
+                        icon: '[ANLASMA]',
                         titleBarColor: const Color(0xFF1E3A8A),
                         child: _buildSponsorshipSlotsWidget(context, ref, gameState),
                       ),
@@ -172,7 +179,7 @@ class BoardRoomScreen extends ConsumerWidget {
                       // 4. Banka Kredisi ve Borç Yönetimi (§A.7)
                       RetroWindow(
                         title: 'BANKA KREDİSİ & BORÇ MERKEZİ',
-                        icon: '🏦',
+                        icon: '',
                         child: _buildBankLoanWidget(context, ref, activeLoan, club.meters.cash),
                       ),
                       const SizedBox(height: 10),
@@ -180,7 +187,7 @@ class BoardRoomScreen extends ConsumerWidget {
                       // 5. Sezon Hedefi Taahhüdü (§A.3)
                       RetroWindow(
                         title: 'SEZON HEDEFİ VE BAŞKAN TAAHHÜDÜ',
-                        icon: '🎯',
+                        icon: '[HEDEF]',
                         child: _buildSeasonTargetWidget(context, ref, gameState.targetLeaguePosition),
                       ),
                       const SizedBox(height: 10),
@@ -188,11 +195,11 @@ class BoardRoomScreen extends ConsumerWidget {
                       // 6. Yönetim Kurulu Acil Talepleri
                       RetroWindow(
                         title: 'YÖNETİM KURULU TALEP & BÜTÇE İSTEKLERİ',
-                        icon: '💎',
+                        icon: 'DIAMOND',
                         child: Column(
                           children: [
                             _buildBoardActionButton(
-                              title: '💰 EK TRANSFER BÜTÇESİ İSTE (+₣15,000)',
+                              title: '[KASA] EK TRANSFER BÜTÇESİ İSTE (+₣15,000)',
                               desc: 'Kulüp kasasına acil ödenek sağlar. (Yönetim Güveni -12 Düşer)',
                               btnText: 'BÜTÇE ÇEK',
                               color: AppColors.neonLime,
@@ -203,8 +210,8 @@ class BoardRoomScreen extends ConsumerWidget {
                                     SnackBar(
                                       content: Text(
                                         ok
-                                            ? '💰 Yönetim Kurulu onayladı! Kasaya +₣15,000 aktarıldı.'
-                                            : '⚠️ İstek reddedildi: Yönetim kurulu güveni yetersiz (%30 altı).',
+                                            ? '[KASA] Yönetim Kurulu onayladı! Kasaya +₣15,000 aktarıldı.'
+                                            : '[UYARI] İstek reddedildi: Yönetim kurulu güveni yetersiz (%30 altı).',
                                       ),
                                     ),
                                   );
@@ -389,7 +396,7 @@ class BoardRoomScreen extends ConsumerWidget {
                 onPressed: () {
                   ref.read(gameStateProvider.notifier).takeBankLoan(25000);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('🏦 ₣25,000 banka kredisi kasaya eklendi!')),
+                    const SnackBar(content: Text(' ₣25,000 banka kredisi kasaya eklendi!')),
                   );
                 },
                 backgroundColor: AppColors.neonCyan,
@@ -403,7 +410,7 @@ class BoardRoomScreen extends ConsumerWidget {
                 onPressed: () {
                   ref.read(gameStateProvider.notifier).takeBankLoan(50000);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('🏦 ₣50,000 banka kredisi kasaya eklendi!')),
+                    const SnackBar(content: Text(' ₣50,000 banka kredisi kasaya eklendi!')),
                   );
                 },
                 backgroundColor: AppColors.neonLime,
@@ -417,7 +424,7 @@ class BoardRoomScreen extends ConsumerWidget {
                 onPressed: () {
                   ref.read(gameStateProvider.notifier).takeBankLoan(100000);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('🏦 ₣100,000 banka kredisi kasaya eklendi!')),
+                    const SnackBar(content: Text(' ₣100,000 banka kredisi kasaya eklendi!')),
                   );
                 },
                 backgroundColor: AppColors.accentGold,
@@ -462,7 +469,7 @@ class BoardRoomScreen extends ConsumerWidget {
             if (val != null) {
               ref.read(gameStateProvider.notifier).setTargetLeaguePosition(val);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('🎯 Yeni sezon hedefi: İlk $val sıra taahhüt edildi!')),
+                SnackBar(content: Text('[HEDEF] Yeni sezon hedefi: İlk $val sıra taahhüt edildi!')),
               );
             }
           },

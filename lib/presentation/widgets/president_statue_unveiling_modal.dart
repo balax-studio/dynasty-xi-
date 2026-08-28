@@ -23,7 +23,7 @@ class PresidentStatueUnveilingModal extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: RetroWindow(
-        title: '🗿 STADYUM MEYDANINA HEYKEL DİKME TÖRENİ',
+        title: '[HEYKEL] STADYUM MEYDANINA HEYKEL DİKME TÖRENİ',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -36,7 +36,7 @@ class PresidentStatueUnveilingModal extends ConsumerWidget {
                   color: Colors.black,
                   child: const Row(
                     children: [
-                      Text('🗿✨', style: TextStyle(fontSize: 26)),
+                      Text('[HEYKEL][ETKI]', style: TextStyle(fontSize: 26)),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -64,7 +64,7 @@ class PresidentStatueUnveilingModal extends ConsumerWidget {
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            '🗿 EFSANE BAŞKANIN BRONZ HEYKELİ AÇILDI! Taraftar coşkusu zirve yaptı (+15 Taraftar / +10 Güven)!',
+                            '[HEYKEL] EFSANE BAŞKANIN BRONZ HEYKELİ AÇILDI! Taraftar coşkusu zirve yaptı (+15 Taraftar / +10 Güven)!',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -88,7 +88,7 @@ class PresidentStatueUnveilingModal extends ConsumerWidget {
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            '⚽ KULÜP EFSANESİ KAPTAN HEYKELİ DİKİLDİ! Soyunma odası kenetlendi (+15 Moral)!',
+                            '[GOL] KULÜP EFSANESİ KAPTAN HEYKELİ DİKİLDİ! Soyunma odası kenetlendi (+15 Moral)!',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),

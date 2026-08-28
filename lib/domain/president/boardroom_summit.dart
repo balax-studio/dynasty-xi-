@@ -45,7 +45,7 @@ class VipBoxDeal {
   factory VipBoxDeal.fromJson(Map<String, dynamic> json) => VipBoxDeal(
         id: json['id'] as String,
         companyName: json['companyName'] as String,
-        companyIcon: json['companyIcon'] as String? ?? '🏢',
+        companyIcon: json['companyIcon'] as String? ?? '[KULÜP]',
         seasonPrice: json['seasonPrice'] as int,
         seatsCount: json['seatsCount'] as int? ?? 12,
         isSold: json['isSold'] as bool? ?? false,
@@ -117,7 +117,7 @@ class BoardroomCatalog {
       VipBoxDeal(
         id: 'vip_kocak_holding',
         companyName: 'Koçak Holding VIP Lounge',
-        companyIcon: '🏛️',
+        companyIcon: '[YÖNETİM]',
         seasonPrice: 35000,
         seatsCount: 16,
         perkDescription: 'Holding yöneticilerine 1 sezonluk protokol locası. Peşin milyonluk nakit sağlar.',
@@ -125,7 +125,7 @@ class BoardroomCatalog {
       VipBoxDeal(
         id: 'vip_neotech_lounge',
         companyName: 'NeoTech Global Suite',
-        companyIcon: '💻',
+        companyIcon: '',
         seasonPrice: 28000,
         seatsCount: 12,
         perkDescription: 'Teknoloji devi sponsorluk locası. Sezon başı büyük nakit girişi.',
@@ -133,7 +133,7 @@ class BoardroomCatalog {
       VipBoxDeal(
         id: 'vip_apex_petrol',
         companyName: 'Apex Energy Skybox',
-        companyIcon: '⛽',
+        companyIcon: '',
         seasonPrice: 42000,
         seatsCount: 20,
         perkDescription: 'Stadyumun en prestijli merkez locası. Yüksek gelirli iş insanlarını ağırlar.',
@@ -141,7 +141,7 @@ class BoardroomCatalog {
       VipBoxDeal(
         id: 'vip_atlas_logistics',
         companyName: 'Atlas Lojistik Club',
-        companyIcon: '🚢',
+        companyIcon: '',
         seasonPrice: 22000,
         seatsCount: 10,
         perkDescription: 'Uluslararası taşımacılık devi için ayrılmış özel tribün locası.',
@@ -157,7 +157,7 @@ class BoardroomCatalog {
         cashAmount: 50000,
         boardTrustBonus: 8,
         fanBonus: 5,
-        icon: '💵',
+        icon: '[TL]',
         description: 'Başkan şahsi servetinden kulüp kasasına ₣50,000 karşılıksız hibe aktarır.',
       ),
       CapitalInjectionOption(
@@ -166,7 +166,7 @@ class BoardroomCatalog {
         cashAmount: 150000,
         boardTrustBonus: 15,
         fanBonus: 10,
-        icon: '💎',
+        icon: 'DIAMOND',
         description: 'Büyük transfer bütçesi için kulübün sermayesini artırarak kasaya ₣150,000 aktarır.',
       ),
       CapitalInjectionOption(
@@ -175,7 +175,7 @@ class BoardroomCatalog {
         cashAmount: 300000,
         boardTrustBonus: 25,
         fanBonus: 18,
-        icon: '🏛️',
+        icon: '[YÖNETİM]',
         description: 'Kulüp mülklerini teminat gösterip şahsi garantiyle devasa ₣300,000 bütçe yaratır.',
       ),
     ];
@@ -199,7 +199,7 @@ class BoardroomCatalog {
         yesVotes: 16,
         noVotes: 2,
         requiredCost: 25000,
-        rewardDescription: 'Akademiye 4★ potansiyelli wonderkid eklenir.',
+        rewardDescription: 'Akademiye 4 potansiyelli wonderkid eklenir.',
       ),
       BoardroomMotion(
         id: 'motion_club_channel',

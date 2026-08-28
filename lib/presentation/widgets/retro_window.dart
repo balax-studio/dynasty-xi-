@@ -25,7 +25,7 @@ class RetroWindow extends StatelessWidget {
   const RetroWindow({
     super.key,
     required this.title,
-    this.icon = '⚡',
+    this.icon = 'BOLT',
     this.leadingIcon,
     required this.child,
     this.onClose,
@@ -88,7 +88,7 @@ class RetroWindow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    // Neo-Brutalist Kontrol Butonları [_] [▲] [✖]
+                    // Neo-Brutalist Kontrol Butonları [_] [▲] []
                     if (onMinimize != null) _buildNeoButton('_', onMinimize),
                     if (onMaximize != null) ...[
                       const SizedBox(width: 4),
@@ -96,7 +96,7 @@ class RetroWindow extends StatelessWidget {
                     ],
                     if (onClose != null) ...[
                       const SizedBox(width: 4),
-                      _buildNeoButton('✖', onClose, isClose: true),
+                      _buildNeoButton('', onClose, isClose: true),
                     ],
                   ],
                 ),

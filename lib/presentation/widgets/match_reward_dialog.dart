@@ -48,7 +48,7 @@ class MatchRewardDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: RetroWindow(
         title: 'MAÇ SONU RAPORU & ÖDÜLLER',
-        icon: '🏆',
+        icon: '[KUPA]',
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,12 +82,12 @@ class MatchRewardDialog extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildRewardRow('💰 Maç Günü Geliri:', '+₣$cashEarned', AppColors.neonLime),
+                    _buildRewardRow('[KASA] Maç Günü Geliri:', '+₣$cashEarned', AppColors.neonLime),
                     const SizedBox(height: 4),
-                    _buildRewardRow('⭐ Menajer Deneyim Puanı:', '+$managerXpEarned XP', AppColors.accentGold),
+                    _buildRewardRow('STAR Menajer Deneyim Puanı:', '+$managerXpEarned XP', AppColors.accentGold),
                     const SizedBox(height: 4),
                     _buildRewardRow(
-                      '👥 Taraftar Değişimi:',
+                      '[TARAFTAR] Taraftar Değişimi:',
                       '${fanDelta >= 0 ? "+" : ""}$fanDelta',
                       fanDelta >= 0 ? AppColors.neonCyan : AppColors.comicRed,
                     ),
@@ -111,7 +111,7 @@ class MatchRewardDialog extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('🌟 MAÇIN ADAMI (MOTM)', style: TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.bold)),
+                          const Text('STAR MAÇIN ADAMI (MOTM)', style: TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.bold)),
                           Text(motmPlayerName, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                           Text('Maç Puanı: $motmPlayerRating / 10 • +50 Ekstra XP', style: const TextStyle(color: Colors.white70, fontSize: 10)),
                         ],

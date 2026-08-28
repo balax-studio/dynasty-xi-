@@ -160,7 +160,7 @@ class _PressConferenceScreenState extends State<PressConferenceScreen> {
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text('📺', style: TextStyle(fontSize: 16)),
+                                  Text('[TV]', style: TextStyle(fontSize: 16)),
                                   SizedBox(width: 6),
                                   Text('GECE 02:00 CANLI YAYIN DÜELLOSU & TELEFON BAĞLANTISI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
                                 ],
@@ -172,10 +172,10 @@ class _PressConferenceScreenState extends State<PressConferenceScreen> {
                           // 1. Basın Odası Başlık Frame
                           RetroWindow(
                             title: 'CANLI BASIN TOPLANTISI SALONU',
-                            icon: '🎙️',
+                            icon: '[BASIN]',
                             child: Row(
                               children: [
-                                const Text('📺', style: TextStyle(fontSize: 32)),
+                                const Text('[TV]', style: TextStyle(fontSize: 32)),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -200,14 +200,14 @@ class _PressConferenceScreenState extends State<PressConferenceScreen> {
                           // 2. Gazeteci Soru Kartı
                           RetroWindow(
                             title: 'GAZETECİ SORUSU (${currentQ.outlet})',
-                            icon: '❓',
+                            icon: '',
                             titleBarColor: AppColors.neoCardBg,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    const Text('👤', style: TextStyle(fontSize: 20)),
+                                    const Text('[OYUNCU]', style: TextStyle(fontSize: 20)),
                                     const SizedBox(width: 8),
                                     Text(
                                       '${currentQ.journalist} (${currentQ.outlet})',
@@ -255,7 +255,7 @@ class _PressConferenceScreenState extends State<PressConferenceScreen> {
                                         });
 
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('🎙️ Basın açıklaması yapıldı: "${opt.log}"')),
+                                          SnackBar(content: Text('[BASIN] Basın açıklaması yapıldı: "${opt.log}"')),
                                         );
                                       },
                                       backgroundColor: const Color(0xFF1B2230),

@@ -20,7 +20,7 @@ class AffiliateClubsScreen extends ConsumerWidget {
       backgroundColor: AppColors.primaryDeep,
       appBar: AppBar(
         backgroundColor: AppColors.neoCardBg,
-        title: Text('🤝 PİLOT TAKIM & UYDU KULÜP AĞI', style: AppTypography.h2(color: Colors.white)),
+        title: Text('[ANLASMA] PİLOT TAKIM & UYDU KULÜP AĞI', style: AppTypography.h2(color: Colors.white)),
       ),
       body: Column(
         children: [
@@ -33,10 +33,10 @@ class AffiliateClubsScreen extends ConsumerWidget {
                 children: [
                   const RetroWindow(
                     title: 'PİLOT KULÜP İŞBİRLİĞİ VE GELİŞİM MERKEZİ',
-                    icon: '🌐',
+                    icon: '',
                     child: Row(
                       children: [
-                        Text('⚽🤝', style: TextStyle(fontSize: 32)),
+                        Text('[GOL][ANLASMA]', style: TextStyle(fontSize: 32)),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -81,11 +81,14 @@ class AffiliateClubsScreen extends ConsumerWidget {
     required String perk,
     required int cost,
   }) {
+    final state = ref.watch(gameStateProvider).valueOrNull;
+    final isSigned = state?.activeAffiliateClubIds.contains(clubName) ?? false;
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.win95Grey,
-        border: Border.all(color: AppColors.win95DarkGrey),
+        border: Border.all(color: isSigned ? AppColors.neonLime : AppColors.win95DarkGrey),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +100,10 @@ class AffiliateClubsScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 color: Colors.black,
-                child: Text('YILLIK: ₣${(cost / 1000).toInt()}K', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10)),
+                child: Text(
+                  isSigned ? 'AKTİF' : 'YILLIK: ₣${(cost / 1000).toInt()}K',
+                  style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10),
+                ),
               ),
             ],
           ),
@@ -107,22 +113,37 @@ class AffiliateClubsScreen extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: RetroButton(
-              onPressed: () {
-                ref.read(gameStateProvider.notifier).adjustCash(-cost);
-                ref.read(gameStateProvider.notifier).adjustBoardTrust(5);
-                Navigator.pop(context);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: AppColors.primaryDeep,
-                    content: Text(
-                      '🤝 $clubName ile 1 yıllık pilot takım protokolü imzalandı (-₣$cost)!',
-                      style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                );
-              },
-              child: Text('PROTOKOL İMZALA VE RESMİ PİLOT TAKIM YAP (-₣${(cost / 1000).toInt()}K)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+              backgroundColor: isSigned ? AppColors.win95DarkGrey : AppColors.neonLime,
+              onPressed: isSigned
+                  ? null
+                  : () async {
+                      final success = await ref.read(gameStateProvider.notifier).signAffiliateProtocol(clubName, cost);
+                      if (context.mounted) {
+                        if (success) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: AppColors.primaryDeep,
+                              content: Text(
+                                '[ANLASMA] $clubName ile 1 yıllık pilot takım protokolü imzalandı (-₣$cost)!',
+                                style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: AppColors.comicRed,
+                              content: Text('[RED] Bakiye yetersiz! Pilot takım anlaşması yapılamadı.'),
+                            ),
+                          );
+                        }
+                      }
+                    },
+              child: Text(
+                isSigned ? ' PROTOKOL AKTİF (RESMİ PİLOT TAKIM)' : 'PROTOKOL İMZALA VE RESMİ PİLOT TAKIM YAP (-₣${(cost / 1000).toInt()}K)',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+              ),
             ),
           ),
         ],

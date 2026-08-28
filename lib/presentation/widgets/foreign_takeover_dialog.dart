@@ -20,13 +20,15 @@ class ForeignTakeoverDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(gameStateProvider).valueOrNull;
+    final currentSold = state?.soldClubSharePercent ?? 0;
     final offers = ForeignTakeoverOffer.getAvailableOffers();
 
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: RetroWindow(
-        title: '🌍 YABANCI FON & SERMAYE ORTAKLIĞI TEKLİFLERİ',
+        title: ' YABANCI FON & SERMAYE ORTAKLIĞI TEKLİFLERİ',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -37,20 +39,32 @@ class ForeignTakeoverDialog extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   color: Colors.black,
-                  child: const Text(
-                    'Uluslararası konsorsiyumlar kulübünüze azınlık hissesi ortaklığı teklif ediyor. Hisse devri büyük nakit sağlar ancak yönetimde söz sahibi olurlar.',
-                    style: TextStyle(color: AppColors.neonLime, fontSize: 10.5),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Uluslararası konsorsiyumlar kulübünüze azınlık hissesi ortaklığı teklif ediyor. Hisse devri büyük nakit sağlar ancak yönetimde söz sahibi olurlar.',
+                        style: TextStyle(color: AppColors.neonLime, fontSize: 10.5),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'DEVREDİLEN HİSSE: %$currentSold / MAKSİMUM KOTA: %49',
+                        style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold, fontSize: 10),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
 
                 ...offers.map((offer) {
+                  final canSell = (currentSold + offer.stakePercentage) <= 49;
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: AppColors.win95Grey,
-                      border: Border.all(color: AppColors.win95DarkGrey),
+                      border: Border.all(color: canSell ? AppColors.win95DarkGrey : AppColors.comicRed),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,22 +95,42 @@ class ForeignTakeoverDialog extends ConsumerWidget {
                         SizedBox(
                           width: double.infinity,
                           child: RetroButton(
-                            onPressed: () {
-                              ref.read(gameStateProvider.notifier).claimSponsorReward(offer.cashOfferAmount);
-                              ref.read(gameStateProvider.notifier).adjustBoardTrust(-10);
-                              Navigator.of(context).pop();
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  backgroundColor: AppColors.primaryDeep,
-                                  content: Text(
-                                    '🤝 ${offer.investorName} hisse devri onaylandı! Kasaya +₣${offer.cashOfferAmount} eklendi.',
-                                    style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Text('%${offer.stakePercentage} HİSSEYİ SAT & ANLAŞMAYI İMZALA', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                            backgroundColor: canSell ? AppColors.neonLime : AppColors.win95DarkGrey,
+                            onPressed: !canSell
+                                ? null
+                                : () async {
+                                    final success = await ref.read(gameStateProvider.notifier).sellClubShares(
+                                          percent: offer.stakePercentage,
+                                          cashAmount: offer.cashOfferAmount,
+                                        );
+                                    if (context.mounted) {
+                                      Navigator.of(context).pop();
+                                      if (success) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            backgroundColor: AppColors.primaryDeep,
+                                            content: Text(
+                                              '[ANLASMA] ${offer.investorName} hisse devri onaylandı! Kasaya +₣${offer.cashOfferAmount} eklendi.',
+                                              style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            backgroundColor: AppColors.comicRed,
+                                            content: Text('[RED] Hisse satış limiti (%49) aşılamaz!'),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                            child: Text(
+                              canSell
+                                  ? '%${offer.stakePercentage} HİSSEYİ SAT & ANLAŞMAYI İMZALA'
+                                  : 'KOTA DOLDU (MAKS %49 AŞILAMAZ)',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: canSell ? Colors.black : Colors.white60),
+                            ),
                           ),
                         ),
                       ],

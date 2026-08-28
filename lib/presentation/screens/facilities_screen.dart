@@ -67,10 +67,10 @@ class _FacilitiesScreenState extends ConsumerState<FacilitiesScreen> {
                       // Özet Penceresi
                       RetroWindow(
                         title: 'MÜHENDİSLİK VE YATIRIM BİLDİRİMİ',
-                        icon: '📐',
+                        icon: '',
                         child: Row(
                           children: [
-                            const Text('🏗️', style: TextStyle(fontSize: 28)),
+                            const Text('[TESİS]', style: TextStyle(fontSize: 28)),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
@@ -108,7 +108,7 @@ class _FacilitiesScreenState extends ConsumerState<FacilitiesScreen> {
                                   SnackBar(
                                     backgroundColor: AppColors.primaryDeep,
                                     content: Text(
-                                      '🏗️ $name ile $weeks haftalık ihale sözleşmesi imzalandı (-₣$cost)!',
+                                      '[TESİS] $name ile $weeks haftalık ihale sözleşmesi imzalandı (-₣$cost)!',
                                       style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                                     ),
                                   ),
@@ -120,7 +120,7 @@ class _FacilitiesScreenState extends ConsumerState<FacilitiesScreen> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('🏗️', style: TextStyle(fontSize: 16)),
+                              Text('[TESİS]', style: TextStyle(fontSize: 16)),
                               SizedBox(width: 6),
                               Text('BAŞKANLIK MÜTEAHHİT İHALESİ & İMAR KOMİSYONU AÇ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: AppColors.win95TitleNavy)),
                             ],
@@ -131,7 +131,7 @@ class _FacilitiesScreenState extends ConsumerState<FacilitiesScreen> {
 
                       RetroWindow(
                         title: '12 KULÜP TESİSİ LİSTESİ',
-                        icon: '🏢',
+                        icon: '[KULÜP]',
                         titleBarColor: AppColors.win95TitleNavy,
                         child: Column(
                           children: FacilityType.values.map((type) {
@@ -257,7 +257,7 @@ class _FacilitiesScreenState extends ConsumerState<FacilitiesScreen> {
                         children: [
                           Row(
                             children: [
-                              const Text('🏗️', style: TextStyle(fontSize: 12)),
+                              const Text('[TESİS]', style: TextStyle(fontSize: 12)),
                               const SizedBox(width: 4),
                               Text(
                                 'İNŞAAT SÜRÜYOR: ${FacilityTiersData.getTierInfo(fac.type, fac.level + 1).name}',
@@ -305,7 +305,7 @@ class _FacilitiesScreenState extends ConsumerState<FacilitiesScreen> {
                       );
                     },
                     child: Text(
-                      isUpgrading ? '⚡ İNŞAAT DETAYI →' : '🔍 DETAY VE GELİŞTİRME →',
+                      isUpgrading ? 'BOLT İNŞAAT DETAYI →' : '[ARAMA] DETAY VE GELİŞTİRME →',
                       style: const TextStyle(fontSize: 10),
                     ),
                   ),

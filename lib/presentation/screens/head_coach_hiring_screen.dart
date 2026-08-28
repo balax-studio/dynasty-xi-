@@ -46,7 +46,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
             ),
             title: Row(
               children: [
-                const Text('👔', style: TextStyle(fontSize: 20)),
+                const Text('[HOCA]', style: TextStyle(fontSize: 12, color: AppColors.neonLime, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -98,7 +98,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
     if (coach == null) {
       return RetroWindow(
         title: 'KULÜBÜN BAŞINDAKİ TEKNİK HEYET',
-        icon: '⚠️',
+        icon: '[UYARI]',
         titleBarColor: AppColors.comicRed,
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -108,7 +108,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
           ),
           child: const Column(
             children: [
-              Text('🚨 KULÜPTE RESMİ BİR TEKNİK DİREKTÖR BULUNMUYOR!', style: TextStyle(color: AppColors.comicRed, fontWeight: FontWeight.bold, fontSize: 11)),
+              Text('[ACIL] KULÜPTE RESMİ BİR TEKNİK DİREKTÖR BULUNMUYOR!', style: TextStyle(color: AppColors.comicRed, fontWeight: FontWeight.bold, fontSize: 11)),
               SizedBox(height: 6),
               Text(
                 'Takım şu an geçici antrenörler eşliğinde maçlara çıkıyor. Taktiksel verim ve oyuncu morali düşük. Lütfen aşağıdaki adaylardan kulüp felsefesine uygun bir hoca ile sözleşme imzalayın.',
@@ -123,7 +123,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
 
     return RetroWindow(
       title: 'GÖREVDEKİ TEKNİK DİREKTÖR (KULÜP PATRONU: BAŞKAN)',
-      icon: '👔',
+      icon: '',
       titleBarColor: AppColors.win95TitleNavy,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,7 +170,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
             ),
             child: Row(
               children: [
-                const Text('⚡', style: TextStyle(fontSize: 14)),
+                const Text('BOLT', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(coach.archetype.description, style: const TextStyle(color: Colors.white70, fontSize: 10)),
@@ -181,7 +181,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
           const SizedBox(height: 10),
 
           // Başkanlık Vizyonu Dikte Etme Seçenekleri
-          const Text('📋 BAŞKANLIK VİZYONU & OYUN FELSEFESİ DİKTE ET:', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+          const Text('[RAPOR] BAŞKANLIK VİZYONU & OYUN FELSEFESİ DİKTE ET:', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Row(
             children: CoachVision.values.map((v) {
@@ -196,7 +196,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             backgroundColor: AppColors.neonLime,
-                            content: Text('📋 Hocaya yeni vizyon dikte edildi: ${v.label}', style: const TextStyle(color: Colors.black)),
+                            content: Text('[RAPOR] Hocaya yeni vizyon dikte edildi: ${v.label}', style: const TextStyle(color: Colors.black)),
                           ),
                         );
                       }
@@ -234,7 +234,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('💬', style: TextStyle(fontSize: 16)),
+                  Text('[MESAJ]', style: TextStyle(fontSize: 16)),
                   SizedBox(width: 8),
                   Text(
                     'HOCA İLE BİREBİR SOHBET ET & TALİMAT VER (RPG)',
@@ -283,7 +283,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         backgroundColor: AppColors.comicRed,
-                        content: Text('🚨 ${coach.fullName} görevden alındı! Tazminat ödendi.', style: const TextStyle(color: Colors.white)),
+                        content: Text('[ACIL] ${coach.fullName} görevden alındı! Tazminat ödendi.', style: const TextStyle(color: Colors.white)),
                       ),
                     );
                   }
@@ -292,7 +292,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
               backgroundColor: AppColors.comicRed,
               textColor: Colors.white,
               child: Text(
-                '🚨 GÖREVDEN AL / KOV (₣${coach.severancePay} Fesih Tazminatı)',
+                '[ACIL] GÖREVDEN AL / KOV (₣${coach.severancePay} Fesih Tazminatı)',
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5),
               ),
             ),
@@ -306,7 +306,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
   Widget _buildCandidateCoachesSection(List<HeadCoach> candidates, int clubCash, HeadCoach? activeCoach) {
     return RetroWindow(
       title: 'BOŞTAKİ TEKNİK DİREKTÖR ADAYLARI',
-      icon: '📋',
+      icon: '[RAPOR]',
       titleBarColor: AppColors.accentGold,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,7 +363,7 @@ class _HeadCoachHiringScreenState extends ConsumerState<HeadCoachHiringScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     backgroundColor: AppColors.neonLime,
-                                    content: Text('🎉 ${c.fullName} kulübün başına getirildi!', style: const TextStyle(color: Colors.black)),
+                                    content: Text('[KUTLAMA] ${c.fullName} kulübün başına getirildi!', style: const TextStyle(color: Colors.black)),
                                   ),
                                 );
                               }

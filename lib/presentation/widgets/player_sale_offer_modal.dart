@@ -216,8 +216,8 @@ class _PlayerSaleOfferModalState extends State<PlayerSaleOfferModal> {
                                 SnackBar(
                                   content: Text(
                                     ok
-                                        ? '💰 ${p.fullName} $_buyerClub kulübüne ₣${widget.salePrice} bedelle satıldı!'
-                                        : '⚠️ Kadroda en az 11 oyuncu bulunmalıdır!',
+                                        ? '[KASA] ${p.fullName} $_buyerClub kulübüne ₣${widget.salePrice} bedelle satıldı!'
+                                        : '[UYARI] Kadroda en az 11 oyuncu bulunmalıdır!',
                                   ),
                                 ),
                               );

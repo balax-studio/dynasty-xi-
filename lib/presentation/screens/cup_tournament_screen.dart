@@ -52,8 +52,8 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
                 labelColor: AppColors.neonLime,
                 unselectedLabelColor: AppColors.win95White,
                 tabs: [
-                  Tab(text: '🇹🇷 TÜRKİYE KUPASI'),
-                  Tab(text: '🌍 AVRUPA KITA KUPASI'),
+                  Tab(text: ' TÜRKİYE KUPASI'),
+                  Tab(text: ' AVRUPA KITA KUPASI'),
                 ],
               ),
             ),
@@ -88,7 +88,7 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
             ),
             child: Row(
               children: [
-                const Text('🏆', style: TextStyle(fontSize: 32)),
+                const Text('[KUPA]', style: TextStyle(fontSize: 32)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -122,7 +122,7 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('🚌', style: TextStyle(fontSize: 16)),
+                  Text('[OTOBUS]', style: TextStyle(fontSize: 16)),
                   SizedBox(width: 6),
                   Text('ÜSTÜ AÇIK OTOBÜSLE ŞEHİR TURU & KUTLAMA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5)),
                 ],
@@ -152,7 +152,7 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
 
     return RetroWindow(
       title: round.title.toUpperCase(),
-      icon: round == CupRound.finalMatch ? '👑' : '⚔️',
+      icon: round == CupRound.finalMatch ? 'CROWN' : 'SWORDS',
       titleBarColor: round == CupRound.finalMatch ? const Color(0xFF581C87) : AppColors.neoCardBg,
       child: matches.isEmpty
           ? const Padding(
@@ -210,7 +210,7 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
                             await ref.read(gameStateProvider.notifier).playCupMatch(m.id);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('⚽ Kupa maçı oynandı!')),
+                                const SnackBar(content: Text('[GOL] Kupa maçı oynandı!')),
                               );
                             }
                           },
@@ -267,7 +267,7 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
             ),
             child: Row(
               children: [
-                const Text('🌍', style: TextStyle(fontSize: 32)),
+                const Text('[ŞAMPİYON]', style: TextStyle(fontSize: 14, color: AppColors.accentGold, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -292,7 +292,7 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
           // Matches
           RetroWindow(
             title: 'AVRUPA GRUP & ELEME FİKSTÜRÜ',
-            icon: '⭐',
+            icon: 'STAR',
             titleBarColor: const Color(0xFF581C87),
             child: Column(
               children: _continentalCup.fixtures.map((m) {
@@ -340,33 +340,8 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
                         )
                       else if (isUserMatch)
                         RetroButton(
-                          onPressed: () {
-                            final updatedFixtures = List<ContinentalMatch>.from(_continentalCup.fixtures);
-                            final idx = updatedFixtures.indexOf(m);
-                            updatedFixtures[idx] = ContinentalMatch(
-                              id: m.id,
-                              stage: m.stage,
-                              homeClubName: m.homeClubName,
-                              homeCountry: m.homeCountry,
-                              homeBadge: m.homeBadge,
-                              awayClubName: m.awayClubName,
-                              awayCountry: m.awayCountry,
-                              awayBadge: m.awayBadge,
-                              isPlayed: true,
-                              homeScore: 2,
-                              awayScore: 1,
-                              winnerName: m.homeClubName,
-                            );
-                            final updatedCup = _continentalCup.copyWith(fixtures: updatedFixtures);
-                            setState(() => _continentalCup = updatedCup);
-                            ref.read(gameStateProvider.notifier).updateContinentalCup(updatedCup);
-                            ref.read(gameStateProvider.notifier).claimSponsorReward(35000);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                backgroundColor: AppColors.accentGold,
-                                content: Text('🎉 Avrupa maçı kazanıldı! (+₣35,000 prim)', style: TextStyle(color: Colors.black)),
-                              ),
-                            );
+                          onPressed: () async {
+                            await ref.read(gameStateProvider.notifier).playContinentalCupMatch(m.id);
                           },
                           backgroundColor: AppColors.accentGold,
                           textColor: Colors.black,

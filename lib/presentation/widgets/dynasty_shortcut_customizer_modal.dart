@@ -42,7 +42,7 @@ class DynastyShortcutCustomizerModal extends ConsumerWidget {
             ),
             child: RetroWindow(
               title: 'DYNASTY HUD — KISAYOL ÖZELLEŞTİRME',
-              icon: '⚙️',
+              icon: '',
               titleBarColor: const Color(0xFF1E293B),
               onClose: () => Navigator.pop(context),
               child: Column(
@@ -155,7 +155,7 @@ class DynastyShortcutCustomizerModal extends ConsumerWidget {
                                         ref.read(gameStateProvider.notifier).toggleShortcutPinned(shortcut.id);
                                       },
                                       child: Text(
-                                        isPinned ? 'ÇIKAR ✕' : '+ EKLE',
+                                        isPinned ? 'ÇIKAR ' : '+ EKLE',
                                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
                                       ),
                                     ),
@@ -184,7 +184,7 @@ class DynastyShortcutCustomizerModal extends ConsumerWidget {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('🔄'),
+                              Text(''),
                               SizedBox(width: 6),
                               Text('VARSAYILANA DÖN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5)),
                             ],
@@ -203,7 +203,7 @@ class DynastyShortcutCustomizerModal extends ConsumerWidget {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('💾'),
+                              Text(''),
                               SizedBox(width: 6),
                               Text('KAYDET VE KAPAT', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10.5)),
                             ],

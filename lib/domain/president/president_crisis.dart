@@ -84,7 +84,7 @@ class PresidentCrisisCall {
         caller: CrisisCallerType.values[(json['caller'] as int?) ?? 0],
         callerName: json['callerName'] as String? ?? '',
         callerTitle: json['callerTitle'] as String? ?? '',
-        callerAvatar: json['callerAvatar'] as String? ?? '📞',
+        callerAvatar: json['callerAvatar'] as String? ?? '',
         dialogQuote: json['dialogQuote'] as String? ?? '',
         choices: (json['choices'] as List<dynamic>?)
                 ?.map((e) => CrisisChoice.fromJson(e as Map<String, dynamic>))
@@ -99,7 +99,7 @@ class PresidentCrisisCall {
         caller: CrisisCallerType.policeChief,
         callerName: 'Emniyet Müdürü Kemal',
         callerTitle: 'İl Güvenlik Şube Müdürü',
-        callerAvatar: '👮‍♂️',
+        callerAvatar: '',
         dialogQuote: 'Sayın Başkan, derbi öncesi rakip taraftarlarla bizim holiganlar meydanda toplanıyor. Maç günü 500 özel güvenlik kiralamazsanız tribünleri kapatırım!',
         choices: [
           CrisisChoice(
@@ -131,7 +131,7 @@ class PresidentCrisisCall {
         caller: CrisisCallerType.mayor,
         callerName: 'Büyükşehir Belediye Başkanı',
         callerTitle: 'Büyükşehir Belediyesi',
-        callerAvatar: '🏛️',
+        callerAvatar: '[YÖNETİM]',
         dialogQuote: 'Başkanım, stadın önüne metro durağı projemiz var. Fakat kulüp olarak altyapı fonuna 75.000 € katkı vermeniz gerekiyor, yoksa hat başka mahalleye kayacak.',
         choices: [
           CrisisChoice(
@@ -163,7 +163,7 @@ class PresidentCrisisCall {
         caller: CrisisCallerType.federationHead,
         callerName: 'Federasyon Başkanı',
         callerTitle: 'TFF Yönetim Kurulu',
-        callerAvatar: '⚖️',
+        callerAvatar: '[HUKUK]',
         dialogQuote: 'Sayın Başkan, dünkü hakem açıklamalarınız sınırları aştı. Disiplin Kurulu 45 gün hak mahrumiyeti hazırlıyor. Basın toplantısında geri adım atacak mısınız?',
         choices: [
           CrisisChoice(
@@ -195,7 +195,7 @@ class PresidentCrisisCall {
         caller: CrisisCallerType.ultraLeader,
         callerName: 'Amigo Reis',
         callerTitle: 'Tribün Derneği Lideri',
-        callerAvatar: '📢',
+        callerAvatar: '[DUYURU]',
         dialogQuote: 'Büyük Başkan! Deplasman tribünü için 2.000 bedava bilet ve 10 otobüs parası istiyoruz. Vermezseniz hafta sonu tribünler "Yönetim İstifa" diye inler!',
         choices: [
           CrisisChoice(

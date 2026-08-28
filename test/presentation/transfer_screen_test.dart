@@ -61,7 +61,7 @@ void main() {
         id: 'club_1',
         name: 'Kadıköy SK',
         city: 'İstanbul',
-        badgeIcon: '⚡',
+        badgeIcon: 'BOLT',
         meters: ClubMeters(cash: 300000, fans: 70, lockerRoom: 70, boardTrust: 80),
         squad: [
           Player(

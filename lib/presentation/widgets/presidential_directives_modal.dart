@@ -38,7 +38,7 @@ class _PresidentialDirectivesModalState extends ConsumerState<PresidentialDirect
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: RetroWindow(
-        title: '👑 BAŞKANLIK KADRO TALİMATLARI & VETO',
+        title: 'CROWN BAŞKANLIK KADRO TALİMATLARI & VETO',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -51,7 +51,7 @@ class _PresidentialDirectivesModalState extends ConsumerState<PresidentialDirect
                   color: Colors.black,
                   child: const Row(
                     children: [
-                      Text('👔⚖️', style: TextStyle(fontSize: 24)),
+                      Text('[HUKUK]', style: TextStyle(fontSize: 24)),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -147,7 +147,7 @@ class _PresidentialDirectivesModalState extends ConsumerState<PresidentialDirect
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            '📜 Başkanlık Kararnamesi Resmi Olarak Tebliğ Edildi!',
+                            ' Başkanlık Kararnamesi Resmi Olarak Tebliğ Edildi!',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),

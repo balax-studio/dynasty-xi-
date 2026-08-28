@@ -38,7 +38,7 @@ class YouthAcademyScreen extends ConsumerWidget {
             ),
             title: Row(
               children: [
-                const Text('🌱', style: TextStyle(fontSize: 20)),
+                const Text('[AKADEMİ]', style: TextStyle(fontSize: 12, color: AppColors.neonLime, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -67,7 +67,7 @@ class YouthAcademyScreen extends ConsumerWidget {
                       // 1. Akademi Tesis Durumu
                       RetroWindow(
                         title: 'AKADEMİ TESİS KAPASİTESİ (SEVİYE $academyLevel/5)',
-                        icon: '🏛️',
+                        icon: '[YÖNETİM]',
                         titleBarColor: AppColors.win95TitleNavy,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,7 +79,7 @@ class YouthAcademyScreen extends ConsumerWidget {
                                   height: 50,
                                   color: Colors.black,
                                   alignment: Alignment.center,
-                                  child: const Text('🌱', style: TextStyle(fontSize: 28)),
+                                  child: const Text('[TESİS]', style: TextStyle(fontSize: 12, color: AppColors.neonAmber, fontWeight: FontWeight.bold)),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -119,9 +119,66 @@ class YouthAcademyScreen extends ConsumerWidget {
                                       MaterialPageRoute(builder: (_) => const FacilitiesScreen()),
                                     );
                                   },
-                                  child: const Text('TESİSLERİ GELİŞTİR ❯', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                                  child: const Text('TESİSLERİ GELİŞTİR', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
                                 ),
                               ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // 1.5. Doğrudan Yetenek Keşif & Tarama Modülü
+                      RetroWindow(
+                        title: 'ALTYAPI SCOUT TARAMASI & YETENEK KEŞFİ',
+                        icon: '[KEŞİF]',
+                        titleBarColor: const Color(0xFF0F382A),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Akademi scoutlarını bölge seçmelerine göndererek U19 kadrosuna yeni yerli wonderkid adayı kazandırın. (Maliyet: ₣5.000)',
+                              style: TextStyle(color: Colors.white70, fontSize: 10),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: RetroButton(
+                                backgroundColor: AppColors.neonLime,
+                                textColor: Colors.black,
+                                onPressed: () {
+                                  if (club.meters.cash < 5000) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        backgroundColor: AppColors.comicRed,
+                                        content: Text('[UYARI] Yetersiz bakiye! Yetenek taraması için ₣5.000 gerekli.'),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  ref.read(gameStateProvider.notifier).scoutNewYouthTalent();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      backgroundColor: AppColors.primaryDeep,
+                                      content: Text(
+                                        '[AKADEMİ] Yeni yetenek keşfedildi ve U19 kadrosuna dahil edildi!',
+                                        style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text('[YETENEK]', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'YENİ YETENEK TARA & AKADEMİYE KAZANDIR (₣5.000)',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -131,7 +188,7 @@ class YouthAcademyScreen extends ConsumerWidget {
                       // 2. U19 Genç Takımı Köprüsü
                       RetroWindow(
                         title: 'U19 GENÇ TAKIMI ($u19Count YETENEK HAZIR)',
-                        icon: '⚡',
+                        icon: '[U19]',
                         titleBarColor: AppColors.neoCardBg,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +201,7 @@ class YouthAcademyScreen extends ConsumerWidget {
                             SizedBox(
                               width: double.infinity,
                               child: RetroButton(
-                                backgroundColor: AppColors.neonLime,
+                                backgroundColor: AppColors.accentGold,
                                 textColor: Colors.black,
                                 onPressed: () {
                                   Navigator.push(
@@ -155,7 +212,7 @@ class YouthAcademyScreen extends ConsumerWidget {
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text('🌱', style: TextStyle(fontSize: 16)),
+                                    Text('[KADRO]', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
                                     SizedBox(width: 8),
                                     Text(
                                       'U19 KADROSUNU VE YETENEKLERİ AÇ',

@@ -4,18 +4,18 @@
 import 'dart:math' as math;
 
 enum FacilityType {
-  stadium('Stadyum', '🏟️', 'Kapasiteyi ve bilet gelirini artırır.', 15000, 30),
-  trainingGround('Antrenman Sahası', '🏃', 'Oyuncuların antrenmandan kazandığı gelişimi artırır.', 8000, 20),
-  youthAcademy('Altyapı Akademisi', '🌱', 'Her sezon başı yüksek potansiyelli genç yetenekler üretir.', 12000, 45),
-  medicalCenter('Tıp Merkezi', '🏥', 'Sakatlık riskini düşürür, iyileşme sürelerini hızlandırır.', 9000, 25),
-  scoutCenter('Scout Merkezi', '🔍', 'Gözlem hızını ve potansiyel tahmin kesinliğini artırır.', 7500, 20),
-  clubMuseum('Kulüp Müzesi', '🏆', 'Taraftar memnuniyetini ve kulüp itibarını yükseltir.', 6000, 15),
-  fanShop('Taraftar Mağazası', '👕', 'Haftalık lisanslı ürün ve forma satış gelirini artırır.', 7000, 20),
-  analyticsDept('Analiz Departmanı', '📊', 'Rakip analiz bonusu ve taktik uyum çarpanı sağlar.', 8500, 25),
-  pitchMaintenance('Çim & Bakım', '🌱', 'Ev sahibi saha avantajını artırır, zemin kaynaklı sakatlıkları önler.', 5000, 15),
-  pressRoom('Basın Odası', '🎙️', 'Kriz anlarında yönetim ve basın baskısını dengeler.', 4500, 15),
-  nutritionCenter('Beslenme & Kondisyon', '🥗', 'Maç içi yorgunluğu azaltır, maçlar arası dinlenmeyi hızlandırır.', 6500, 20),
-  vipLounge('VIP Salonu', '🥂', 'Kurumsal sponsorluk ve kombine gelirlerini çarpar.', 11000, 35);
+  stadium('Stadyum', '', 'Kapasiteyi ve bilet gelirini artırır.', 15000, 30),
+  trainingGround('Antrenman Sahası', '', 'Oyuncuların antrenmandan kazandığı gelişimi artırır.', 8000, 20),
+  youthAcademy('Altyapı Akademisi', '', 'Her sezon başı yüksek potansiyelli genç yetenekler üretir.', 12000, 45),
+  medicalCenter('Tıp Merkezi', '[REVİR]', 'Sakatlık riskini düşürür, iyileşme sürelerini hızlandırır.', 9000, 25),
+  scoutCenter('Scout Merkezi', '[ARAMA]', 'Gözlem hızını ve potansiyel tahmin kesinliğini artırır.', 7500, 20),
+  clubMuseum('Kulüp Müzesi', '[KUPA]', 'Taraftar memnuniyetini ve kulüp itibarını yükseltir.', 6000, 15),
+  fanShop('Taraftar Mağazası', '[KADRO]', 'Haftalık lisanslı ürün ve forma satış gelirini artırır.', 7000, 20),
+  analyticsDept('Analiz Departmanı', '[GRAFIK]', 'Rakip analiz bonusu ve taktik uyum çarpanı sağlar.', 8500, 25),
+  pitchMaintenance('Çim & Bakım', '', 'Ev sahibi saha avantajını artırır, zemin kaynaklı sakatlıkları önler.', 5000, 15),
+  pressRoom('Basın Odası', '[BASIN]', 'Kriz anlarında yönetim ve basın baskısını dengeler.', 4500, 15),
+  nutritionCenter('Beslenme & Kondisyon', '', 'Maç içi yorgunluğu azaltır, maçlar arası dinlenmeyi hızlandırır.', 6500, 20),
+  vipLounge('VIP Salonu', '', 'Kurumsal sponsorluk ve kombine gelirlerini çarpar.', 11000, 35);
 
   final String label;
   final String icon;

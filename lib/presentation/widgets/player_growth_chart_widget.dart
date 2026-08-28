@@ -31,7 +31,7 @@ class PlayerGrowthChartWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                '📈 SEZONLUK GELİŞİM GRAFİĞİ (OVR)',
+                '[ARTIS] SEZONLUK GELİŞİM GRAFİĞİ (OVR)',
                 style: TextStyle(color: AppColors.neonCyan, fontSize: 10, fontWeight: FontWeight.bold),
               ),
               Text(

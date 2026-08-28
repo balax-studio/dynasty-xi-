@@ -9,6 +9,7 @@ import '../../application/providers/game_state_provider.dart';
 import '../../domain/economy/financial_statement.dart';
 import '../../domain/economy/sponsorship_contract.dart';
 import '../../domain/entities/game_state.dart';
+import '../widgets/brutalist_icons.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_impact_confirm_modal.dart';
 import '../widgets/retro_window.dart';
@@ -41,10 +42,17 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         final currentTicketPrice = _simulatedTicketPrice ?? club.ticketPrice;
         final simulatedClub = club.copyWith(ticketPrice: currentTicketPrice);
 
+        int sleeveIncome = gameState.sleeveSponsorIncome;
+        int stadiumIncome = gameState.stadiumNamingIncome;
+        final sleeveContract = gameState.activeSponsorships[SponsorshipSlot.sleeve];
+        if (sleeveContract != null) sleeveIncome = sleeveContract.weeklyIncome;
+        final stadiumContract = gameState.activeSponsorships[SponsorshipSlot.stadiumNaming];
+        if (stadiumContract != null) stadiumIncome = stadiumContract.weeklyIncome;
+
         final statement = FinancialStatementCalculator.calculateWeeklyStatement(
           club: simulatedClub,
-          sleeveSponsorIncome: gameState.sleeveSponsorIncome,
-          stadiumNamingIncome: gameState.stadiumNamingIncome,
+          sleeveSponsorIncome: sleeveIncome,
+          stadiumNamingIncome: stadiumIncome,
           activeLoanWeeklyRepayment: gameState.activeLoan?.weeklyPayment ?? 0,
           treasuryDeposit: gameState.treasuryDeposit,
         );
@@ -61,7 +69,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             elevation: 0,
             title: Row(
               children: [
-                const Text('💰', style: TextStyle(fontSize: 20)),
+                const Text('[KASA]', style: TextStyle(fontSize: 20)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -105,13 +113,20 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         onPressed: () => TaxAuditInspectionModal.show(context),
                         backgroundColor: AppColors.comicRed,
                         child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4.0),
+                          padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text('⚖️', style: TextStyle(fontSize: 16)),
-                              SizedBox(width: 6),
-                              Text('MALİYE MÜFETTİŞİ VE VERGİ DENETİM MASASI (RİSK İNCELEMESİ)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                              BrutalistIcon(BrutalistIconType.audit, size: 14, color: Colors.white),
+                              SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'MALİYE MÜFETTİŞİ VE VERGİ DENETİM MASASI',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -150,7 +165,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     return RetroWindow(
       title: 'HAFTALIK GELİR-GİDER BİLANÇOSU (LEDGER.DAT)',
-      icon: '📑',
+      icon: '',
       titleBarColor: AppColors.win95TitleNavy,
       child: Column(
         children: [
@@ -214,8 +229,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                     children: [
                       Row(
                         children: [
-                          const Text('📥', style: TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
+                          const Text('[GELİR]', style: TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 6),
                           Text('GELİRLER (₣${statement.totalIncome})', style: const TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -246,8 +261,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                     children: [
                       Row(
                         children: [
-                          const Text('📤', style: TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
+                          const Text('[GİDER]', style: TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 6),
                           Text('GİDERLER (₣${statement.totalExpenses})', style: const TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -303,7 +318,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     return RetroWindow(
       title: 'UEFA & FEDERASYON FİNANSAL FAIR PLAY (FFP) RADARI',
-      icon: '🛡️',
+      icon: 'SHIELD',
       titleBarColor: AppColors.win95TitleNavy,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,22 +374,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     String fanReaction;
     Color reactionColor;
     if (currentPrice < 15) {
-      fanReaction = '💚 Halk Tipi / Ucuz Bilet (Taraftar Çok Mutlu)';
+      fanReaction = ' Halk Tipi / Ucuz Bilet (Taraftar Çok Mutlu)';
       reactionColor = AppColors.neonLime;
     } else if (currentPrice <= 30) {
-      fanReaction = '⚖️ Dengeli Fiyatlandırma (Optimum Hasılat)';
+      fanReaction = '[HUKUK] Dengeli Fiyatlandırma (Optimum Hasılat)';
       reactionColor = AppColors.neonCyan;
     } else if (currentPrice <= 42) {
-      fanReaction = '⚠️ Pahalı Bilet (Seyirci Sayısı Düşüyor)';
+      fanReaction = '[UYARI] Pahalı Bilet (Seyirci Sayısı Düşüyor)';
       reactionColor = AppColors.neonAmber;
     } else {
-      fanReaction = '🚨 Fahiş Fiyat! (Tribünler Boş Kalıyor, Taraftar Öfkeli)';
+      fanReaction = '[ACIL] Fahiş Fiyat! (Tribünler Boş Kalıyor, Taraftar Öfkeli)';
       reactionColor = AppColors.comicRed;
     }
 
     return RetroWindow(
       title: 'MAÇ GÜNÜ BİLET VE HASILAT SİMÜLATÖRÜ',
-      icon: '🎟️',
+      icon: '',
       titleBarColor: AppColors.win95TitleNavy,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,7 +460,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         backgroundColor: AppColors.neonLime,
-                        content: Text('🎟️ Bilet fiyatı ₣$_simulatedTicketPrice olarak güncellendi!', style: const TextStyle(color: Colors.black)),
+                        content: Text(' Bilet fiyatı ₣$_simulatedTicketPrice olarak güncellendi!', style: const TextStyle(color: Colors.black)),
                       ),
                     );
                   }
@@ -470,7 +485,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     return RetroWindow(
       title: '3-SLOT SPONSORLUK MASASI & RPG SÖZLEŞMELERİ',
-      icon: '✍️',
+      icon: '',
       titleBarColor: AppColors.accentGold,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +502,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               children: [
                 const Row(
                   children: [
-                    Text('📋', style: TextStyle(fontSize: 12)),
+                    Text('[RAPOR]', style: TextStyle(fontSize: 12)),
                     SizedBox(width: 6),
                     Text(
                       'AKTİF SPONSORLUK PROTOKOLLERİ (SLOT DURUMU)',
@@ -565,8 +580,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                               backgroundColor: ok ? AppColors.comicRed : Colors.orange,
                                               content: Text(
                                                 ok
-                                                    ? '⚠️ ${active.brandName} sözleşmesi feshedildi. Slot boşa çıktı.'
-                                                    : '❌ Fesih tazminatı için kasada yeterli nakit yok!',
+                                                    ? '[UYARI] ${active.brandName} sözleşmesi feshedildi. Slot boşa çıktı.'
+                                                    : '[RED] Fesih tazminatı için kasada yeterli nakit yok!',
                                                 style: const TextStyle(color: Colors.white),
                                               ),
                                             ),
@@ -693,7 +708,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                           color: const Color(0xFF0F172A),
                           border: Border.all(color: Colors.white24),
                         ),
-                        child: Text('⏱️ ${contract.durationWeeks} Hf', style: const TextStyle(color: AppColors.accentGold, fontSize: 9, fontWeight: FontWeight.bold)),
+                        child: Text('[SURE] ${contract.durationWeeks} Hf', style: const TextStyle(color: AppColors.accentGold, fontSize: 9, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -745,7 +760,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                             children: [
                               const Row(
                                 children: [
-                                  Text('🟢', style: TextStyle(fontSize: 8)),
+                                  Text('[YEŞİL]', style: TextStyle(fontSize: 8)),
                                   SizedBox(width: 4),
                                   Text(
                                     'AVANTAJ (+)',
@@ -777,7 +792,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                             children: [
                               const Row(
                                 children: [
-                                  Text('🔴', style: TextStyle(fontSize: 8)),
+                                  Text('[KIRMIZI]', style: TextStyle(fontSize: 8)),
                                   SizedBox(width: 4),
                                   Text(
                                     'RİSK / BEDEL (-)',
@@ -811,7 +826,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                   border: Border.all(color: AppColors.neonLime),
                                 ),
                                 child: const Text(
-                                  '✓ ŞU ANDA AKTİF SÖZLEŞME',
+                                  ' ŞU ANDA AKTİF SÖZLEŞME',
                                   style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10),
                                 ),
                               )
@@ -853,8 +868,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                         backgroundColor: success ? AppColors.neonLime : AppColors.comicRed,
                                         content: Text(
                                           success
-                                              ? '🎉 ${contract.brandName} ile resmi sponsorluk imzalandı (+₣${contract.signingBonus} kasaya eklendi)!'
-                                              : '❌ Bu slot için zaten aktif bir sözleşmeniz var!',
+                                              ? '[KUTLAMA] ${contract.brandName} ile resmi sponsorluk imzalandı (+₣${contract.signingBonus} kasaya eklendi)!'
+                                              : '[RED] Bu slot için zaten aktif bir sözleşmeniz var!',
                                           style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                                         ),
                                       ),
@@ -868,7 +883,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text('✍️', style: TextStyle(fontSize: 14)),
+                                const Text('[İMZA]', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
                                 const SizedBox(width: 6),
                                 Text(
                                   'SÖZLEŞMEYİ İNCELE VE İMZALA (+₣${contract.signingBonus} PEŞİN)',
@@ -894,7 +909,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     return RetroWindow(
       title: 'BANKA KREDİLERİ VE BORÇ YÖNETİMİ',
-      icon: '🏦',
+      icon: '',
       titleBarColor: AppColors.win95TitleNavy,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -912,7 +927,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('🚨 AKTİF BANKA KREDİSİ BORCU', style: TextStyle(color: AppColors.comicRed, fontSize: 11, fontWeight: FontWeight.bold)),
+                      const Text('[ACIL] AKTİF BANKA KREDİSİ BORCU', style: TextStyle(color: AppColors.comicRed, fontSize: 11, fontWeight: FontWeight.bold)),
                       Text('Kalan Hafta: ${activeLoan.remainingWeeks} / ${activeLoan.totalWeeks}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
                     ],
                   ),
@@ -935,7 +950,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     backgroundColor: AppColors.neonLime,
-                                    content: Text('🎉 Kredi erken kapatıldı! Kulüp tüm borçlarından kurtuldu.', style: TextStyle(color: Colors.black)),
+                                    content: Text('[KUTLAMA] Kredi erken kapatıldı! Kulüp tüm borçlarından kurtuldu.', style: TextStyle(color: Colors.black)),
                                   ),
                                 );
                               }
@@ -982,7 +997,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               backgroundColor: AppColors.neonLime,
-                              content: Text('🏦 ₣${pkg.principalAmount} kredi kasaya eklendi!', style: const TextStyle(color: Colors.black)),
+                              content: Text(' ₣${pkg.principalAmount} kredi kasaya eklendi!', style: const TextStyle(color: Colors.black)),
                             ),
                           );
                         }
@@ -1008,7 +1023,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     return RetroWindow(
       title: 'KULÜP HAZİNESİ & VADELİ MEVDUAT HESABI',
-      icon: '📈',
+      icon: '[ARTIS]',
       titleBarColor: const Color(0xFF0F2E1E),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

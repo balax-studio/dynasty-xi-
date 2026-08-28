@@ -33,7 +33,7 @@ class NamePools {
   ];
 
   static const List<String> badgeIcons = [
-    '🛡️', '⚡', '🦅', '🦁', '⭐', '🏆', '⚓', '⚔️', '🌊', '🔥', '👑', '🐺'
+    'SHIELD', 'BOLT', 'EAGLE', 'LION', 'STAR', '[KUPA]', 'ANCHOR', 'SWORDS', '', '[FORM]', 'CROWN', 'WOLF'
   ];
 
   static const List<String> primaryColors = [
@@ -51,73 +51,73 @@ class NamePools {
     'recep_vardar': {
       'name': 'Recep Vardar',
       'role': 'Kulüp Başkanı',
-      'avatar': '👔',
+      'avatar': '',
       'trait': 'Duygusal, sabırsız, popülist.',
     },
     'nihal_aksu': {
       'name': 'Nihal Aksu',
       'role': 'Baş Gazeteci',
-      'avatar': '🎙️',
+      'avatar': '[BASIN]',
       'trait': 'Keskin, adil ama acımasız.',
     },
     'baba_kadir': {
       'name': '"Baba" Kadir',
       'role': 'Ultra Taraftar Lideri',
-      'avatar': '📢',
+      'avatar': '[DUYURU]',
       'trait': 'Sadık, ateşli, samimi.',
     },
     'ayse_doktor': {
       'name': 'Dr. Ayşe Tanrıkulu',
       'role': 'Kulüp Doktoru',
-      'avatar': '👩‍⚕️',
+      'avatar': '',
       'trait': 'Titiz, koruyucu, bilimsel.',
     },
     'selim_hoca': {
       'name': 'Selim Aydoğan',
       'role': 'Asistan Menajer',
-      'avatar': '📋',
+      'avatar': '[RAPOR]',
       'trait': 'Sadık, gerçekçi, taktiksel.',
     },
     'hatice_scout': {
       'name': 'Hatice Ergin',
       'role': 'Baş Scout',
-      'avatar': '🔍',
+      'avatar': '[ARAMA]',
       'trait': 'Sezgisel, gizemli, keskin göz.',
     },
     'nazim_hoca': {
       'name': 'Nazım Bey',
       'role': 'Altyapı Direktörü',
-      'avatar': '🌱',
+      'avatar': '',
       'trait': 'Sabırlı, idealist, yetiştirici.',
     },
     'serdar_mali': {
       'name': 'Serdar Koçak',
       'role': 'Mali Müşavir',
-      'avatar': '💼',
+      'avatar': '[MENAJER]',
       'trait': 'Soğuk, sayısal, kuralcı.',
     },
     'bulent_menajer': {
       'name': 'Bülent Tosun',
       'role': 'Oyuncu Temsilcisi (Ajan)',
-      'avatar': '📱',
+      'avatar': '',
       'trait': 'Kurnaz, ısrarcı, fırsatçı.',
     },
     'zeynep_sponsor': {
       'name': 'Zeynep Arık',
       'role': 'Sponsorluk Direktörü',
-      'avatar': '🤝',
+      'avatar': '[ANLASMA]',
       'trait': 'Profesyonel, hırslı, kurumsal.',
     },
     'cemal_usta': {
       'name': 'Cemal Usta',
       'role': 'Saha Bakım Sorumlusu',
-      'avatar': '🌾',
+      'avatar': '',
       'trait': 'Yaşlı, bilge, kulüp hafızası.',
     },
     'deniz_medya': {
       'name': 'Deniz Aktaş',
       'role': 'Sosyal Medya Direktörü',
-      'avatar': '📲',
+      'avatar': '',
       'trait': 'Genç, hızlı, trend odaklı.',
     },
   };

@@ -176,8 +176,8 @@ class _LoanContractSummaryModalState extends State<LoanContractSummaryModal> {
                                 SnackBar(
                                   content: Text(
                                     ok
-                                        ? '🎉 ${p.fullName} 1 sezonluğuna kiralandı! Haftalık maaş: ₣${deal.weeklyWageToPay}'
-                                        : '⚠️ Kiralama gerçekleştirilemedi.',
+                                        ? '[KUTLAMA] ${p.fullName} 1 sezonluğuna kiralandı! Haftalık maaş: ₣${deal.weeklyWageToPay}'
+                                        : '[UYARI] Kiralama gerçekleştirilemedi.',
                                   ),
                                 ),
                               );

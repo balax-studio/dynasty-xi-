@@ -45,7 +45,7 @@ void main() {
       const contract = SponsorshipContract(
         id: 'test_eco_future',
         brandName: 'EcoFuture Renewables',
-        brandIcon: '🌱',
+        brandIcon: '',
         sector: 'Yeşil Enerji',
         slot: SponsorshipSlot.mainShirt,
         weeklyIncome: 4200,
@@ -94,7 +94,7 @@ void main() {
       const contract = SponsorshipContract(
         id: 'anadolu_celik',
         brandName: 'Anadolu Çelik Sanayi',
-        brandIcon: '⚙️',
+        brandIcon: '',
         sector: 'Ağır Sanayi',
         slot: SponsorshipSlot.mainShirt,
         weeklyIncome: 3500,
@@ -133,7 +133,7 @@ void main() {
       const activeContract = SponsorshipContract(
         id: 'test',
         brandName: 'Test',
-        brandIcon: '⭐',
+        brandIcon: 'STAR',
         sector: 'Test',
         slot: SponsorshipSlot.sleeve,
         weeklyIncome: 1000,

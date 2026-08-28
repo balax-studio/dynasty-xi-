@@ -30,7 +30,7 @@ class TaxAuditInspectionModal extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: RetroWindow(
-        title: '⚖️ MALİYE MÜFETTİŞİ VERGİ DENETİMİ',
+        title: '[HUKUK] MALİYE MÜFETTİŞİ VERGİ DENETİMİ',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -46,7 +46,7 @@ class TaxAuditInspectionModal extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      const Text('🕵️‍♂️📋', style: TextStyle(fontSize: 28)),
+                      const Text('[SCOUT][RAPOR]', style: TextStyle(fontSize: 28)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(

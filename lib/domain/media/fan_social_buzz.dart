@@ -29,20 +29,20 @@ class FanSocialBuzzGenerator {
   }) {
     if (userGoals > oppGoals) {
       return [
-        '🔥 İşte futbol bu! $userClubName sahada resital sundu! $userGoals-$oppGoals',
-        if (motmName != null) '🌟 $motmName bu ligin çok üzerinde bir topçu, helal olsun sana çocuk!',
+        '[FORM] İşte futbol bu! $userClubName sahada resital sundu! $userGoals-$oppGoals',
+        if (motmName != null) 'STAR $motmName bu ligin çok üzerinde bir topçu, helal olsun sana çocuk!',
         'Harika taktik, harika mücadele! Bu takım şampiyon olacak!',
         'Hafta sonum güzelleşti resmen. Yürü be $userClubName!',
       ];
     } else if (userGoals < oppGoals) {
       return [
-        '💔 Böyle bir futbol olamaz! $userClubName acilen toparlanmalı.',
+        ' Böyle bir futbol olamaz! $userClubName acilen toparlanmalı.',
         'Defanstaki hatalar saç baş yoldurdu. $opponentName hak etti kazandı.',
         'Yönetim ve teknik heyet bu maçı iyi analiz etsin, sabrımız tükeniyor.',
       ];
     } else {
       return [
-        '🤝 1 puan fena değil ama $opponentName karşısında galibiyet kaçtı.',
+        '[ANLASMA] 1 puan fena değil ama $opponentName karşısında galibiyet kaçtı.',
         'Ortada bir maç oldu. Önümüzdeki haftaya bakacağız artık.',
       ];
     }
@@ -64,10 +64,10 @@ class FanSocialBuzzGenerator {
     );
 
     final authors = [
-      (name: 'Arma Sevdalısı', handle: '@tribunsesi', icon: '📣'),
-      (name: 'Taktik Masası', handle: '@taktikanaliz', icon: '📋'),
-      (name: 'Semt Çocuğu', handle: '@semt_cocugu', icon: '⚽'),
-      (name: 'Büyük Başkan', handle: '@baskan_fan', icon: '🎩'),
+      (name: 'Arma Sevdalısı', handle: '@tribunsesi', icon: ''),
+      (name: 'Taktik Masası', handle: '@taktikanaliz', icon: '[RAPOR]'),
+      (name: 'Semt Çocuğu', handle: '@semt_cocugu', icon: '[GOL]'),
+      (name: 'Büyük Başkan', handle: '@baskan_fan', icon: '[VIP]'),
     ];
 
     return List.generate(buzz.length, (i) {

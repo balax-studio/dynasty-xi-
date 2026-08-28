@@ -23,7 +23,7 @@ class VictoryBusParadeDialog extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: RetroWindow(
-        title: '🚌 ÜSTÜ AÇIK OTOBÜSLE ŞEHİR TURU KUTLAMASI',
+        title: '[OTOBUS] ÜSTÜ AÇIK OTOBÜSLE ŞEHİR TURU KUTLAMASI',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -36,7 +36,7 @@ class VictoryBusParadeDialog extends ConsumerWidget {
                   color: Colors.black,
                   child: const Row(
                     children: [
-                      Text('🚌🎆', style: TextStyle(fontSize: 26)),
+                      Text('[OTOBUS]', style: TextStyle(fontSize: 26)),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -64,7 +64,7 @@ class VictoryBusParadeDialog extends ConsumerWidget {
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            '🚌 ÜSTÜ AÇIK OTOBÜSLE ŞEHİR KUTLAMASI YAPILDI! Yüzbinler sokağa döküldü (+25 Taraftar)!',
+                            '[OTOBUS] ÜSTÜ AÇIK OTOBÜSLE ŞEHİR KUTLAMASI YAPILDI! Yüzbinler sokağa döküldü (+25 Taraftar)!',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -87,7 +87,7 @@ class VictoryBusParadeDialog extends ConsumerWidget {
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            '🍽️ Kulüp tesislerinde şampiyonluk yemeği organize edildi (+10 Moral).',
+                            ' Kulüp tesislerinde şampiyonluk yemeği organize edildi (+10 Moral).',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),

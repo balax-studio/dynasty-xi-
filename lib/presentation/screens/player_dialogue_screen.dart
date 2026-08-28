@@ -32,7 +32,7 @@ class _PlayerDialogueScreenState extends ConsumerState<PlayerDialogueScreen> {
   DialogueTopic? _selectedTopic;
   DialogueResult? _lastResult;
   DialogueOption? _lastChosenOption;
-  String _currentReactionEmoji = '💬';
+  String _currentReactionEmoji = '[MESAJ]';
 
   @override
   void initState() {
@@ -155,7 +155,7 @@ class _PlayerDialogueScreenState extends ConsumerState<PlayerDialogueScreen> {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('🎁', style: TextStyle(fontSize: 14)),
+                            Text('[ODUL]', style: TextStyle(fontSize: 14)),
                             SizedBox(width: 6),
                             Text('ELDEN GİZLİ PRİM / LÜKS HEDİYE VER (SAAT, ARABA, REZİDANS)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: AppColors.win95TitleNavy)),
                           ],
@@ -280,14 +280,14 @@ class _PlayerDialogueScreenState extends ConsumerState<PlayerDialogueScreen> {
   Widget _buildOutcomeCard(DialogueResult result, DialogueOption chosenOption) {
     return RetroWindow(
       title: 'GÖRÜŞME SONUCU & RPG ETKİLERİ',
-      icon: '📊',
+      icon: '[GRAFIK]',
       titleBarColor: AppColors.neonLime,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text('🎯', style: TextStyle(fontSize: 14)),
+              const Text('[HEDEF]', style: TextStyle(fontSize: 14)),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -377,7 +377,7 @@ class _PlayerDialogueScreenState extends ConsumerState<PlayerDialogueScreen> {
   Widget _buildOptionsWindow(DialogueTopic topic, int clubCash, int clubLockerRoom) {
     return RetroWindow(
       title: '${topic.icon} ${topic.title.toUpperCase()}',
-      icon: '💬',
+      icon: '[MESAJ]',
       titleBarColor: AppColors.win95TitleNavy,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

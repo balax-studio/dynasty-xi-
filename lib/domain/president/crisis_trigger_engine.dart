@@ -23,7 +23,7 @@ class CrisisTriggerEngine {
         caller: CrisisCallerType.mayor,
         callerName: 'Vergi Dairesi & Belediye',
         callerTitle: 'Maliye ve Hazine Komisyonu',
-        callerAvatar: '📉',
+        callerAvatar: '[DUSUS]',
         dialogQuote: 'Sayın Başkan! Kulüp hesaplarınızda bloke riski var. Acil 25.000 € kaynak girişi yapmazsanız transfer tahtası ve tesis elektrikleri kesilecek!',
         choices: [
           CrisisChoice(
@@ -60,7 +60,7 @@ class CrisisTriggerEngine {
         caller: CrisisCallerType.rivalPresident,
         callerName: 'Muhalif Divan Kurulu Lideri',
         callerTitle: 'Olağanüstü Kongre Komitesi',
-        callerAvatar: '⚖️',
+        callerAvatar: '[HUKUK]',
         dialogQuote: 'Başkan! Yönetim Kurulu içinde çoğunluk imza topladı. Bu hafta takıma net bir galibiyet primi koymazsanız olağanüstü kongre kararı alıyoruz!',
         choices: [
           CrisisChoice(
@@ -96,7 +96,7 @@ class CrisisTriggerEngine {
         caller: CrisisCallerType.ultraLeader,
         callerName: 'Amigo Reis',
         callerTitle: 'Birleşik Tribünler Sözcüsü',
-        callerAvatar: '📢',
+        callerAvatar: '[DUYURU]',
         dialogQuote: 'Büyük Başkan! Taraftar tesisleri bastı. Antrenmanı durdurduk. Ya transfer sözü verirsin ya da pazar günü istifa tezahüratından maçı oynatmayız!',
         choices: [
           CrisisChoice(
@@ -134,7 +134,7 @@ class CrisisTriggerEngine {
         caller: CrisisCallerType.starPlayerAgent,
         callerName: 'Takım Kaptanı Menajeri',
         callerTitle: 'Oyuncu Temsilcisi',
-        callerAvatar: '💼',
+        callerAvatar: '[MENAJER]',
         dialogQuote: 'Sayın Başkan, takım kaptanı ve yerli oyuncular hocanın antrenman metodlarını boykot ediyor. Acil bir prim dopingi veya özel toplantı yapmanız şart.',
         choices: [
           CrisisChoice(
@@ -170,7 +170,7 @@ class CrisisTriggerEngine {
         caller: CrisisCallerType.federationHead,
         callerName: 'Federasyon Başkanı',
         callerTitle: 'TFF Disiplin Kurulu',
-        callerAvatar: '⚖️',
+        callerAvatar: '[HUKUK]',
         dialogQuote: 'Sayın Başkan, kulübünüzün maç sonu hakem bildirisi disiplin kuruluna sevk edildi. Sert ceza kapıda. Kamuoyu önünde uzlaşma mesajı verecek misiniz?',
         choices: [
           CrisisChoice(

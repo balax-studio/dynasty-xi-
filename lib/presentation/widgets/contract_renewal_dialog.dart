@@ -55,7 +55,7 @@ class _ContractRenewalDialogState extends State<ContractRenewalDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: RetroWindow(
         title: 'SÖZLEŞME GÖRÜŞMESİ: ${widget.player.fullName.toUpperCase()}',
-        icon: '📝',
+        icon: '',
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

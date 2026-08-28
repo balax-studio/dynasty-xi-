@@ -13,6 +13,7 @@ import '../president/president_crisis.dart';
 import '../progression/daily_quest.dart';
 import '../progression/dynasty_prestige.dart';
 import '../progression/museum_records.dart';
+import '../scouting/scouting_mission.dart';
 import '../tournament/continental_cup.dart';
 import '../tournament/cup_tournament.dart';
 import 'card.dart';
@@ -67,6 +68,14 @@ class GameState {
   final int crisisCooldownMatches;
   final List<String> resolvedCrisisIds;
   final int clubXp;
+  final List<String> ownedLuxuryAssetIds;
+  final List<String> activeAffiliateClubIds;
+  final List<String> resolvedLegalCaseIds;
+  final List<String> resolvedDebateIds;
+  final List<String> votedSummitAgendaIds;
+  final int soldClubSharePercent;
+  final List<String> hijackedPlayerIds;
+  final List<ScoutingMission> activeScoutingMissions;
 
   const GameState({
     required this.userClub,
@@ -109,6 +118,14 @@ class GameState {
     this.crisisCooldownMatches = 0,
     this.resolvedCrisisIds = const [],
     this.clubXp = 0,
+    this.ownedLuxuryAssetIds = const [],
+    this.activeAffiliateClubIds = const [],
+    this.resolvedLegalCaseIds = const [],
+    this.resolvedDebateIds = const [],
+    this.votedSummitAgendaIds = const [],
+    this.soldClubSharePercent = 0,
+    this.hijackedPlayerIds = const [],
+    this.activeScoutingMissions = const [],
     this.pinnedShortcutIds = const [
       'head_coach',
       'boardroom_summit',
@@ -181,6 +198,14 @@ class GameState {
     int? crisisCooldownMatches,
     List<String>? resolvedCrisisIds,
     int? clubXp,
+    List<String>? ownedLuxuryAssetIds,
+    List<String>? activeAffiliateClubIds,
+    List<String>? resolvedLegalCaseIds,
+    List<String>? resolvedDebateIds,
+    List<String>? votedSummitAgendaIds,
+    int? soldClubSharePercent,
+    List<String>? hijackedPlayerIds,
+    List<ScoutingMission>? activeScoutingMissions,
   }) {
     return GameState(
       userClub: userClub ?? this.userClub,
@@ -224,6 +249,14 @@ class GameState {
       crisisCooldownMatches: crisisCooldownMatches ?? this.crisisCooldownMatches,
       resolvedCrisisIds: resolvedCrisisIds ?? this.resolvedCrisisIds,
       clubXp: clubXp ?? this.clubXp,
+      ownedLuxuryAssetIds: ownedLuxuryAssetIds ?? this.ownedLuxuryAssetIds,
+      activeAffiliateClubIds: activeAffiliateClubIds ?? this.activeAffiliateClubIds,
+      resolvedLegalCaseIds: resolvedLegalCaseIds ?? this.resolvedLegalCaseIds,
+      resolvedDebateIds: resolvedDebateIds ?? this.resolvedDebateIds,
+      votedSummitAgendaIds: votedSummitAgendaIds ?? this.votedSummitAgendaIds,
+      soldClubSharePercent: soldClubSharePercent ?? this.soldClubSharePercent,
+      hijackedPlayerIds: hijackedPlayerIds ?? this.hijackedPlayerIds,
+      activeScoutingMissions: activeScoutingMissions ?? this.activeScoutingMissions,
     );
   }
 
@@ -269,6 +302,14 @@ class GameState {
         'crisisCooldownMatches': crisisCooldownMatches,
         'resolvedCrisisIds': resolvedCrisisIds,
         'clubXp': clubXp,
+        'ownedLuxuryAssetIds': ownedLuxuryAssetIds,
+        'activeAffiliateClubIds': activeAffiliateClubIds,
+        'resolvedLegalCaseIds': resolvedLegalCaseIds,
+        'resolvedDebateIds': resolvedDebateIds,
+        'votedSummitAgendaIds': votedSummitAgendaIds,
+        'soldClubSharePercent': soldClubSharePercent,
+        'hijackedPlayerIds': hijackedPlayerIds,
+        'activeScoutingMissions': activeScoutingMissions.map((m) => m.toJson()).toList(),
       };
 
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -391,6 +432,17 @@ class GameState {
     final signedMarketIds = (json['signedMarketIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
     final crisisCooldownMatches = json['crisisCooldownMatches'] as int? ?? 0;
     final resolvedCrisisIds = (json['resolvedCrisisIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
+    final ownedLuxuryAssetIds = (json['ownedLuxuryAssetIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
+    final activeAffiliateClubIds = (json['activeAffiliateClubIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
+    final resolvedLegalCaseIds = (json['resolvedLegalCaseIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
+    final resolvedDebateIds = (json['resolvedDebateIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
+    final votedSummitAgendaIds = (json['votedSummitAgendaIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
+    final soldClubSharePercent = json['soldClubSharePercent'] as int? ?? 0;
+    final hijackedPlayerIds = (json['hijackedPlayerIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [];
+    final activeScoutingMissions = (json['activeScoutingMissions'] as List<dynamic>?)
+            ?.map((e) => ScoutingMission.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        const [];
 
     return GameState(
       userClub: userClub,
@@ -434,6 +486,14 @@ class GameState {
       crisisCooldownMatches: crisisCooldownMatches,
       resolvedCrisisIds: resolvedCrisisIds,
       clubXp: json['clubXp'] as int? ?? 0,
+      ownedLuxuryAssetIds: ownedLuxuryAssetIds,
+      activeAffiliateClubIds: activeAffiliateClubIds,
+      resolvedLegalCaseIds: resolvedLegalCaseIds,
+      resolvedDebateIds: resolvedDebateIds,
+      votedSummitAgendaIds: votedSummitAgendaIds,
+      soldClubSharePercent: soldClubSharePercent,
+      hijackedPlayerIds: hijackedPlayerIds,
+      activeScoutingMissions: activeScoutingMissions,
     );
   }
 }

@@ -1,21 +1,6 @@
-// domain/generation/scout_service.dart
-// Scouting generation with duration tiers, accuracy margins, and hidden wonderkid chance (§10.4)
-
 import 'dart:math' as math;
 import '../entities/player.dart';
-
-enum ScoutDurationTier {
-  instant('Hızlı Tarama', '45 dk • Yüzeysel yetenek tespiti', 0, 8),
-  standard('Kapsamlı Rapor', '3 Saat • Dengeli analiz ve potansiyel aralığı', 3, 5),
-  deep('Derin Analiz', '6 Saat • Yüksek doğruluk, gizli cevher şansı', 6, 3);
-
-  final String label;
-  final String description;
-  final int durationHours;
-  final int baseAccuracyMargin;
-
-  const ScoutDurationTier(this.label, this.description, this.durationHours, this.baseAccuracyMargin);
-}
+import '../scouting/scouting_mission.dart';
 
 class ScoutReport {
   final List<Player> players;
@@ -51,8 +36,8 @@ class ScoutService {
     required ScoutDurationTier tier,
     required int scoutFacilityLevel,
   }) {
-    // Facility seviyesi artıkça hata payı daralır
-    final accuracyMargin = math.max(1, tier.baseAccuracyMargin - (scoutFacilityLevel ~/ 2));
+    final baseMargin = tier == ScoutDurationTier.deep ? 3 : (tier == ScoutDurationTier.standard ? 5 : 7);
+    final accuracyMargin = math.max(1, baseMargin - (scoutFacilityLevel ~/ 2));
     final isWonderkidChance = _random.nextDouble() < (tier == ScoutDurationTier.deep ? 0.12 : 0.04);
 
     final players = <Player>[];

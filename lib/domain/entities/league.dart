@@ -16,7 +16,7 @@ class LeagueTableEntry {
   const LeagueTableEntry({
     required this.clubId,
     required this.clubName,
-    this.badgeIcon = '🛡️',
+    this.badgeIcon = 'SHIELD',
     this.played = 0,
     this.won = 0,
     this.drawn = 0,
@@ -69,7 +69,7 @@ class LeagueTableEntry {
   factory LeagueTableEntry.fromJson(Map<String, dynamic> json) => LeagueTableEntry(
         clubId: json['clubId'] as String,
         clubName: json['clubName'] as String,
-        badgeIcon: json['badgeIcon'] as String? ?? '🛡️',
+        badgeIcon: json['badgeIcon'] as String? ?? 'SHIELD',
         played: json['played'] as int? ?? 0,
         won: json['won'] as int? ?? 0,
         drawn: json['drawn'] as int? ?? 0,
@@ -205,7 +205,7 @@ class League {
 
   /// Belirtilen kulübün arma ikonu
   String getClubBadge(String clubId) {
-    return getEntry(clubId)?.badgeIcon ?? '🛡️';
+    return getEntry(clubId)?.badgeIcon ?? 'SHIELD';
   }
 
   League copyWith({

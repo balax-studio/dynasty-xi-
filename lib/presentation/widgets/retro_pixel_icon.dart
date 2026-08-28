@@ -51,159 +51,152 @@ enum RetroPixelIconType {
   user,
   users;
 
-  /// String veya emoji girdisini en uygun RetroPixelIconType'a dönüştürür.
+  /// String girdisini en uygun RetroPixelIconType'a dönüştürür.
   static RetroPixelIconType fromString(String input) {
-    final clean = input.trim();
+    final clean = input.trim().toLowerCase();
     switch (clean) {
-      case '🛒':
       case 'cart':
       case 'market':
+      case 'shop':
         return RetroPixelIconType.cart;
-      case '🏷️':
-      case '🏷':
+      case '[etiket]':
       case 'tag':
       case 'sale':
         return RetroPixelIconType.tag;
-      case '🤝':
+      case '[anlasma]':
       case 'handshake':
       case 'loan':
+      case 'contract':
         return RetroPixelIconType.handshake;
-      case '💰':
-      case '💵':
+      case '[kasa]':
+      case '[tl]':
       case '₣':
       case 'cash':
       case 'money':
+      case 'finance':
         return RetroPixelIconType.cash;
-      case '📢':
-      case '📣':
+      case '[duyuru]':
       case 'fan':
       case 'fans':
       case 'megaphone':
         return RetroPixelIconType.megaphone;
-      case '👕':
+      case '[kadro]':
       case 'shirt':
       case 'jersey':
       case 'locker':
+      case 'squad':
         return RetroPixelIconType.shirt;
-      case '🏛️':
-      case '🏛':
+      case '[yönetim]':
       case 'capitol':
       case 'board':
       case 'bank':
         return RetroPixelIconType.capitol;
-      case '👑':
       case 'crown':
       case 'president':
         return RetroPixelIconType.crown;
-      case '👔':
       case 'suit':
       case 'coach':
       case 'staff':
+      case 'manager':
         return RetroPixelIconType.suit;
-      case '📋':
+      case '[rapor]':
       case 'tactics':
       case 'lineup':
         return RetroPixelIconType.tacticsBoard;
-      case '🏟️':
-      case '🏟':
       case 'stadium':
       case 'facility':
+      case '[tesis]':
         return RetroPixelIconType.stadium;
-      case '🏆':
+      case '[kupa]':
       case 'trophy':
       case 'cup':
         return RetroPixelIconType.trophy;
-      case '📰':
+      case '[manset]':
       case 'newspaper':
       case 'press':
+      case '[basin]':
         return RetroPixelIconType.newspaper;
-      case '⚡':
+      case 'bolt':
       case 'lightning':
       case 'power':
         return RetroPixelIconType.lightning;
-      case '🛡️':
-      case '🛡':
       case 'shield':
       case 'club':
+      case 'defense':
         return RetroPixelIconType.shield;
-      case '⭐':
       case 'star':
       case 'pot':
+      case 'talent':
         return RetroPixelIconType.star;
-      case '🪑':
       case 'bench':
       case 'sub':
         return RetroPixelIconType.bench;
-      case '📯':
       case 'whistle':
       case 'ref':
+      case 'match':
         return RetroPixelIconType.whistle;
-      case '💬':
+      case '[mesaj]':
       case 'chat':
       case 'dialogue':
         return RetroPixelIconType.chat;
-      case '🔥':
+      case '[form]':
       case 'flame':
       case 'form':
         return RetroPixelIconType.flame;
-      case '⚖️':
-      case '⚖':
+      case '[hukuk]':
       case 'scales':
       case 'compare':
+      case 'legal':
         return RetroPixelIconType.scales;
-      case '📝':
-      case '✍️':
       case 'pen':
-      case 'contract':
         return RetroPixelIconType.pen;
-      case '🌱':
       case 'sprout':
       case 'youth':
       case 'academy':
+      case '[altyapi]':
         return RetroPixelIconType.sprout;
-      case '✈️':
-      case '✈':
       case 'plane':
       case 'hijack':
         return RetroPixelIconType.plane;
-      case '📡':
-      case '🛰️':
       case 'satellite':
       case 'scout':
+      case '[scout]':
+      case '[arama]':
         return RetroPixelIconType.satellite;
-      case '💼':
+      case '[menajer]':
       case 'briefcase':
       case 'agent':
         return RetroPixelIconType.briefcase;
-      case '🔨':
-      case '👨‍⚖️':
+      case '[inşaat]':
+      case '[tesisat]':
       case 'gavel':
-      case 'legal':
         return RetroPixelIconType.gavel;
-      case '📺':
+      case '[tv]':
       case 'tv':
       case 'debate':
         return RetroPixelIconType.tv;
-      case '🔒':
+      case '[kilitli]':
       case 'lock':
         return RetroPixelIconType.lock;
-      case '🔓':
+      case '[acik]':
       case 'unlock':
         return RetroPixelIconType.unlock;
-      case '🎯':
+      case '[hedef]':
       case 'target':
         return RetroPixelIconType.target;
-      case '📊':
+      case '[grafik]':
       case 'chart':
       case 'stats':
         return RetroPixelIconType.chart;
-      case '⚽':
+      case '[gol]':
       case 'ball':
+      case 'goal':
         return RetroPixelIconType.ball;
-      case '👤':
+      case '[oyuncu]':
       case 'user':
+      case 'player':
         return RetroPixelIconType.user;
-      case '👥':
+      case '[taraftar]':
       case 'users':
         return RetroPixelIconType.users;
       default:

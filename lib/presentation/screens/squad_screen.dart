@@ -94,7 +94,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
           duration: const Duration(seconds: 2),
           backgroundColor: AppColors.neonCyan,
           content: Text(
-            '🔄 ${player.fullName} seçildi. Değiştirmek istediğiniz diğer oyuncuya dokunun.',
+            ' ${player.fullName} seçildi. Değiştirmek istediğiniz diğer oyuncuya dokunun.',
             style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 11),
           ),
         ),
@@ -108,7 +108,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
           const SnackBar(
             backgroundColor: AppColors.neonLime,
             content: Text(
-              '⚡ Kadro güncellendi! Oyuncular yer değiştirdi.',
+              'BOLT Kadro güncellendi! Oyuncular yer değiştirdi.',
               style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 11),
             ),
           ),
@@ -267,7 +267,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
                                         const SnackBar(
                                           backgroundColor: AppColors.neonLime,
                                           content: Text(
-                                            '⚡ En iyi 11 oyuncu otomatik olarak sahaya dizildi!',
+                                            'BOLT En iyi 11 oyuncu otomatik olarak sahaya dizildi!',
                                             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                                           ),
                                         ),
@@ -326,7 +326,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
                                     onPressed: () => setState(() => _selectedPlayerForSwap = null),
                                     backgroundColor: AppColors.comicRed,
                                     textColor: Colors.white,
-                                    child: const Text('İPTAL ✕', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
+                                    child: const Text('İPTAL ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
                                   ),
                               ],
                             ),
@@ -339,7 +339,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
                       if (_showPitchView)
                         RetroWindow(
                           title: 'İLK 11 SAHA DİZİLİMİ (${club.formation})',
-                          icon: '🏟️',
+                          icon: '',
                           titleBarColor: const Color(0xFF005500),
                           child: _buildVisualPitchLineup(context, club, club.starting11),
                         ),
@@ -348,7 +348,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
                       // 4. İlk 11 Liste Penceresi
                       RetroWindow(
                         title: 'İLK 11 KADROSU (${starting11.length} OYUNCU)',
-                        icon: '⭐',
+                        icon: 'STAR',
                         titleBarColor: AppColors.win95TitleNavy,
                         child: Column(
                           children: starting11.map((p) => _buildPlayerCard(context, ref, club, p, isStarting: true)).toList(),
@@ -359,7 +359,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
                       // 5. Yedekler Penceresi
                       RetroWindow(
                         title: 'YEDEK KULÜBESİ (${subs.length} OYUNCU)',
-                        icon: '🪑',
+                        icon: '',
                         titleBarColor: AppColors.win95TitleNavy,
                         child: subs.isEmpty
                             ? const Padding(
@@ -518,7 +518,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
               height: 40,
               color: Colors.black,
               alignment: Alignment.center,
-              child: Text(headCoach?.archetype.icon ?? '👔', style: const TextStyle(fontSize: 22)),
+              child: Text(headCoach?.archetype.icon ?? '', style: const TextStyle(fontSize: 22)),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -552,7 +552,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
               },
               backgroundColor: AppColors.accentGold,
               textColor: Colors.black,
-              child: const Text('💬 HOCA ODASI', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+              child: const Text('[MESAJ] HOCA ODASI', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -658,7 +658,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
                 ),
               ),
               Text(
-                '★' * p.stars,
+                '' * p.stars,
                 style: TextStyle(
                   color: rarityColor,
                   fontSize: 7,
@@ -688,7 +688,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
                 margin: const EdgeInsets.only(left: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 color: AppColors.comicRed,
-                child: Text('🚑 ${p.injuryMatchesLeft}M', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 9)),
+                child: Text('[SAĞLIK] ${p.injuryMatchesLeft}M', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 9)),
               ),
           ],
         ),

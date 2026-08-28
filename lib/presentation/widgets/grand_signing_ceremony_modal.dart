@@ -111,7 +111,7 @@ class GrandSigningCeremonyModal extends ConsumerWidget {
                           SnackBar(
                             backgroundColor: AppColors.neonLime,
                             content: Text(
-                              '🏟️ ${player.fullName} stadyumda binlerce taraftar önünde imza attı! +₣${estimatedJerseySales - ceremonyCost} Net Gelir, +%15 Taraftar Coşkusu!',
+                              ' ${player.fullName} stadyumda binlerce taraftar önünde imza attı! +₣${estimatedJerseySales - ceremonyCost} Net Gelir, +%15 Taraftar Coşkusu!',
                               style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                             ),
                           ),

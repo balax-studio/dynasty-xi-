@@ -35,10 +35,10 @@ class LegalDefenseScreen extends ConsumerWidget {
                 children: [
                   const RetroWindow(
                     title: 'BAŞKANLIK HUKUK VE TAHKİM MERKEZİ',
-                    icon: '⚖️',
+                    icon: '[HUKUK]',
                     child: Row(
                       children: [
-                        Text('👩‍⚖️📜', style: TextStyle(fontSize: 32)),
+                        Text('[HUKUK]', style: TextStyle(fontSize: 32)),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -52,12 +52,14 @@ class LegalDefenseScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
 
                   ...cases.map((c) {
+                    final isResolved = state?.resolvedLegalCaseIds.contains(c.id) ?? false;
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: AppColors.win95Grey,
-                        border: Border.all(color: AppColors.win95DarkGrey),
+                        border: Border.all(color: isResolved ? AppColors.neonLime : AppColors.win95DarkGrey),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,8 +74,8 @@ class LegalDefenseScreen extends ConsumerWidget {
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 color: Colors.black,
                                 child: Text(
-                                  'RİSK: ₣${(c.initialPenalty / 1000).toInt()}K',
-                                  style: const TextStyle(color: AppColors.comicRed, fontWeight: FontWeight.bold, fontSize: 10),
+                                  isResolved ? 'SONUÇLANDI' : 'RİSK: ₣${(c.initialPenalty / 1000).toInt()}K',
+                                  style: TextStyle(color: isResolved ? AppColors.neonLime : AppColors.comicRed, fontWeight: FontWeight.bold, fontSize: 10),
                                 ),
                               ),
                             ],
@@ -96,22 +98,33 @@ class LegalDefenseScreen extends ConsumerWidget {
                           SizedBox(
                             width: double.infinity,
                             child: RetroButton(
-                              onPressed: () {
-                                ref.read(gameStateProvider.notifier).adjustCash(-c.appealCost);
-                                ref.read(gameStateProvider.notifier).adjustBoardTrust(6);
-                                Navigator.pop(context);
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: AppColors.primaryDeep,
-                                    content: Text(
-                                      '⚖️ ${c.victoryOutcome}',
-                                      style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Text('TAHKİM KURULUNA İTİRAZ DİLEKÇESİ VER (-₣${(c.appealCost / 1000).toInt()}K)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                              backgroundColor: isResolved ? AppColors.win95DarkGrey : AppColors.neonLime,
+                              onPressed: isResolved
+                                  ? null
+                                  : () async {
+                                      final won = await ref.read(gameStateProvider.notifier).resolveLegalAppeal(c);
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            backgroundColor: AppColors.primaryDeep,
+                                            content: Text(
+                                              won
+                                                  ? '[HUKUK] KAZANILDI! ${c.victoryOutcome}'
+                                                  : '[RED] TAHKİM REDDETTİ! Ceza onandı (-₣${c.initialPenalty})',
+                                              style: TextStyle(
+                                                color: won ? AppColors.neonLime : AppColors.comicRed,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                              child: Text(
+                                isResolved ? ' DAVA TAHKİMDE SONUÇLANDI' : 'TAHKİM KURULUNA İTİRAZ DİLEKÇESİ VER (-₣${(c.appealCost / 1000).toInt()}K)',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                              ),
                             ),
                           ),
                         ],

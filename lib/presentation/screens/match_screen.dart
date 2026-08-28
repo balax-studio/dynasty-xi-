@@ -1,5 +1,5 @@
 // presentation/screens/match_screen.dart
-// Live match simulation screen featuring 2D CustomPainter pitch, commentary feed, half-time talks, and in-game substitutions (§11.3, §11.4).
+// Live match simulation screen featuring 60 FPS Flame 2D radar pitch, commentary feed, half-time talks, and in-game substitutions (§11.3, §11.4).
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -9,12 +9,13 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../core/audio/audio_synthesizer.dart';
 import '../../domain/entities/club.dart';
+import '../../domain/entities/player.dart';
 import '../../domain/sim/half_time_talk.dart';
 import '../../domain/sim/match_engine.dart';
 import '../../domain/sim/match_events.dart';
 import '../../domain/media/press_conference.dart';
 import '../../domain/media/fan_social_buzz.dart';
-import '../widgets/pitch_painter.dart';
+import '../widgets/flame_match_pitch_widget.dart';
 import '../widgets/ref_tunnel_confrontation_dialog.dart';
 import '../widgets/retro_window.dart';
 
@@ -34,18 +35,95 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
   int currentMinute = 0;
   Timer? _ticker;
   List<MatchEvent> visibleEvents = [];
-  dynamic _matchResult;
+  MatchResult? _matchResult;
   bool isFinished = false;
   bool hasHalfTimeTalked = false;
   bool isHalfTimeModalActive = false;
   MatchEvent? activeKeyMoment;
-  int simulationSpeedMs = 300; // 1x=400ms, 2x=200ms, 4x=80ms
+  int simulationSpeedMs = 250; // 1x=350ms, 2x=180ms, 4x=60ms
+  bool _hasCommitted = false;
+
+  late bool isUserHome;
+  late String homeName;
+  late String awayName;
+  late String homeBadge;
+  late String awayBadge;
+  List<Player> _liveHomeStarters = [];
+  List<Player> _liveAwayStarters = [];
+  String _liveHomeFormation = '4-3-3';
+  String _liveAwayFormation = '4-3-3';
 
   @override
   void initState() {
     super.initState();
     AudioSynthesizer.playWhistle();
-    _startSimulation();
+    _initMatch();
+  }
+
+  void _initMatch() {
+    if (_matchResult != null) return;
+    final state = ref.read(gameStateProvider).valueOrNull;
+    if (state == null) return;
+
+    final fixture = state.currentLeague.fixtures.firstWhere(
+      (f) => f.matchday == state.clock.matchday && !f.isPlayed,
+      orElse: () => state.currentLeague.fixtures.first,
+    );
+    isUserHome = fixture.homeClubId == state.userClub.id;
+    final oppId = isUserHome ? fixture.awayClubId : fixture.homeClubId;
+    final oppName = state.currentLeague.getClubName(oppId);
+    final oppBadge = state.currentLeague.getClubBadge(oppId);
+
+    homeName = isUserHome ? state.userClub.name : oppName;
+    homeBadge = isUserHome ? state.userClub.badgeIcon : oppBadge;
+    awayName = !isUserHome ? state.userClub.name : oppName;
+    awayBadge = !isUserHome ? state.userClub.badgeIcon : oppBadge;
+
+    final oppClub = Club(
+      id: oppId,
+      name: oppName,
+      city: 'Anadolu',
+      leagueTier: state.userClub.leagueTier,
+      badgeIcon: oppBadge,
+      squad: state.userClub.squad,
+      starting11Ids: state.userClub.starting11Ids,
+    );
+
+    final homeClub = isUserHome ? state.userClub : oppClub;
+    final awayClub = isUserHome ? oppClub : state.userClub;
+
+    _liveHomeStarters = List<Player>.from(homeClub.starting11);
+    _liveAwayStarters = List<Player>.from(awayClub.starting11);
+    _liveHomeFormation = homeClub.formation;
+    _liveAwayFormation = awayClub.formation;
+
+    final matchSeed = state.clock.seasonNumber * 10000 + state.clock.matchday * 100 + (DateTime.now().millisecondsSinceEpoch % 100);
+    final setup = MatchSetup(
+      home: homeClub,
+      away: awayClub,
+      seed: matchSeed,
+      isLiveMode: true,
+      hasTacticianPerk: state.manager.hasPerk('tactician_1'),
+    );
+
+    final result = MatchEngine(setup.seed).simulate(setup);
+
+    final startEvent = result.events.firstWhere(
+      (e) => e.minute == 0,
+      orElse: () => const MatchEvent(
+        minute: 0,
+        type: MatchEventType.whistleStart,
+        description: 'Hakem ilk düdüğü çaldı, maç başladı!',
+        isHomeTeam: true,
+      ),
+    );
+
+    setState(() {
+      _matchResult = result;
+      visibleEvents = [startEvent];
+    });
+
+    _startTimer();
   }
 
   @override
@@ -54,59 +132,10 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     super.dispose();
   }
 
-  Future<void> _startSimulation() async {
-    final state = ref.read(gameStateProvider).valueOrNull;
-    if (state == null) return;
-
-    final fixture = state.currentLeague.fixtures.firstWhere(
-      (f) => f.matchday == state.clock.matchday && !f.isPlayed,
-      orElse: () => state.currentLeague.fixtures.first,
-    );
-    final isUserHome = fixture.homeClubId == state.userClub.id;
-    final oppId = isUserHome ? fixture.awayClubId : fixture.homeClubId;
-    final oppName = state.currentLeague.getClubName(oppId);
-    final oppBadge = state.currentLeague.getClubBadge(oppId);
-
-    final result = await ref.read(gameStateProvider.notifier).playMatch(isLiveMode: true);
-    if (!mounted) return;
-
-    // Sonuç null dönerse (örn. maç daha önce simüle edilmişse) fallback maç motorunu çalıştır
-    final matchRes = result ?? MatchEngine(DateTime.now().millisecondsSinceEpoch).simulate(
-      MatchSetup(
-        home: isUserHome ? state.userClub : Club(
-          id: oppId,
-          name: oppName,
-          city: 'Anadolu',
-          leagueTier: state.userClub.leagueTier,
-          badgeIcon: oppBadge,
-          squad: state.userClub.squad,
-          starting11Ids: state.userClub.starting11Ids,
-        ),
-        away: !isUserHome ? state.userClub : Club(
-          id: oppId,
-          name: oppName,
-          city: 'Anadolu',
-          leagueTier: state.userClub.leagueTier,
-          badgeIcon: oppBadge,
-          squad: state.userClub.squad,
-          starting11Ids: state.userClub.starting11Ids,
-        ),
-        seed: DateTime.now().millisecondsSinceEpoch,
-        isLiveMode: true,
-      ),
-    );
-
-    setState(() {
-      _matchResult = matchRes;
-    });
-
-    _startTimer();
-  }
-
   void _startTimer() {
     _ticker?.cancel();
     _ticker = Timer.periodic(Duration(milliseconds: simulationSpeedMs), (timer) {
-      if (!mounted) {
+      if (!mounted || _matchResult == null) {
         timer.cancel();
         return;
       }
@@ -127,12 +156,13 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         setState(() {
           isFinished = true;
         });
+        _commitMatchResult();
         return;
       }
 
       setState(() {
         currentMinute++;
-        final eventsInMinute = _matchResult.events.where((e) => (e as MatchEvent).minute == currentMinute).cast<MatchEvent>().toList();
+        final eventsInMinute = _matchResult!.events.where((e) => e.minute == currentMinute).toList();
         visibleEvents.addAll(eventsInMinute);
 
         // Gol sesi
@@ -148,6 +178,28 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         }
       });
     });
+  }
+
+  Future<void> _commitMatchResult() async {
+    if (_hasCommitted || _matchResult == null) return;
+    _hasCommitted = true;
+    await ref.read(gameStateProvider.notifier).playMatch(
+      isLiveMode: true,
+      liveResult: _matchResult,
+    );
+  }
+
+  void _fastForward() {
+    _ticker?.cancel();
+    AudioSynthesizer.playWhistle();
+    setState(() {
+      currentMinute = 90;
+      visibleEvents = List.from(_matchResult?.events ?? []);
+      isFinished = true;
+      activeKeyMoment = null;
+      isHalfTimeModalActive = false;
+    });
+    _commitMatchResult();
   }
 
   void _resumeAfterKeyMoment(LiveDecisionOption option) {
@@ -193,7 +245,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     final state = ref.read(gameStateProvider).valueOrNull;
     if (state == null) return;
 
-    final starters = state.userClub.starting11;
+    final starters = _liveHomeStarters;
     final bench = state.userClub.bench;
 
     showModalBottomSheet(
@@ -266,11 +318,18 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                                           playerInId: subId,
                                         );
                                         if (subResult.success) {
-                                          visibleEvents.add(MatchEvent(
-                                            minute: currentMinute,
-                                            type: MatchEventType.substitution,
-                                            description: subResult.message,
-                                          ));
+                                          final incoming = bench.firstWhere((p) => p.id == subId);
+                                          setState(() {
+                                            final idx = _liveHomeStarters.indexWhere((p) => p.id == starter.id);
+                                            if (idx != -1) {
+                                              _liveHomeStarters[idx] = incoming;
+                                            }
+                                            visibleEvents.add(MatchEvent(
+                                              minute: currentMinute,
+                                              type: MatchEventType.substitution,
+                                              description: subResult.message,
+                                            ));
+                                          });
                                         }
                                         Navigator.pop(ctx);
                                         _startTimer();
@@ -295,24 +354,16 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(gameStateProvider).valueOrNull;
-    if (state == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_matchResult == null && state != null) {
+      _initMatch();
     }
 
-    final homeClub = state.userClub;
-    final fixture = state.currentLeague.fixtures.firstWhere(
-      (f) => f.matchday == state.clock.matchday && !f.isPlayed,
-      orElse: () => state.currentLeague.fixtures.first,
-    );
-    final isUserHome = fixture.homeClubId == state.userClub.id;
-    final oppId = isUserHome ? fixture.awayClubId : fixture.homeClubId;
-    final oppName = state.currentLeague.getClubName(oppId);
-    final oppBadge = state.currentLeague.getClubBadge(oppId);
-
-    final homeName = isUserHome ? state.userClub.name : oppName;
-    final homeBadge = isUserHome ? state.userClub.badgeIcon : oppBadge;
-    final awayName = !isUserHome ? state.userClub.name : oppName;
-    final awayBadge = !isUserHome ? state.userClub.badgeIcon : oppBadge;
+    if (_matchResult == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.primaryDeep,
+        body: Center(child: CircularProgressIndicator(color: AppColors.neonLime)),
+      );
+    }
 
     final currentScoreHome = visibleEvents.isNotEmpty ? visibleEvents.last.scoreHome : 0;
     final currentScoreAway = visibleEvents.isNotEmpty ? visibleEvents.last.scoreAway : 0;
@@ -339,26 +390,16 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               _startTimer();
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 450, child: Text('1x Normal Hız')),
-              const PopupMenuItem(value: 200, child: Text('2x Hızlı')),
-              const PopupMenuItem(value: 60, child: Text('4x Çok Hızlı')),
+              const PopupMenuItem(value: 350, child: Text('1x Normal Hız')),
+              const PopupMenuItem(value: 180, child: Text('2x Hızlı')),
+              const PopupMenuItem(value: 50, child: Text('4x Çok Hızlı')),
             ],
           ),
           // Hızlı Bitir
           IconButton(
             icon: const Icon(Icons.fast_forward),
             tooltip: 'Hızlı Bitir',
-            onPressed: () {
-              _ticker?.cancel();
-              AudioSynthesizer.playWhistle();
-              setState(() {
-                currentMinute = 90;
-                visibleEvents = _matchResult?.events ?? [];
-                isFinished = true;
-                activeKeyMoment = null;
-                isHalfTimeModalActive = false;
-              });
-            },
+            onPressed: _fastForward,
           ),
         ],
       ),
@@ -376,36 +417,34 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                 scoreAway: currentScoreAway,
               ),
 
-              // 2. 2D Saha Görselleştirmesi
+              // 2. Flame 60 FPS 2D Radar Saha Görselleştirmesi
               Expanded(
                 flex: 5,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: CustomPaint(
-                      painter: PitchPainter(
-                        homePlayers: homeClub.starting11,
-                        homeFormation: homeClub.formation,
-                        ballPosition: _calculateBallOffset(currentMinute),
-                      ),
-                      child: Container(),
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
+                  child: FlameMatchPitchWidget(
+                    homePlayers: _liveHomeStarters,
+                    awayPlayers: _liveAwayStarters,
+                    homeFormation: _liveHomeFormation,
+                    awayFormation: _liveAwayFormation,
+                    isUserHome: isUserHome,
+                    currentMinute: currentMinute,
+                    visibleEvents: visibleEvents,
                   ),
                 ),
               ),
 
               // 2.5. BAŞKAN CANLI MAÇ MÜDAHALE BARINI (CHAIRMAN LIVE MATCH BAR)
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
                   color: Colors.black,
                   border: Border.all(color: AppColors.neonLime, width: 1.5),
                 ),
                 child: Row(
                   children: [
-                    const Text('👔 BAŞKAN:', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10)),
+                    const Text(' BAŞKAN:', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: SingleChildScrollView(
@@ -415,14 +454,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             ActionChip(
                               backgroundColor: AppColors.neoInnerBg,
                               side: const BorderSide(color: AppColors.comicRed, width: 1.5),
-                              label: const Text('⚡ HAKEM ODASI BASKINI', style: TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold)),
+                              label: const Text('BOLT HAKEM ODASI BASKINI', style: TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
                                 RefTunnelConfrontationDialog.show(context, (outcome) {
                                   setState(() {
                                     visibleEvents.add(MatchEvent(
                                       minute: currentMinute,
                                       type: MatchEventType.yellowCard,
-                                      description: '🚨 BAŞKAN KORİDORDA: ${outcome.title}! ${outcome.narrative}',
+                                      description: '[ACIL] BAŞKAN KORİDORDA: ${outcome.title}! ${outcome.narrative}',
                                     ));
                                   });
                                 });
@@ -432,14 +471,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             ActionChip(
                               backgroundColor: AppColors.neoInnerBg,
                               side: const BorderSide(color: AppColors.accentGold, width: 1.5),
-                              label: const Text('💰 PRİM VADET (-₣10K)', style: TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.bold)),
+                              label: const Text('[KASA] PRİM VADET (-₣10K)', style: TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
                                 ref.read(gameStateProvider.notifier).claimSponsorReward(-10000);
                                 setState(() {
                                   visibleEvents.add(MatchEvent(
                                     minute: currentMinute,
                                     type: MatchEventType.keyMoment,
-                                    description: '💰 BAŞKAN: Soyunma Odasına +₣10,000 Maç Primi Vadetti! Takım Ateşlendi!',
+                                    description: '[KASA] BAŞKAN: Soyunma Odasına +₣10,000 Maç Primi Vadetti! Takım Ateşlendi!',
                                   ));
                                 });
                                 AudioSynthesizer.playGoalFanfare();
@@ -449,14 +488,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             ActionChip(
                               backgroundColor: AppColors.neoInnerBg,
                               side: const BorderSide(color: AppColors.neonPink, width: 1.5),
-                              label: const Text('🔥 DEV DERBİ PRİMİ (-₣25K)', style: TextStyle(color: AppColors.neonPink, fontSize: 10, fontWeight: FontWeight.bold)),
+                              label: const Text('[FORM] DEV DERBİ PRİMİ (-₣25K)', style: TextStyle(color: AppColors.neonPink, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
                                 ref.read(gameStateProvider.notifier).claimSponsorReward(-25000);
                                 setState(() {
                                   visibleEvents.add(MatchEvent(
                                     minute: currentMinute,
                                     type: MatchEventType.keyMoment,
-                                    description: '🔥 BAŞKAN: Soyunma Odasına ₣25.000 Dev Derbi Prim Sözü Verdi! Oyuncular Sahayı Yakıyor!',
+                                    description: '[FORM] BAŞKAN: Soyunma Odasına ₣25.000 Dev Derbi Prim Sözü Verdi! Oyuncular Sahayı Yakıyor!',
                                   ));
                                 });
                                 AudioSynthesizer.playGoalFanfare();
@@ -466,13 +505,13 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             ActionChip(
                               backgroundColor: AppColors.neoInnerBg,
                               side: const BorderSide(color: AppColors.neonCyan, width: 1.5),
-                              label: const Text('🎆 MEŞALE & PANKART ŞOVU', style: TextStyle(color: AppColors.neonCyan, fontSize: 10, fontWeight: FontWeight.bold)),
+                              label: const Text(' MEŞALE & PANKART ŞOVU', style: TextStyle(color: AppColors.neonCyan, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
                                 setState(() {
                                   visibleEvents.add(MatchEvent(
                                     minute: currentMinute,
                                     type: MatchEventType.keyMoment,
-                                    description: '🎆 TRİBÜNLER: Dev Pankart ve Meşale Şovu Başladı! Stat Alev Alev!',
+                                    description: ' TRİBÜNLER: Dev Pankart ve Meşale Şovu Başladı! Stat Alev Alev!',
                                   ));
                                 });
                               },
@@ -481,13 +520,13 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             ActionChip(
                               backgroundColor: AppColors.neoInnerBg,
                               side: const BorderSide(color: AppColors.neonLime, width: 1.5),
-                              label: const Text('⚡ HOCAYA: HÜCUM ET', style: TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold)),
+                              label: const Text('BOLT HOCAYA: HÜCUM ET', style: TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
                                 setState(() {
                                   visibleEvents.add(MatchEvent(
                                     minute: currentMinute,
                                     type: MatchEventType.keyMoment,
-                                    description: '⚡ BAŞKAN TALİMATI: Hoca Takımı Tüm Hatlarıyla Hücuma Sürdü!',
+                                    description: 'BOLT BAŞKAN TALİMATI: Hoca Takımı Tüm Hatlarıyla Hücuma Sürdü!',
                                   ));
                                 });
                               },
@@ -543,7 +582,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('☕', style: TextStyle(fontSize: 40)),
+            const Text('[TAKTIK]', style: TextStyle(fontSize: 20, color: AppColors.accentGold, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text('DEVRE ARASI SOYUNMA ODASI', style: AppTypography.h2(color: AppColors.accentGold)),
             const SizedBox(height: 6),
@@ -622,30 +661,31 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text('xG: ${_matchResult?.xgHome ?? "0.0"}', style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 9)),
+                  Text('xG: ${_matchResult?.xgHome.toStringAsFixed(2) ?? "0.00"}', style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 9)),
                 ],
               ),
             ),
           ),
           const SizedBox(width: 8),
 
-          // Dijital Skor Kutusu
+          // Canlı Skor Tabelası
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.black,
-              border: Border.all(color: AppColors.neonPink, width: 2),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppColors.neonPink,
-                  blurRadius: 4,
-                  spreadRadius: -1,
+              border: Border.all(color: AppColors.comicYellow, width: 2),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  '$scoreHome - $scoreAway',
+                  style: AppTypography.monoNumber(color: AppColors.comicYellow).copyWith(fontSize: 28, fontWeight: FontWeight.w900),
+                ),
+                Text(
+                  currentMinute >= 90 ? 'MS' : '$currentMinute\'',
+                  style: AppTypography.monoNumber(color: currentMinute >= 90 ? AppColors.comicRed : AppColors.neonLime).copyWith(fontSize: 12),
                 ),
               ],
-            ),
-            child: Text(
-              '$scoreHome : $scoreAway',
-              style: AppTypography.display(color: AppColors.neonLime).copyWith(fontSize: 34),
             ),
           ),
           const SizedBox(width: 8),
@@ -673,7 +713,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text('xG: ${_matchResult?.xgAway ?? "0.0"}', style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 9)),
+                  Text('xG: ${_matchResult?.xgAway.toStringAsFixed(2) ?? "0.00"}', style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 9)),
                 ],
               ),
             ),
@@ -686,22 +726,11 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
   Widget _buildCommentaryFeed() {
     if (visibleEvents.isEmpty) {
       return Container(
-        color: Colors.black,
+        color: const Color(0xFF0D1117),
         alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(color: AppColors.neonLime, strokeWidth: 2),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              '> HAKEM DÜDÜĞÜ ÇALDI, MAÇ BAŞLIYOR...',
-              style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 12),
-            ),
-          ],
+        child: Text(
+          '> HAKEM DÜDÜĞÜ ÇALDI, MAÇ BAŞLIYOR...',
+          style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 12),
         ),
       );
     }
@@ -759,7 +788,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('⚡ CANLI TAKTİK KARARI', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.accentGold)),
+            const Text('BOLT CANLI TAKTİK KARARI', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.accentGold)),
             const SizedBox(height: 12),
             Text(keyMoment.description, textAlign: TextAlign.center, style: AppTypography.body()),
             const SizedBox(height: 20),
@@ -794,7 +823,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     required String awayBadge,
   }) {
     final result = _matchResult;
-    final userClubHome = homeName == ref.read(gameStateProvider).value?.userClub.name;
+    final userClubHome = isUserHome;
     final userGoals = userClubHome ? (result?.homeGoals ?? 0) : (result?.awayGoals ?? 0);
     final oppGoals = userClubHome ? (result?.awayGoals ?? 0) : (result?.homeGoals ?? 0);
     final oppName = userClubHome ? awayName : homeName;
@@ -847,7 +876,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              Text('Topla Oynama: %${result?.possessionHome ?? 50} - %${result?.possessionAway ?? 50} • xG: ${result?.xgHome ?? "0.0"} - ${result?.xgAway ?? "0.0"}', style: AppTypography.bodySmall()),
+              Text('Topla Oynama: %${result?.possessionHome ?? 50} - %${result?.possessionAway ?? 50} • xG: ${result?.xgHome.toStringAsFixed(2) ?? "0.00"} - ${result?.xgAway.toStringAsFixed(2) ?? "0.00"}', style: AppTypography.bodySmall()),
               const SizedBox(height: 12),
 
               // BASIN TOPLANTISI (§16)
@@ -863,84 +892,116 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                   children: [
                     Row(
                       children: [
-                        const Text('🎙️ ', style: TextStyle(fontSize: 14)),
-                        Text('${pressConf.reporterName} (${pressConf.mediaOutlet})', style: AppTypography.label(color: AppColors.neonCyan).copyWith(fontSize: 11)),
+                        const Text('[BASIN]', style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 6),
+                        Text('BASIN TOPLANTISI ODASI', style: AppTypography.label(color: AppColors.neonCyan)),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(pressConf.question, style: AppTypography.bodySmall(color: Colors.white).copyWith(fontSize: 10)),
+                    Text(
+                      '"${pressConf.question}"',
+                      style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontStyle: FontStyle.italic),
+                    ),
                     const SizedBox(height: 8),
-                    Column(
-                      children: pressConf.options.map((opt) {
-                        final isSelected = _selectedPressOption == opt;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 4.0),
-                          child: InkWell(
-                            onTap: () {
+                    ...pressConf.options.map((opt) {
+                      final isSelected = _selectedPressOption == opt;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: RetroButton(
+                            backgroundColor: isSelected ? AppColors.neonCyan : AppColors.neutral800,
+                            textColor: isSelected ? Colors.black : Colors.white,
+                            onPressed: () {
                               setState(() {
                                 _selectedPressOption = opt;
                               });
+                              AudioSynthesizer.playClick();
+                              ref.read(gameStateProvider.notifier).applyPressResponse(
+                                    deltaFans: opt.fanImpact,
+                                    deltaLockerRoom: opt.lockerImpact,
+                                    deltaBoardTrust: opt.boardImpact,
+                                    logText: 'Basın Açıklaması: ${opt.stance.label}',
+                                  );
                             },
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: isSelected ? const Color(0xFF003322) : Colors.black45,
-                                border: Border.all(color: isSelected ? AppColors.neonLime : Colors.white24),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(opt.stance.icon, style: const TextStyle(fontSize: 12)),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      opt.text,
-                                      style: TextStyle(color: isSelected ? AppColors.neonLime : Colors.white70, fontSize: 9),
-                                    ),
-                                  ),
-                                ],
+                            child: Text(
+                              opt.text,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isSelected ? Colors.black : Colors.white,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
+                        ),
+                      );
+                    }),
+                    if (_selectedPressOption != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          '${_selectedPressOption!.stance.icon} Duruş: ${_selectedPressOption!.stance.label}',
+                          style: const TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
 
-              // TRİBÜN VE SOSYAL MEDYA SESİ (§16.2)
+              const SizedBox(height: 12),
+
+              // SOSYAL MEDYA TARAFTAR TWEETLERİ (§16.2)
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.black,
-                  border: Border.all(color: Colors.white24),
+                  border: Border.all(color: AppColors.neonLime),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('📢 TRİBÜN & SOSYAL MEDYA SESİ', style: AppTypography.label(color: AppColors.accentGold).copyWith(fontSize: 10)),
-                    const SizedBox(height: 4),
-                    ...fanTweets.take(2).map((t) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4.0),
-                          child: Text(
-                            '${t.authorName} (${t.handle}): ${t.content}',
-                            style: const TextStyle(color: Colors.white70, fontSize: 9),
-                          ),
-                        )),
+                    Row(
+                      children: [
+                        const Text('[CANLI]', style: TextStyle(fontSize: 10, color: AppColors.neonLime, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 6),
+                        Text('TARAFTAR SOSYAL MEDYA AKIŞI (#DynastyXI)', style: AppTypography.label(color: AppColors.neonLime)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ...fanTweets.map((tweet) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(tweet.handle, style: const TextStyle(color: AppColors.neonCyan, fontSize: 10, fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                tweet.content,
+                                style: const TextStyle(color: Colors.white, fontSize: 10),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
 
+              const SizedBox(height: 16),
+
+              // Kapatma / Devam Etme Butonu
               SizedBox(
                 width: double.infinity,
                 child: RetroButton(
-                  backgroundColor: AppColors.signalGreen,
+                  backgroundColor: AppColors.accentGold,
                   textColor: Colors.black,
                   onPressed: () {
                     AudioSynthesizer.playClick();
-                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(_matchResult);
                   },
                   child: Text('KULÜP OFİSİNE DÖN', style: AppTypography.label(color: Colors.black)),
                 ),
@@ -950,40 +1011,5 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         ),
       ),
     );
-  }
-
-  Offset _calculateBallOffset(int minute) {
-    if (_matchResult == null || minute == 0) {
-      return const Offset(0.50, 0.50); // Santra noktası
-    }
-
-    // O anki veya en son gerçekleşen olay
-    final recentEvent = visibleEvents.isNotEmpty ? visibleEvents.last : null;
-    if (recentEvent != null && recentEvent.minute == minute) {
-      if (recentEvent.type == MatchEventType.goal) {
-        return recentEvent.isHomeTeam ? const Offset(0.50, 0.08) : const Offset(0.50, 0.92);
-      }
-      if (recentEvent.type == MatchEventType.shotSaved || recentEvent.type == MatchEventType.shotOffTarget) {
-        return recentEvent.isHomeTeam ? const Offset(0.50, 0.16) : const Offset(0.50, 0.84);
-      }
-      if (recentEvent.type == MatchEventType.foul) {
-        return const Offset(0.40, 0.50);
-      }
-    }
-
-    // Dinamik saha içi pas ve hücum hareketliliği
-    final phase = (minute % 8);
-    final isHomeAttacking = (minute % 6) < 3;
-    final waveX = 0.20 + 0.60 * ((minute * 3) % 7) / 7.0;
-
-    if (isHomeAttacking) {
-      // Ev sahibi hücumda: top 0.55'ten 0.15'e doğru ilerler
-      final progressY = 0.55 - (phase / 8.0) * 0.38;
-      return Offset(waveX, progressY.clamp(0.12, 0.88));
-    } else {
-      // Deplasman hücumda: top 0.45'ten 0.85'e doğru ilerler
-      final progressY = 0.45 + (phase / 8.0) * 0.38;
-      return Offset(waveX, progressY.clamp(0.12, 0.88));
-    }
   }
 }

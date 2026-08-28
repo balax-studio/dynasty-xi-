@@ -63,7 +63,7 @@ class _HeadCoachDialogueScreenState extends ConsumerState<HeadCoachDialogueScree
         SnackBar(
           backgroundColor: AppColors.neonLime,
           content: Text(
-            '📋 ${option.resultSummary}',
+            '[RAPOR] ${option.resultSummary}',
             style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
         ),
@@ -92,7 +92,7 @@ class _HeadCoachDialogueScreenState extends ConsumerState<HeadCoachDialogueScree
             body: const Center(
               child: RetroWindow(
                 title: 'RESMİ HOCA YOK',
-                icon: '⚠️',
+                icon: '[UYARI]',
                 titleBarColor: AppColors.comicRed,
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
@@ -236,7 +236,7 @@ class _HeadCoachDialogueScreenState extends ConsumerState<HeadCoachDialogueScree
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  isPresident ? '👑 BAŞKAN (${gameState.manager.name})' : '👔 ${coach.fullName}',
+                                  isPresident ? 'CROWN BAŞKAN (${gameState.manager.name})' : ' ${coach.fullName}',
                                   style: TextStyle(
                                     color: isPresident ? AppColors.accentGold : AppColors.neonLime,
                                     fontWeight: FontWeight.bold,
@@ -284,7 +284,7 @@ class _HeadCoachDialogueScreenState extends ConsumerState<HeadCoachDialogueScree
                             padding: const EdgeInsets.symmetric(vertical: 2.0),
                             child: Row(
                               children: [
-                                const Text('💬', style: TextStyle(fontSize: 14)),
+                                const Text('[MESAJ]', style: TextStyle(fontSize: 14)),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(

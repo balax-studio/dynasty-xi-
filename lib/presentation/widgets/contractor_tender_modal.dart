@@ -40,7 +40,7 @@ class ContractorTenderModal extends StatelessWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: RetroWindow(
-        title: '🏗️ İNŞAAT MÜTEAHHİT İHALESİ & İMAR ONAYI',
+        title: '[TESİS] İNŞAAT MÜTEAHHİT İHALESİ & İMAR ONAYI',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -62,7 +62,7 @@ class ContractorTenderModal extends StatelessWidget {
                 _buildTenderCard(
                   context: context,
                   name: 'Öz-Kardeşler İnşaat (Yerel)',
-                  avatar: '🚚',
+                  avatar: '',
                   cost: (baseCost * 0.85).toInt(),
                   weeks: 8,
                   desc: 'Maliyet %15 daha ucuz fakat inşaat süresi 8 hafta sürer.',
@@ -77,7 +77,7 @@ class ContractorTenderModal extends StatelessWidget {
                 _buildTenderCard(
                   context: context,
                   name: 'Yapı-Merkez Taahhüt A.Ş.',
-                  avatar: '🏗️',
+                  avatar: '[TESİS]',
                   cost: baseCost,
                   weeks: 6,
                   desc: 'Standart piyasa maliyeti ve 6 haftalık teslim süresi.',
@@ -92,7 +92,7 @@ class ContractorTenderModal extends StatelessWidget {
                 _buildTenderCard(
                   context: context,
                   name: 'Hochtief German Engineering',
-                  avatar: '🏢',
+                  avatar: '[KULÜP]',
                   cost: (baseCost * 1.35).toInt(),
                   weeks: 4,
                   desc: 'Hızlı teslim (4 hafta) ve üstün Alman kalitesi (+%35 Maliyet).',

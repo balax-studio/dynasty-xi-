@@ -118,7 +118,7 @@ class NegotiationState {
       askingWage: discountedWage,
       hasPaidAgentKickback: true,
       statusMessage:
-          '🍷 Menajere ₣$kickbackAmount gizli komisyon ödendi! Menajer oyuncuyu ikna etti, maaş beklentisi kırıldı ve sabır tazelendi (%$restoredPatience).',
+          ' Menajere ₣$kickbackAmount gizli komisyon ödendi! Menajer oyuncuyu ikna etti, maaş beklentisi kırıldı ve sabır tazelendi (%$restoredPatience).',
     );
   }
 
@@ -165,7 +165,7 @@ class NegotiationState {
         roundsPassed: roundsPassed + 1,
         clauses: activeClauses,
         outcome: NegotiationOutcome.accepted,
-        statusMessage: '🎉 Anlaşma sağlandı! Kulüp ve futbolcu tüm transfer maddelerini onayladı.',
+        statusMessage: '[KUTLAMA] Anlaşma sağlandı! Kulüp ve futbolcu tüm transfer maddelerini onayladı.',
       );
     }
 
@@ -177,7 +177,7 @@ class NegotiationState {
         roundsPassed: roundsPassed + 1,
         clauses: activeClauses,
         outcome: NegotiationOutcome.walkedAway,
-        statusMessage: '🚪 Karşı taraf masadan kalktı! Teklifleriniz ciddiyetsiz bulundu ve görüşmeler çöktü.',
+        statusMessage: ' Karşı taraf masadan kalktı! Teklifleriniz ciddiyetsiz bulundu ve görüşmeler çöktü.',
       );
     }
 
@@ -201,7 +201,7 @@ class NegotiationState {
       clauses: activeClauses,
       outcome: NegotiationOutcome.counterOffered,
       statusMessage:
-          '💬 Karşı taraf yeni bir teklifle döndü. Sabır: %$nextPatience. İstek: ₣${newAskingFee.toString()} bonservis, ₣${newAskingWage.toString()} maaş.',
+          '[MESAJ] Karşı taraf yeni bir teklifle döndü. Sabır: %$nextPatience. İstek: ₣${newAskingFee.toString()} bonservis, ₣${newAskingWage.toString()} maaş.',
     );
   }
 

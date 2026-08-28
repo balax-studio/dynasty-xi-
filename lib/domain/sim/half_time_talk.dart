@@ -8,17 +8,17 @@ enum HalfTimeTalkType {
   harshCriticism(
     'Sert Tepki & Şok',
     'Soyunma odasını inlet: "Bu formanın hakkını verin!" (Yüksek Risk / Yüksek Ödül)',
-    '⚡',
+    'BOLT',
   ),
   calmTactical(
     'Sakin & Taktiksel',
     'Tahtaya geç ve taktiksel boşlukları sakin kafayla anlat. (Güvenli +Uyum)',
-    '📋',
+    '[RAPOR]',
   ),
   allOutPress(
     'Tam Saha Baskı & Yürek',
     '"Rakibe nefes aldırmayacağız, sahayı dar edin!" (+Baskı Gücü, -Kondisyon)',
-    '🔥',
+    '[FORM]',
   );
 
   final String title;

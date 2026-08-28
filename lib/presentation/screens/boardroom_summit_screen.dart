@@ -9,6 +9,7 @@ import '../../application/providers/game_state_provider.dart';
 import '../../domain/president/boardroom_summit.dart';
 import '../widgets/foreign_takeover_dialog.dart';
 import '../widgets/meters_bar_widget.dart';
+import '../widgets/retro_pixel_icon.dart';
 import '../widgets/retro_window.dart';
 
 class BoardroomSummitScreen extends ConsumerStatefulWidget {
@@ -49,7 +50,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
             ),
             title: Row(
               children: [
-                const Text('🏛️', style: TextStyle(fontSize: 20)),
+                const Text('[YÖNETİM]', style: TextStyle(fontSize: 20)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -87,7 +88,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('🌍', style: TextStyle(fontSize: 16)),
+                              Text('[FON]', style: TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold, fontSize: 10)),
                               SizedBox(width: 6),
                               Text('YABANCI SERMAYE FONU & HİSSE DEVRİ TEKLİFLERİ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
                             ],
@@ -122,7 +123,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
   Widget _buildCapitalInjectionSection(List<CapitalInjectionOption> options) {
     return RetroWindow(
       title: 'BAŞKANLIK ŞAHSİ SERMAYE ENJEKSİYONU & HİBE',
-      icon: '💎',
+      icon: 'DIAMOND',
       titleBarColor: AppColors.accentGold,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,7 +140,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
               ),
               child: Row(
                 children: [
-                  Text(opt.icon, style: const TextStyle(fontSize: 26)),
+                  RetroPixelIcon.fromEmoji(opt.icon, size: 24),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -148,10 +149,11 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
                         Text(opt.title, style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold)),
                         Text(opt.description, style: const TextStyle(color: Colors.white60, fontSize: 9.5)),
                         const SizedBox(height: 4),
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text('+₣${opt.cashAmount}', style: AppTypography.monoNumber(color: AppColors.neonLime).copyWith(fontSize: 11, fontWeight: FontWeight.bold)),
-                            const SizedBox(width: 8),
                             Text('Güven: +${opt.boardTrustBonus} • Taraftar: +${opt.fanBonus}', style: const TextStyle(color: AppColors.accentGold, fontSize: 9.5)),
                           ],
                         ),
@@ -165,7 +167,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             backgroundColor: AppColors.neonLime,
-                            content: Text('💎 +₣${opt.cashAmount} sermaye kulüp kasasına hibe edildi!', style: const TextStyle(color: Colors.black)),
+                            content: Text('DIAMOND +₣${opt.cashAmount} sermaye kulüp kasasına hibe edildi!', style: const TextStyle(color: Colors.black)),
                           ),
                         );
                       }
@@ -187,7 +189,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
   Widget _buildVipBoxSection(List<VipBoxDeal> boxes) {
     return RetroWindow(
       title: 'SEZONLUK VIP PROTOKOL LOCA KİRALAMA BORSASI',
-      icon: '🥂',
+      icon: '',
       titleBarColor: AppColors.win95TitleNavy,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +206,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
               ),
               child: Row(
                 children: [
-                  Text(box.companyIcon, style: const TextStyle(fontSize: 24)),
+                  RetroPixelIcon.fromEmoji(box.companyIcon, size: 24),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -231,7 +233,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               backgroundColor: AppColors.neonLime,
-                              content: Text('🥂 ${box.companyName} kiralandı! (+₣${box.seasonPrice} kasaya eklendi)', style: const TextStyle(color: Colors.black)),
+                              content: Text(' ${box.companyName} kiralandı! (+₣${box.seasonPrice} kasaya eklendi)', style: const TextStyle(color: Colors.black)),
                             ),
                           );
                         }
@@ -253,7 +255,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
   Widget _buildMotionsSection(List<BoardroomMotion> motions, int clubCash) {
     return RetroWindow(
       title: 'DİVAN KURULU VE YÖNETİM OYLAMALARI',
-      icon: '⚖️',
+      icon: '[HUKUK]',
       titleBarColor: AppColors.win95TitleNavy,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,7 +295,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     backgroundColor: AppColors.neonLime,
-                                    content: Text('⚖️ ${m.title} kabul edildi ve yürürlüğe girdi!', style: const TextStyle(color: Colors.black)),
+                                    content: Text('[HUKUK] ${m.title} kabul edildi ve yürürlüğe girdi!', style: const TextStyle(color: Colors.black)),
                                   ),
                                 );
                               }

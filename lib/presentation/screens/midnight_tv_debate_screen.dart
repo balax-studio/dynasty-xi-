@@ -22,7 +22,7 @@ class MidnightTvDebateScreen extends ConsumerWidget {
       backgroundColor: AppColors.primaryDeep,
       appBar: AppBar(
         backgroundColor: AppColors.neoCardBg,
-        title: Text('📺 GECE 02:00 CANLI YAYIN DÜELLOSU', style: AppTypography.h2(color: Colors.white)),
+        title: Text('[TV] GECE 02:00 CANLI YAYIN DÜELLOSU', style: AppTypography.h2(color: Colors.white)),
       ),
       body: Column(
         children: [
@@ -35,10 +35,10 @@ class MidnightTvDebateScreen extends ConsumerWidget {
                 children: [
                   const RetroWindow(
                     title: 'CANLI YAYIN STÜDYOSU VE TELEFON BAĞLANTISI',
-                    icon: '🎙️',
+                    icon: '[BASIN]',
                     child: Row(
                       children: [
-                        Text('📺🔥', style: TextStyle(fontSize: 32)),
+                        Text('[TV][FORM]', style: TextStyle(fontSize: 32)),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -52,12 +52,14 @@ class MidnightTvDebateScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
 
                   ...debates.map((debate) {
+                    final isResolved = state?.resolvedDebateIds.contains(debate.id) ?? false;
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 14),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: AppColors.win95Grey,
-                        border: Border.all(color: AppColors.comicRed, width: 1.5),
+                        border: Border.all(color: isResolved ? AppColors.neonLime : AppColors.comicRed, width: 1.5),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +71,10 @@ class MidnightTvDebateScreen extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 color: Colors.black,
-                                child: Text('YORUMCU: ${debate.punditName}', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 9.5)),
+                                child: Text(
+                                  isResolved ? 'YAYIN BİTTİ' : 'YORUMCU: ${debate.punditName}',
+                                  style: TextStyle(color: isResolved ? AppColors.neonLime : AppColors.accentGold, fontWeight: FontWeight.bold, fontSize: 9.5),
+                                ),
                               ),
                             ],
                           ),
@@ -78,47 +83,62 @@ class MidnightTvDebateScreen extends ConsumerWidget {
                             padding: const EdgeInsets.all(8),
                             color: Colors.black87,
                             child: Text(
-                              '🗣️ "${debate.accusation}"',
+                              ' "${debate.accusation}"',
                               style: const TextStyle(color: Colors.white, fontSize: 10.5, fontStyle: FontStyle.italic),
                             ),
                           ),
                           const SizedBox(height: 8),
 
-                          ...debate.choices.map((choice) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: SizedBox(
-                                width: double.infinity,
-                                child: RetroButton(
-                                  onPressed: () {
-                                    if (choice.cashDelta != 0) {
-                                      ref.read(gameStateProvider.notifier).adjustCash(choice.cashDelta);
-                                    }
-                                    ref.read(gameStateProvider.notifier).adjustFans(choice.fansDelta);
-                                    ref.read(gameStateProvider.notifier).adjustBoardTrust(choice.boardDelta);
-                                    Navigator.pop(context);
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        backgroundColor: AppColors.primaryDeep,
-                                        content: Text(
-                                          '📺 REYTİNG: ${choice.ratingScore}/10! ${choice.outcomeText}',
-                                          style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(choice.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                                      Text(choice.dialogue, style: const TextStyle(fontSize: 9, color: Colors.black54), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                    ],
-                                  ),
+                          if (isResolved)
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              color: AppColors.win95DarkGrey,
+                              child: const Center(
+                                child: Text(
+                                  ' CANLI YAYIN BAĞLANTISI YAPILDI & PROGRAM TAMAMLANDI',
+                                  style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold),
                                 ),
                               ),
-                            );
-                          }),
+                            )
+                          else
+                            ...debate.choices.map((choice) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: RetroButton(
+                                    onPressed: () async {
+                                      await ref.read(gameStateProvider.notifier).participateInDebate(
+                                            debate.id,
+                                            cashDelta: choice.cashDelta,
+                                            fansDelta: choice.fansDelta,
+                                            boardDelta: choice.boardDelta,
+                                            outcomeText: choice.outcomeText,
+                                          );
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            backgroundColor: AppColors.primaryDeep,
+                                            content: Text(
+                                              '[TV] REYTİNG: ${choice.ratingScore}/10! ${choice.outcomeText}',
+                                              style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(choice.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                                        Text(choice.dialogue, style: const TextStyle(fontSize: 9, color: Colors.black54), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
                         ],
                       ),
                     );

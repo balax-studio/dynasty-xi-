@@ -38,10 +38,10 @@ class PlayerAgentMeetingScreen extends ConsumerWidget {
                 children: [
                   RetroWindow(
                     title: 'LÜKS RESTORAN GİZLİ PAZARLIK MASASI',
-                    icon: '🍷',
+                    icon: '',
                     child: Row(
                       children: [
-                        const Text('💼🍽️', style: TextStyle(fontSize: 32)),
+                        const Text('[MENAJER]', style: TextStyle(fontSize: 32)),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -72,24 +72,36 @@ class PlayerAgentMeetingScreen extends ConsumerWidget {
                           SizedBox(
                             width: double.infinity,
                             child: RetroButton(
-                              onPressed: () {
-                                if (opt.cashCost > 0) {
-                                  ref.read(gameStateProvider.notifier).adjustCash(-opt.cashCost);
-                                }
-                                if (opt.loyaltyBonus != 0) {
-                                  ref.read(gameStateProvider.notifier).adjustLockerRoom(opt.loyaltyBonus);
-                                }
-                                Navigator.pop(context);
+                              onPressed: () async {
+                                final success = await ref.read(gameStateProvider.notifier).resolveAgentMeeting(
+                                      playerId: player.id,
+                                      wageDiscountPercent: opt.wageDiscountPercent,
+                                      extendSeasons: 1,
+                                      cost: opt.cashCost,
+                                      loyaltyBonus: opt.loyaltyBonus,
+                                    );
 
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: AppColors.primaryDeep,
-                                    content: Text(
-                                      '🤝 Menajerle anlaşma sağlandı! ${player.fullName} bağlılığı arttı.',
-                                      style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                );
+                                if (context.mounted) {
+                                  if (success) {
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: AppColors.primaryDeep,
+                                        content: Text(
+                                          '[ANLASMA] Menajerle anlaşma sağlandı! ${player.fullName} sözleşmesi güncellendi.',
+                                          style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        backgroundColor: AppColors.comicRed,
+                                        content: Text('[RED] Bakiye yetersiz! Komisyon ödenemedi.'),
+                                      ),
+                                    );
+                                  }
+                                }
                               },
                               child: const Text('ŞARTLARI KABUL ET & İMZALA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                             ),

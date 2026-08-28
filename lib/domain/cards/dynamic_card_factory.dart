@@ -12,7 +12,7 @@ class DynamicCardFactory {
       id: 'dyn_injury_${player.id}_${DateTime.now().millisecondsSinceEpoch}',
       characterName: 'Ayşe Tanrıkulu',
       characterRole: 'Kulüp Doktoru',
-      characterAvatar: '👩‍⚕️',
+      characterAvatar: '',
       headline: '${player.fullName} Sakatlandı!',
       storyText:
           '"Hocam, ${player.fullName} maçta ${injury.injuryType} sakatlığı yaşadı. Yaklaşık ${injury.matchesOut} maç sahalardan uzak kalacak."',
@@ -42,7 +42,7 @@ class DynamicCardFactory {
       id: 'dyn_underpaid_${player.id}_${DateTime.now().millisecondsSinceEpoch}',
       characterName: player.fullName,
       characterRole: '${player.position.label} (Maaş: ₣${player.weeklyWage})',
-      characterAvatar: '😠',
+      characterAvatar: '',
       headline: '${player.lastName}\'nin Maaş İsyanı',
       storyText:
           '"Hocam, takıma katkım ortada ama haftalık sadece ₣${player.weeklyWage} alıyorum. Piyasa değerimin hakkını (₣$expectedWage) istiyorum!"',
@@ -73,7 +73,7 @@ class DynamicCardFactory {
       id: 'dyn_contract_exp_${player.id}_${DateTime.now().millisecondsSinceEpoch}',
       characterName: 'Bülent Tosun',
       characterRole: 'Oyuncu Menajeri',
-      characterAvatar: '💼',
+      characterAvatar: '[MENAJER]',
       headline: '${player.fullName} Sözleşme Sonu Yaklaşıyor',
       storyText:
           '"Hocam, müvekkilim ${player.fullName}\'in sözleşmesinde son sezona girdik. Başka kulüpler teklif hazırlıyor."',
@@ -104,7 +104,7 @@ class DynamicCardFactory {
       id: 'dyn_star_bench_${player.id}_${DateTime.now().millisecondsSinceEpoch}',
       characterName: player.fullName,
       characterRole: 'Yıldız Oyuncu',
-      characterAvatar: '⭐',
+      characterAvatar: 'STAR',
       headline: 'Yıldızın Kulübe İsyanı',
       storyText:
           '"Hocam, ben bu takımın yıldızıyım. Yedek kulübesinde oturmaya alışkın değilim! Beni oynatmayacaksanız gideyim."',

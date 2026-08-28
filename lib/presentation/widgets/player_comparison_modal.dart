@@ -71,7 +71,7 @@ class _PlayerComparisonModalState extends State<PlayerComparisonModal> {
               children: [
                 Row(
                   children: [
-                    const Text('⚖️', style: TextStyle(fontSize: 18)),
+                    const Text('[HUKUK]', style: TextStyle(fontSize: 18)),
                     const SizedBox(width: 8),
                     Text(
                       'KADRO İÇİ MEVKİ & OYUNCU KIYASLAMA',
@@ -141,7 +141,7 @@ class _PlayerComparisonModalState extends State<PlayerComparisonModal> {
                   // Nitelik Kıyaslama Satırları
                   RetroWindow(
                     title: 'TEMEL VERİLER VE YETENEK KIYASI',
-                    icon: '📊',
+                    icon: '[GRAFIK]',
                     child: Column(
                       children: [
                         _buildCompareRow('GENEL PUAN (OVR)', widget.player.ovr, _compareTarget.ovr),

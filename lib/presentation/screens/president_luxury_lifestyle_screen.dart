@@ -22,7 +22,7 @@ class PresidentLuxuryLifestyleScreen extends ConsumerWidget {
       backgroundColor: AppColors.primaryDeep,
       appBar: AppBar(
         backgroundColor: AppColors.win95TitleNavy,
-        title: Text('👑 BAŞKANIN LÜKS YAŞAMI & ŞAHSİ ENVANTERİ', style: AppTypography.h2(color: Colors.white)),
+        title: Text('CROWN BAŞKANIN LÜKS YAŞAMI & ŞAHSİ ENVANTERİ', style: AppTypography.h2(color: Colors.white)),
       ),
       body: Column(
         children: [
@@ -35,10 +35,10 @@ class PresidentLuxuryLifestyleScreen extends ConsumerWidget {
                 children: [
                   const RetroWindow(
                     title: 'ŞAHSİ SERVET VE PRESTİJ KOLEKSİYONU',
-                    icon: '💎',
+                    icon: 'DIAMOND',
                     child: Row(
                       children: [
-                        Text('🏰🛥️', style: TextStyle(fontSize: 32)),
+                        Text('CASTLE', style: TextStyle(fontSize: 32)),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -52,12 +52,14 @@ class PresidentLuxuryLifestyleScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
 
                   ...assets.map((asset) {
+                    final isOwned = state?.ownedLuxuryAssetIds.contains(asset.id) ?? false;
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: AppColors.win95Grey,
-                        border: Border.all(color: AppColors.accentGold, width: 1.5),
+                        border: Border.all(color: isOwned ? AppColors.neonLime : AppColors.accentGold, width: 1.5),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +77,10 @@ class PresidentLuxuryLifestyleScreen extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 color: Colors.black,
-                                child: Text('₣${(asset.purchaseCost / 1000).toInt()}K', style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold, fontSize: 10)),
+                                child: Text(
+                                  isOwned ? 'SAHİPSİNİZ' : '₣${(asset.purchaseCost / 1000).toInt()}K',
+                                  style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold, fontSize: 10),
+                                ),
                               ),
                             ],
                           ),
@@ -84,34 +89,47 @@ class PresidentLuxuryLifestyleScreen extends ConsumerWidget {
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              Text('🌟 Prestij: +${asset.prestigeBonus}', style: const TextStyle(color: AppColors.win95TitleNavy, fontWeight: FontWeight.bold, fontSize: 10)),
+                              Text('STAR Prestij: +${asset.prestigeBonus}', style: const TextStyle(color: AppColors.win95TitleNavy, fontWeight: FontWeight.bold, fontSize: 10)),
                               const SizedBox(width: 12),
-                              Text('📢 Taraftar Hype: +${asset.fansBonus}', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10)),
+                              Text('[DUYURU] Taraftar Hype: +${asset.fansBonus}', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10)),
                             ],
                           ),
                           const SizedBox(height: 8),
                           SizedBox(
                             width: double.infinity,
                             child: RetroButton(
-                              backgroundColor: AppColors.accentGold,
+                              backgroundColor: isOwned ? AppColors.win95DarkGrey : AppColors.accentGold,
                               textColor: Colors.black,
-                              onPressed: () {
-                                ref.read(gameStateProvider.notifier).adjustCash(-asset.purchaseCost);
-                                ref.read(gameStateProvider.notifier).adjustFans(asset.fansBonus);
-                                ref.read(gameStateProvider.notifier).adjustBoardTrust(8);
-                                Navigator.pop(context);
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: AppColors.primaryDeep,
-                                    content: Text(
-                                      '💎 ${asset.name} başkanlık envanterinize eklendi!',
-                                      style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Text('ŞAHSİ SERVETTEN SATIN AL (-₣${(asset.purchaseCost / 1000).toInt()}K)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5)),
+                              onPressed: isOwned
+                                  ? null
+                                  : () async {
+                                      final success = await ref.read(gameStateProvider.notifier).buyLuxuryAsset(asset);
+                                      if (context.mounted) {
+                                        if (success) {
+                                          Navigator.pop(context);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              backgroundColor: AppColors.primaryDeep,
+                                              content: Text(
+                                                'DIAMOND ${asset.name} başkanlık envanterinize eklendi!',
+                                                style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              backgroundColor: AppColors.comicRed,
+                                              content: Text('[RED] Bakiye yetersiz! Bu varlığı satın almak için yeterli kulüp fonu yok.'),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                              child: Text(
+                                isOwned ? ' BAŞKANLIK ENVANTERİNDE (SAHİPSİNİZ)' : 'ŞAHSİ SERVETTEN SATIN AL (-₣${(asset.purchaseCost / 1000).toInt()}K)',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: isOwned ? Colors.white70 : Colors.black),
+                              ),
                             ),
                           ),
                         ],

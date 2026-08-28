@@ -19,31 +19,31 @@ enum MatchEventType {
   String get icon {
     switch (this) {
       case MatchEventType.whistleStart:
-        return '📢';
+        return '[DUYURU]';
       case MatchEventType.goal:
-        return '⚽';
+        return '[GOL]';
       case MatchEventType.shotSaved:
-        return '🧤';
+        return '';
       case MatchEventType.shotOffTarget:
-        return '💨';
+        return '';
       case MatchEventType.foul:
-        return '⚠️';
+        return '[UYARI]';
       case MatchEventType.yellowCard:
-        return '🟨';
+        return '';
       case MatchEventType.redCard:
-        return '🟥';
+        return '';
       case MatchEventType.injury:
-        return '🚑';
+        return '[SAĞLIK]';
       case MatchEventType.substitution:
-        return '🔄';
+        return '';
       case MatchEventType.keyMoment:
-        return '⚡';
+        return 'BOLT';
       case MatchEventType.halfTime:
-        return '☕';
+        return '';
       case MatchEventType.halfTimeTalk:
-        return '🗣️';
+        return '';
       case MatchEventType.fullTime:
-        return '🏁';
+        return '';
     }
   }
 }

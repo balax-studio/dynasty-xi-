@@ -9,6 +9,8 @@ import '../../application/providers/game_state_provider.dart';
 import '../../core/audio/audio_synthesizer.dart';
 import '../../domain/economy/transfer_models.dart';
 import '../../domain/entities/player.dart';
+import '../../domain/transfers/transfer_window_rules.dart';
+import '../../core/time/game_clock.dart';
 import 'player_detail_screen.dart';
 import 'transfer_hijack_screen.dart';
 import 'transfer_negotiation_screen.dart';
@@ -156,7 +158,11 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 0. Son Dakika Transfer Çalımı Butonu
+                            // 0. Transfer Penceresi & Kadro Kotası Durum Paneli
+                            _buildTransferWindowBanner(gameState),
+                            const SizedBox(height: 10),
+
+                            // 1. Son Dakika Transfer Çalımı Butonu
                             SizedBox(
                               width: double.infinity,
                               child: RetroButton(
@@ -179,7 +185,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
                             ),
                             const SizedBox(height: 10),
 
-                            // 1. Çok Kriterli Siber Arama & Filtreleme Araç Çubuğu
+                            // 2. Çok Kriterli Siber Arama & Filtreleme Araç Çubuğu
                             _buildAdvancedFilterToolbar(currentCash),
                             const SizedBox(height: 10),
 
@@ -576,7 +582,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
                           ],
                         ),
                         Text(
-                          '${p.age} Yaş • ${p.personality.label} • ${p.stars}★',
+                          '${p.age} Yaş • ${p.personality.label} • ${p.stars}',
                           style: const TextStyle(color: Colors.white70, fontSize: 10),
                         ),
                       ],
@@ -602,20 +608,37 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
                   ),
                   RetroButton(
                     onPressed: () {
+                      final isOpen = (gameState.clock.isTransferWindowOpen as bool);
+                      if (!isOpen) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: AppColors.signalRed,
+                            content: Text('[TESCİL KAPALI] ${TransferWindowRules.getWindowStatusLabel(gameState.clock.phase)}. Resmi imza atılamaz!'),
+                          ),
+                        );
+                        return;
+                      }
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => TransferNegotiationScreen(player: p),
                         ),
                       );
                     },
-                    backgroundColor: AppColors.neonLime,
-                    textColor: Colors.black,
-                    child: const Row(
+                    backgroundColor: (gameState.clock.isTransferWindowOpen as bool) ? AppColors.neonLime : AppColors.win95DarkGrey,
+                    textColor: (gameState.clock.isTransferWindowOpen as bool) ? Colors.black : Colors.white70,
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        RetroPixelIcon(type: RetroPixelIconType.handshake, size: 12, color: Colors.black),
-                        SizedBox(width: 4),
-                        Text('PAZARLIK YAP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                        RetroPixelIcon(
+                          type: (gameState.clock.isTransferWindowOpen as bool) ? RetroPixelIconType.handshake : RetroPixelIconType.lock,
+                          size: 12,
+                          color: (gameState.clock.isTransferWindowOpen as bool) ? Colors.black : Colors.white70,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          (gameState.clock.isTransferWindowOpen as bool) ? 'PAZARLIK YAP' : 'PENCERE KAPALI',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                        ),
                       ],
                     ),
                   ),
@@ -624,6 +647,87 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTransferWindowBanner(dynamic gameState) {
+    final phase = gameState.clock.phase as SeasonPhase;
+    final isOpen = gameState.clock.isTransferWindowOpen as bool;
+    final squad = gameState.userClub.squad as List<Player>;
+    const maxQuota = TransferWindowRules.maxSquadRegistrationLimit;
+    final currentRegCount = squad.where((p) => p.age > TransferWindowRules.u21AgeThreshold).length;
+
+    final bannerColor = isOpen ? AppColors.neonLime : AppColors.neonAmber;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: isOpen ? const Color(0xFF072212) : const Color(0xFF261904),
+        border: Border.all(color: bannerColor, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    RetroPixelIcon(
+                      type: isOpen ? RetroPixelIconType.handshake : RetroPixelIconType.lock,
+                      size: 16,
+                      color: bannerColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        TransferWindowRules.getWindowStatusLabel(phase).toUpperCase(),
+                        style: TextStyle(color: bannerColor, fontWeight: FontWeight.bold, fontSize: 11),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                color: Colors.black,
+                child: Text(
+                  isOpen ? 'RESMİ TESCİL AÇIK' : 'TESCİL DÖNEMİ KAPALI',
+                  style: TextStyle(
+                    color: isOpen ? AppColors.neonLime : AppColors.signalRed,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 9.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'A-Takım Kadro Kotası: $currentRegCount/$maxQuota (U21 Sınırsız)',
+                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'Toplam Kadro: ${squad.length} Oyuncu',
+                style: const TextStyle(color: Colors.white70, fontSize: 9.5),
+              ),
+            ],
+          ),
+          if (!isOpen) ...[
+            const SizedBox(height: 4),
+            const Text(
+              'Bilgi: Lig maçları sürerken tescil dönemi kapalıdır. Yeni oyuncu transferleri devre arası (10. Maç) veya sezon başında tescil edilir.',
+              style: TextStyle(color: Colors.white60, fontSize: 9),
+            ),
+          ],
+        ],
       ),
     );
   }

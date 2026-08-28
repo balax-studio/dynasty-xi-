@@ -31,7 +31,7 @@ class UrgentPhoneCallModal extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: RetroWindow(
-        title: '🔴 ACİL ÇAĞRI: ${call.callerTitle.toUpperCase()}',
+        title: '[KIRMIZI] ACİL ÇAĞRI: ${call.callerTitle.toUpperCase()}',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -123,7 +123,7 @@ class UrgentPhoneCallModal extends ConsumerWidget {
                             SnackBar(
                               backgroundColor: AppColors.primaryDeep,
                               content: Text(
-                                '📞 ${choice.outcomeMessage}',
+                                ' ${choice.outcomeMessage}',
                                 style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                               ),
                             ),

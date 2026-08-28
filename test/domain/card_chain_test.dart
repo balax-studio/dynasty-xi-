@@ -19,7 +19,7 @@ void main() {
         chainStep: 1,
         characterName: 'Osman Yalçın',
         characterRole: 'Kaptan',
-        characterAvatar: '⭐',
+        characterAvatar: 'STAR',
         headline: 'Kaptanın Resti',
         storyText: '"Hocam zam vermedin, antrenmana çıkmıyorum."',
         category: CardCategory.lockerRoom,

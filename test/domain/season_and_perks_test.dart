@@ -85,7 +85,7 @@ void main() {
         name: 'Angora Gücü',
         city: 'Angora',
         leagueTier: 20,
-        badgeIcon: '🛡️',
+        badgeIcon: 'SHIELD',
       );
 
       final league = ClubGenerator.generateLeague(
@@ -113,7 +113,7 @@ void main() {
 
       // League helper methods work correctly
       expect(league.getClubName('u_test'), equals('Angora Gücü'));
-      expect(league.getClubBadge('u_test'), equals('🛡️'));
+      expect(league.getClubBadge('u_test'), equals('SHIELD'));
       final oppId = league.clubIds.firstWhere((id) => id != 'u_test');
       expect(league.getClubName(oppId), isNotEmpty);
       expect(league.getClubBadge(oppId), isNotEmpty);

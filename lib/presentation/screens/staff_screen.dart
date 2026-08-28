@@ -60,7 +60,7 @@ class StaffScreen extends ConsumerWidget {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('⚖️', style: TextStyle(fontSize: 16)),
+                              Text('[HUKUK]', style: TextStyle(fontSize: 16)),
                               SizedBox(width: 6),
                               Text(
                                 'KULÜP HUKUK BÜROSU & TAHKİM KURULU İTİRAZLARI',
@@ -75,7 +75,7 @@ class StaffScreen extends ConsumerWidget {
                       // 1. Mevcut Teknik Direktör Penceresi
                       RetroWindow(
                         title: 'FAAL TEKNİK DİREKTÖR (HEAD COACH)',
-                        icon: '👔',
+                        icon: '',
                         titleBarColor: const Color(0xFF005500),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +91,7 @@ class StaffScreen extends ConsumerWidget {
                                   ),
                                   alignment: Alignment.center,
                                   child: Text(
-                                    headCoach?.archetype.icon ?? '👔',
+                                    headCoach?.archetype.icon ?? '',
                                     style: const TextStyle(fontSize: 26),
                                   ),
                                 ),
@@ -142,7 +142,7 @@ class StaffScreen extends ConsumerWidget {
                                     child: const Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Text('💬', style: TextStyle(fontSize: 14)),
+                                        Text('[MESAJ]', style: TextStyle(fontSize: 14)),
                                         SizedBox(width: 4),
                                         Text('HOCA İLE SOHBET ET', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
                                       ],
@@ -163,7 +163,7 @@ class StaffScreen extends ConsumerWidget {
                                     child: const Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Text('👔', style: TextStyle(fontSize: 14)),
+                                        Text('[ATAMA]', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
                                         SizedBox(width: 4),
                                         Text('YÖNETİM & ATAMA', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
                                       ],
@@ -180,7 +180,7 @@ class StaffScreen extends ConsumerWidget {
                       // 2. Arka Ofis ve Uzman Ekip (Backroom Staff)
                       RetroWindow(
                         title: 'KULÜP ARKA OFİS UZMANLARI (${staffList.length} UZMAN)',
-                        icon: '🔬',
+                        icon: '',
                         titleBarColor: const Color(0xFF1E3A8A),
                         child: Column(
                           children: [
@@ -203,7 +203,7 @@ class StaffScreen extends ConsumerWidget {
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text('🛒', style: TextStyle(fontSize: 12)),
+                                        Text('[PAZAR]', style: TextStyle(color: Colors.black, fontSize: 9.5, fontWeight: FontWeight.bold)),
                                         SizedBox(width: 4),
                                         Text(
                                           'UZMAN TRANSFER PAZARI',
@@ -283,7 +283,7 @@ class StaffScreen extends ConsumerWidget {
                                                     SnackBar(
                                                       backgroundColor: AppColors.neonLime,
                                                       content: Text(
-                                                        '🎓 ${staff.name} kursu tamamlayarak Seviye ${staff.level + 1} oldu!',
+                                                        ' ${staff.name} kursu tamamlayarak Seviye ${staff.level + 1} oldu!',
                                                         style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                                                       ),
                                                     ),
@@ -292,7 +292,7 @@ class StaffScreen extends ConsumerWidget {
                                                   ScaffoldMessenger.of(context).showSnackBar(
                                                     const SnackBar(
                                                       backgroundColor: AppColors.comicRed,
-                                                      content: Text('⚠️ Yetersiz bütçe!'),
+                                                      content: Text('[UYARI] Yetersiz bütçe!'),
                                                     ),
                                                   );
                                                 }
@@ -312,7 +312,7 @@ class StaffScreen extends ConsumerWidget {
                                         InkWell(
                                           onTap: () => _showStaffMarketModal(context, ref, gameState),
                                           child: const Text(
-                                            'DEĞİŞTİR ❯',
+                                            'DEĞİŞTİR ',
                                             style: TextStyle(color: AppColors.neonCyan, fontSize: 8.5, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
                                           ),
                                         ),
@@ -330,7 +330,7 @@ class StaffScreen extends ConsumerWidget {
                       // 3. Teknik Direktör Borsası
                       RetroWindow(
                         title: 'TEKNİK DİREKTÖR BORSASI & ADAYLAR',
-                        icon: '💼',
+                        icon: '[MENAJER]',
                         titleBarColor: AppColors.neoCardBg,
                         child: Column(
                           children: availableCoaches.map((c) {
@@ -384,7 +384,7 @@ class StaffScreen extends ConsumerWidget {
                                               final ok = await ref.read(gameStateProvider.notifier).hireHeadCoach(c);
                                               if (context.mounted && ok) {
                                                 ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('👔 ${c.fullName} yeni teknik direktörünüz olarak göreve başladı!')),
+                                                  SnackBar(content: Text(' ${c.fullName} yeni teknik direktörünüz olarak göreve başladı!')),
                                                 );
                                               }
                                             },
@@ -425,7 +425,7 @@ class StaffScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(12.0),
           child: RetroWindow(
             title: 'UZMAN TRANSFER PAZARI & ADAYLAR',
-            icon: '🛒',
+            icon: '',
             titleBarColor: AppColors.win95TitleNavy,
             onClose: () => Navigator.pop(ctx),
             child: SingleChildScrollView(
@@ -504,8 +504,8 @@ class StaffScreen extends ConsumerWidget {
                                     backgroundColor: ok ? AppColors.neonLime : AppColors.comicRed,
                                     content: Text(
                                       ok
-                                          ? '🤝 ${candidate.name} (${candidate.role.label}) göreve başladı!'
-                                          : '⚠️ Yetersiz transfer bütçesi!',
+                                          ? '[ANLASMA] ${candidate.name} (${candidate.role.label}) göreve başladı!'
+                                          : '[UYARI] Yetersiz transfer bütçesi!',
                                       style: TextStyle(color: ok ? Colors.black : Colors.white, fontWeight: FontWeight.bold),
                                     ),
                                   ),

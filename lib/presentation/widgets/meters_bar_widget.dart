@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../domain/entities/meter.dart';
+import 'brutalist_icons.dart';
 import 'retro_pixel_icon.dart';
 
 class MetersBarWidget extends StatelessWidget {
@@ -88,7 +89,7 @@ class MetersBarWidget extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('⚠️', style: TextStyle(fontSize: 12)),
+                  const BrutalistIcon(BrutalistIconType.warning, size: 12, color: AppColors.signalRed),
                   const SizedBox(width: 6),
                   Text(
                     'KRİTİK GÜVEN: ${meters.consecutiveCriticalMatches}/${ClubMeters.graceMatchesAllowed} MAÇ İÇİNDE KOVULMA TEHLİKESİ!',

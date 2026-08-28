@@ -33,10 +33,10 @@ class GrassrootsTournamentScreen extends ConsumerWidget {
                 children: [
                   const RetroWindow(
                     title: 'AMATÖR VE SOKAK YETENEKLERİ TURNUVASI',
-                    icon: '⭐',
+                    icon: 'STAR',
                     child: Row(
                       children: [
-                        Text('🏟️👦🏻', style: TextStyle(fontSize: 32)),
+                        Text('[TURNUVA]', style: TextStyle(fontSize: 12, color: AppColors.neonLime, fontWeight: FontWeight.bold)),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -54,8 +54,10 @@ class GrassrootsTournamentScreen extends ConsumerWidget {
                     ref: ref,
                     name: 'Yasin Karaca (16 Yaşında)',
                     position: '10 Numara / Forvet Arkası',
-                    potential: '⭐⭐⭐⭐⭐ (88-92 Potansiyel)',
+                    potential: 'STARSTARSTARSTARSTAR (88-92 Potansiyel)',
                     scoutNote: 'İnanılmaz dripling ve top tekniği var. Sokak futbolundan keşfedildi.',
+                    overallRating: 68,
+                    potentialRating: 90,
                   ),
                   const SizedBox(height: 10),
 
@@ -64,8 +66,10 @@ class GrassrootsTournamentScreen extends ConsumerWidget {
                     ref: ref,
                     name: 'Kerem Demir (17 Yaşında)',
                     position: 'Stoper / Defans Lideri',
-                    potential: '⭐⭐⭐⭐ (82-86 Potansiyel)',
+                    potential: 'STARSTARSTARSTAR (82-86 Potansiyel)',
                     scoutNote: 'Hava toplarında geçilmez, lider karakterli.',
+                    overallRating: 66,
+                    potentialRating: 84,
                   ),
                 ],
               ),
@@ -83,12 +87,17 @@ class GrassrootsTournamentScreen extends ConsumerWidget {
     required String position,
     required String potential,
     required String scoutNote,
+    required int overallRating,
+    required int potentialRating,
   }) {
+    final state = ref.watch(gameStateProvider).valueOrNull;
+    final isAlreadySigned = state?.userClub.u19Squad.any((p) => p.fullName.contains(name.split(' ').first)) ?? false;
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.win95Grey,
-        border: Border.all(color: AppColors.win95DarkGrey),
+        border: Border.all(color: isAlreadySigned ? AppColors.neonLime : AppColors.win95DarkGrey),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +109,10 @@ class GrassrootsTournamentScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 color: Colors.black,
-                child: const Text('BEDELSİZ', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10)),
+                child: Text(
+                  isAlreadySigned ? 'AKADEMİDE' : 'BEDELSİZ',
+                  style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10),
+                ),
               ),
             ],
           ),
@@ -114,22 +126,33 @@ class GrassrootsTournamentScreen extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: RetroButton(
-              onPressed: () {
-                ref.read(gameStateProvider.notifier).adjustFans(5);
-                ref.read(gameStateProvider.notifier).adjustBoardTrust(5);
-                Navigator.pop(context);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: AppColors.primaryDeep,
-                    content: Text(
-                      '🌟 $name kulüp altyapısına kazandırıldı!',
-                      style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                );
-              },
-              child: const Text('AKADEMİYE BEDELSİZ DAHİL ET & İMZA ATTIR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+              backgroundColor: isAlreadySigned ? AppColors.win95DarkGrey : AppColors.neonLime,
+              onPressed: isAlreadySigned
+                  ? null
+                  : () async {
+                      await ref.read(gameStateProvider.notifier).signGrassrootsTalent(
+                            name: name,
+                            position: position,
+                            overallRating: overallRating,
+                            potentialRating: potentialRating,
+                          );
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: AppColors.primaryDeep,
+                            content: Text(
+                              'STAR $name ($overallRating OVR / $potentialRating POT) kulüp U19 akademisine kazandırıldı!',
+                              style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+              child: Text(
+                isAlreadySigned ? ' AKADEMİYE KATILDI' : 'AKADEMİYE BEDELSİZ DAHİL ET & İMZA ATTIR',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+              ),
             ),
           ),
         ],

@@ -5,11 +5,11 @@ import '../entities/game_state.dart';
 import '../president/head_coach.dart';
 
 enum CoachDialogueTopic {
-  tacticalPlan('⚔️ Taktik & Oyun Planı', 'Haftalık maç stratejisini ve oyun temposunu tartışın.'),
-  playerManagement('👥 Kadro & Gençler', 'Gençlerin oynatılması ve yıldızların dinlendirilmesini talep edin.'),
-  transferAdvice('🔍 Transfer Tavsiyesi', 'Hocadan kadrodaki en zayıf halka ve eksik bölge raporu alın.'),
-  presidentCritique('⚡ Başkanlık Uyarısı', 'Takımın gidişatı ve disiplini hakkında sert/yapıcı ikazda bulunun.'),
-  licenseUpgrade('🎓 Pro Lisans Kampı', 'Hocayı UEFA Taktik Seminerine gönderip OVR ve itibarını yükseltin (₣8.000).');
+  tacticalPlan('SWORDS Taktik & Oyun Planı', 'Haftalık maç stratejisini ve oyun temposunu tartışın.'),
+  playerManagement('[TARAFTAR] Kadro & Gençler', 'Gençlerin oynatılması ve yıldızların dinlendirilmesini talep edin.'),
+  transferAdvice('[ARAMA] Transfer Tavsiyesi', 'Hocadan kadrodaki en zayıf halka ve eksik bölge raporu alın.'),
+  presidentCritique('BOLT Başkanlık Uyarısı', 'Takımın gidişatı ve disiplini hakkında sert/yapıcı ikazda bulunun.'),
+  licenseUpgrade(' Pro Lisans Kampı', 'Hocayı UEFA Taktik Seminerine gönderip OVR ve itibarını yükseltin (₣8.000).');
 
   final String title;
   final String description;

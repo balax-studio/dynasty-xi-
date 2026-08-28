@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mutation-test version="1.0">
+  <!-- Dynasty XI Mutation Testing Configuration for Core & Domain Logic -->
+  <rules>
+    <ruleset name="default"/>
+  </rules>
+  <inputs>
+    <directories>
+      <directory recursive="true">lib/domain/economy</directory>
+      <directory recursive="true">lib/domain/progression</directory>
+      <directory recursive="true">lib/domain/tactics</directory>
+      <directory recursive="true">lib/core/rng</directory>
+    </directories>
+  </inputs>
+  <commands>
+    <command group="test">flutter test test/domain/comprehensive_logic_verification_test.dart</command>
+  </commands>
+  <threshold>80</threshold>
+</mutation-test>

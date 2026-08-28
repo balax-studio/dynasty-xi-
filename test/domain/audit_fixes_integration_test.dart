@@ -49,7 +49,7 @@ void main() {
         principalAmount: 100000,
         interestRate: 0.1,
         totalWeeks: 10,
-        icon: '🏦',
+        icon: '',
         description: 'Test loan',
       );
 
@@ -92,7 +92,7 @@ void main() {
         caller: CrisisCallerType.rivalPresident,
         callerName: 'Başkan Aziz',
         callerTitle: 'Kulüp Başkanı',
-        callerAvatar: '🎩',
+        callerAvatar: '[VIP]',
         dialogQuote: 'Basına gizli belgeler sızdırıldı.',
         choices: [
           CrisisChoice(
@@ -118,7 +118,7 @@ void main() {
     test('K-12: ContinentalCup serializes and deserializes correctly in GameState', () {
       final cup = ContinentalCup.generateTournament(
         userClubName: 'Test FC',
-        userBadge: '🦁',
+        userBadge: 'LION',
         season: 2,
       );
 

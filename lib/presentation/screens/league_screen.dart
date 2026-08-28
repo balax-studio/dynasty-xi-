@@ -59,9 +59,9 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
               labelColor: AppColors.neonLime,
               unselectedLabelColor: AppColors.win95White,
               tabs: const [
-                Tab(text: '📊 PUAN TABLOSU'),
-                Tab(text: '📅 FİKSTÜR'),
-                Tab(text: '🌟 GOL & ASİST'),
+                Tab(text: '[GRAFIK] PUAN TABLOSU'),
+                Tab(text: ' FİKSTÜR'),
+                Tab(text: 'STAR GOL & ASİST'),
               ],
             ),
           ),
@@ -83,7 +83,7 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('🏛️', style: TextStyle(fontSize: 16)),
+                        Text('[YÖNETİM]', style: TextStyle(fontSize: 16)),
                         SizedBox(width: 6),
                         Text('KULÜPLER BİRLİĞİ VAKFI ZİRVESİ & HAVUZ OYLAMASI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
                       ],
@@ -125,7 +125,7 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
           // GOL KRALLIĞI
           RetroWindow(
             title: 'LİG GOL KRALLIĞI (ALTIN AYAKKABI)',
-            icon: '⚽',
+            icon: '[GOL]',
             titleBarColor: const Color(0xFF6E5000),
             child: scorers.isEmpty
                 ? Container(
@@ -196,7 +196,7 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
           // ASİST KRALLIĞI
           RetroWindow(
             title: 'LİG ASİST KRALLIĞI (OYUN KURUCULAR)',
-            icon: '👟',
+            icon: '',
             titleBarColor: AppColors.win95TitleNavy,
             child: assists.isEmpty
                 ? Container(
@@ -457,7 +457,7 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
           // Sezon Tamamlandıysa veya 21. Hafta Tören Butonu
           RetroWindow(
             title: 'SEZON SONU PROTOKOLÜ & ÖDÜL TÖRENİ',
-            icon: '🏆',
+            icon: '[KUPA]',
             titleBarColor: const Color(0xFF6E5000),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -488,7 +488,7 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
                           );
                         }
                       : null,
-                  child: Text(isSeasonCompleted ? '🏆 TÖRENİ AÇ' : '🔒 21. HAFTA SONU'),
+                  child: Text(isSeasonCompleted ? '[KUPA] TÖRENİ AÇ' : '[KILITLI] 21. HAFTA SONU'),
                 ),
               ],
             ),

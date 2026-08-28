@@ -22,7 +22,7 @@ void main() {
         boardConfidence: 80,
         matchesManaged: 14,
         activeVision: CoachVision.attacking,
-        countryCode: '🇹🇷 TR',
+        countryCode: ' TR',
         age: 51,
       );
 

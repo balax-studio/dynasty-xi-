@@ -58,7 +58,7 @@ class SaveRepository {
     String managerName = 'Hoca',
     String primaryColorHex = '#0B2E20',
     String secondaryColorHex = '#D9A62E',
-    String badgeIcon = '🛡️',
+    String badgeIcon = 'SHIELD',
   }) {
     final rng = DeterministicRng(DateTime.now().millisecondsSinceEpoch);
 

@@ -2,9 +2,9 @@
 // Post-Match & Pre-Match Press Conferences with 3 Stances (§16)
 
 enum PressStance {
-  diplomatic('Diplomatik & Ölçülü', '🎙️'),
-  aggressive('İddialı & Meydan Okuyan', '🔥'),
-  protective('Oyuncuları Koruyan & Destekleyici', '🛡️');
+  diplomatic('Diplomatik & Ölçülü', '[BASIN]'),
+  aggressive('İddialı & Meydan Okuyan', '[FORM]'),
+  protective('Oyuncuları Koruyan & Destekleyici', 'SHIELD');
 
   final String label;
   final String icon;

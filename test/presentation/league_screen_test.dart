@@ -26,17 +26,17 @@ void main() {
     expect(find.textContaining('LİG VERİTABANI'), findsOneWidget);
 
     // 2. Tab 1: Puan Tablosu
-    expect(find.text('📊 PUAN TABLOSU'), findsOneWidget);
+    expect(find.text('[GRAFIK] PUAN TABLOSU'), findsOneWidget);
     expect(find.textContaining('SEZON SONU PROTOKOLÜ'), findsOneWidget);
     expect(find.text('KULÜP'), findsOneWidget);
 
     // 3. Tab 2: Fikstür
-    await tester.tap(find.text('📅 FİKSTÜR'));
+    await tester.tap(find.text(' FİKSTÜR'));
     await tester.pumpAndSettle();
     expect(find.textContaining('H.'), findsWidgets);
 
     // 4. Tab 3: Gol & Asist
-    await tester.tap(find.text('🌟 GOL & ASİST'));
+    await tester.tap(find.text('STAR GOL & ASİST'));
     await tester.pumpAndSettle();
     expect(find.textContaining('LİG GOL KRALLIĞI'), findsOneWidget);
     expect(find.textContaining('LİG ASİST KRALLIĞI'), findsOneWidget);

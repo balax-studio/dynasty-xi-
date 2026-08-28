@@ -3,10 +3,14 @@
 
 import '../../core/rng/deterministic_rng.dart';
 import '../../core/time/game_clock.dart';
+import '../entities/club.dart';
 import '../entities/facility.dart';
 import '../entities/game_state.dart';
+import '../entities/player.dart';
 import '../generation/club_generator.dart';
 import '../generation/player_generator.dart';
+import '../tournament/continental_cup.dart';
+import '../tournament/cup_tournament.dart';
 import 'player_growth.dart';
 
 class SeasonReport {
@@ -85,22 +89,39 @@ class SeasonTransition {
     final trainingLvl = state.userClub.getFacilityLevel(FacilityType.trainingGround);
     final academyLvl = state.userClub.getFacilityLevel(FacilityType.youthAcademy);
 
-    // 1. Oyuncuların Yaşlanması, Sözleşmelerinin Azalması ve Gelişimi
-    final updatedSquad = state.userClub.squad.map((p) {
+    // 1. Oyuncuların Yaşlanması, Sözleşmelerinin Azalması, Gelişimi ve Biten Sözleşmelerin Ayrılması
+    final remainingSquad = <Player>[];
+    final expiredPlayers = <Player>[];
+
+    for (final p in state.userClub.squad) {
       final grown = PlayerGrowth.applyTrainingGrowth(
         player: p,
         trainingFacilityLevel: trainingLvl,
         randomFactor: rng.nextDoubleInRange(0.85, 1.20),
       );
-      return grown.copyWith(
-        age: grown.age + 1,
-        contractSeasonsLeft: grown.contractSeasonsLeft - 1,
-        appearances: 0,
-        goals: 0,
-        assists: 0,
-        cleanSheets: 0,
-      );
-    }).toList();
+      final nextContract = grown.contractSeasonsLeft - 1;
+      if (nextContract > 0) {
+        remainingSquad.add(grown.copyWith(
+          age: grown.age + 1,
+          contractSeasonsLeft: nextContract,
+          appearances: 0,
+          goals: 0,
+          assists: 0,
+          cleanSheets: 0,
+        ));
+      } else {
+        expiredPlayers.add(grown.copyWith(
+          age: grown.age + 1,
+          contractSeasonsLeft: 0,
+        ));
+      }
+    }
+
+    // Kadro derinliği 15'in altına düşerse acil 1 yıllık uzatma hakkı tanınır
+    while (remainingSquad.length < 15 && expiredPlayers.isNotEmpty) {
+      final rescued = expiredPlayers.removeAt(0);
+      remainingSquad.add(rescued.copyWith(contractSeasonsLeft: 1));
+    }
 
     // 2. Altyapı Akademisinden Yeni Genç Oyuncu Katılımı
     final youthCount = academyLvl >= 3 ? 2 : 1;
@@ -110,7 +131,7 @@ class SeasonTransition {
         academyLevel: academyLvl,
         seasonNumber: state.clock.seasonNumber + 1,
       );
-      updatedSquad.add(youth);
+      remainingSquad.add(youth);
     }
 
     // 3. Lig Kademesi Güncelleme
@@ -132,7 +153,7 @@ class SeasonTransition {
     final updatedClub = state.userClub.copyWith(
       leagueTier: nextTier,
       meters: nextMeters,
-      squad: updatedSquad,
+      squad: remainingSquad,
       totalTrophies: report.isChampion ? state.userClub.totalTrophies + 1 : state.userClub.totalTrophies,
     );
 
@@ -148,10 +169,42 @@ class SeasonTransition {
       seasonNumber: state.clock.seasonNumber + 1,
     );
 
+    // 6. Yeni Sezon Kupa ve Kıta Turnuvalarının Kurulması
+    final opponents = newLeague.standings
+        .where((s) => s.clubId != updatedClub.id)
+        .map((s) => Club(
+              id: s.clubId,
+              name: s.clubName,
+              city: 'Anadolu',
+              leagueTier: nextTier,
+              badgeIcon: s.badgeIcon,
+              squad: const [],
+              starting11Ids: const [],
+            ))
+        .toList();
+    final newCup = CupTournament.generateQuarterFinalTournament(
+      userClub: updatedClub,
+      opponents: opponents,
+      seed: rng.nextInt(99999),
+    );
+
+    final newContinentalCup = ContinentalCup.generateTournament(
+      userClubName: updatedClub.name,
+      userBadge: updatedClub.badgeIcon,
+      season: state.clock.seasonNumber + 1,
+    );
+
     return state.copyWith(
       userClub: updatedClub,
       manager: updatedManager,
       currentLeague: newLeague,
+      cupTournament: newCup,
+      continentalCup: newContinentalCup,
+      signedMarketIds: const [],
+      resolvedDebateIds: const [],
+      votedSummitAgendaIds: const [],
+      resolvedLegalCaseIds: const [],
+      activeAffiliateClubIds: const [],
       clock: GameClock(
         seasonNumber: state.clock.seasonNumber + 1,
         dayOfSeason: 1,
@@ -160,6 +213,8 @@ class SeasonTransition {
       ),
       notificationLog: [
         'Sezon ${state.clock.seasonNumber} tamamlandı: ${report.summaryText}',
+        if (expiredPlayers.isNotEmpty)
+          '${expiredPlayers.length} oyuncunun sözleşmesi bitti ve serbest kaldı.',
         ...state.notificationLog,
       ],
     );

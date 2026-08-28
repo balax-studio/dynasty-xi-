@@ -114,10 +114,14 @@ class WeeklyLedgerCalculator {
     final baseBroadcast = 2200 + ((21 - tier) * 650);
     final broadcastRev = (baseBroadcast * (isHomeMatch ? 1.0 : 0.85)).round();
 
-    // 3. Sponsorluk & VIP
-    int sponsorRev = state.sleeveSponsorIncome + state.stadiumNamingIncome + club.sponsorWeeklyIncome;
-    for (final contract in state.activeSponsorships.values) {
-      sponsorRev += contract.weeklyIncome;
+    // 3. Sponsorluk & VIP (Tekil ve tutarlı kaynak)
+    int sponsorRev = 0;
+    if (state.activeSponsorships.isNotEmpty) {
+      for (final contract in state.activeSponsorships.values) {
+        sponsorRev += contract.weeklyIncome;
+      }
+    } else {
+      sponsorRev = state.sleeveSponsorIncome + state.stadiumNamingIncome + club.sponsorWeeklyIncome;
     }
     for (final vip in state.vipBoxDeals) {
       if (vip.isSold) {

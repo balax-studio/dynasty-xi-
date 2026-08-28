@@ -33,7 +33,7 @@ class SeasonSummaryDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.all(12),
       child: RetroWindow(
         title: 'SEZON ÖDÜL VE TERFİ PROTOKOLÜ v1.0',
-        icon: '🏆',
+        icon: '[KUPA]',
         titleBarColor: isChampion ? const Color(0xFF6E5000) : AppColors.win95TitleNavy,
         onClose: () => Navigator.of(context).pop(),
         child: SingleChildScrollView(
@@ -42,7 +42,7 @@ class SeasonSummaryDialog extends StatelessWidget {
             children: [
               // Kupa / Madalya İkonu
               Text(
-                isChampion ? '🏆' : (isPromoted ? '🥈' : (isRelegated ? '📉' : '⚽')),
+                isChampion ? '[KUPA]' : (isPromoted ? '2.' : (isRelegated ? '[DUSUS]' : '[GOL]')),
                 style: const TextStyle(fontSize: 48),
               ),
               const SizedBox(height: 8),
@@ -85,11 +85,11 @@ class SeasonSummaryDialog extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildRow('🏆 DERECE PRİMİ:', '+₣${prizeMoney.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}'),
+                    _buildRow('[KUPA] DERECE PRİMİ:', '+₣${prizeMoney.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}'),
                     const SizedBox(height: 6),
-                    _buildRow('📺 YAYIN & SIRALAMA GELİRİ:', '+₣${tvMoney.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}'),
+                    _buildRow('[TV] YAYIN & SIRALAMA GELİRİ:', '+₣${tvMoney.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}'),
                     const Divider(color: AppColors.win95DarkGrey, height: 12),
-                    _buildRow('💰 TOPLAM SEZON KAZANCI:', '+₣${(prizeMoney + tvMoney).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}', isBold: true),
+                    _buildRow('[KASA] TOPLAM SEZON KAZANCI:', '+₣${(prizeMoney + tvMoney).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}', isBold: true),
                   ],
                 ),
               ),
@@ -109,7 +109,7 @@ class SeasonSummaryDialog extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Text('🌱', style: TextStyle(fontSize: 22)),
+                    const Text('[AKADEMİ]', style: TextStyle(fontSize: 10, color: AppColors.neonLime, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(

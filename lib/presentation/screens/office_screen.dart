@@ -9,6 +9,7 @@ import '../../application/providers/game_state_provider.dart';
 import '../../domain/media/newspaper_story_engine.dart';
 import '../../domain/president/president_crisis.dart';
 import '../../domain/progression/daily_quest.dart';
+import '../../core/time/game_clock.dart';
 import '../widgets/club_emblem_widget.dart';
 import '../widgets/decision_card_widget.dart';
 import '../widgets/match_reward_dialog.dart';
@@ -17,6 +18,7 @@ import '../widgets/newspaper_headline_widget.dart';
 import '../widgets/retro_pixel_icon.dart';
 import '../widgets/retro_window.dart';
 import '../widgets/urgent_phone_call_modal.dart';
+import '../widgets/midseason_camp_modal.dart';
 import 'match_screen.dart';
 import 'sacked_screen.dart';
 import 'trophy_room_screen.dart';
@@ -203,7 +205,7 @@ class OfficeScreen extends ConsumerWidget {
                       // 3. Günlük Görevler Widget'ı (§17.3, §21.2)
                       RetroWindow(
                         title: 'GÜNLÜK GÖREVLER (DAILY.EXE)',
-                        icon: '📅',
+                        icon: '',
                         titleBarColor: const Color(0xFF1E3A8A),
                         child: _buildDailyQuestsContent(context, ref, gameState.dailyQuests),
                       ),
@@ -212,7 +214,7 @@ class OfficeScreen extends ConsumerWidget {
                       // 4. Masadaki Karar Kartı (Windows 95 Window Frame)
                       RetroWindow(
                         title: 'MASADAKİ DOSYA — KARAR ANI',
-                        icon: '📁',
+                        icon: '',
                         backgroundColor: AppColors.primaryDeep,
                         child: gameState.pendingCards.isNotEmpty
                             ? DecisionCardWidget(
@@ -230,7 +232,7 @@ class OfficeScreen extends ConsumerWidget {
                       // 5. Sezon Hedefleri Penceresi
                       RetroWindow(
                         title: 'BAŞKANLIK HEDEF RAPORU',
-                        icon: '🎯',
+                        icon: '[HEDEF]',
                         child: _buildSeasonGoalsContent(gameState),
                       ),
                       const SizedBox(height: 10),
@@ -238,7 +240,7 @@ class OfficeScreen extends ConsumerWidget {
                       // 6. Kulüp Bildirim Günlüğü
                       RetroWindow(
                         title: 'KULÜP SİSTEM GÜNLÜĞÜ (SYSTEM.LOG)',
-                        icon: '📝',
+                        icon: '',
                         child: _buildActivityLogContent(gameState),
                       ),
                     ],
@@ -262,7 +264,7 @@ class OfficeScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Text('⚠️', style: TextStyle(fontSize: 24)),
+          const Text('[UYARI]', style: TextStyle(fontSize: 24)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -294,7 +296,7 @@ class OfficeScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Text('💰', style: TextStyle(fontSize: 24)),
+          const Text('[KASA]', style: TextStyle(fontSize: 24)),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -316,7 +318,7 @@ class OfficeScreen extends ConsumerWidget {
               final claimed = await ref.read(gameStateProvider.notifier).claimIdleCash();
               if (context.mounted && claimed > 0) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('💰 ₣$claimed kasa hesabına aktarıldı!')),
+                  SnackBar(content: Text('[KASA] ₣$claimed kasa hesabına aktarıldı!')),
                 );
               }
             },
@@ -345,7 +347,7 @@ class OfficeScreen extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Text(q.isClaimed ? '✅' : (q.isCompleted ? '⭐' : '⏳'), style: const TextStyle(fontSize: 18)),
+              Text(q.isClaimed ? '[ONAY]' : (q.isCompleted ? 'STAR' : '[BEKLEME]'), style: const TextStyle(fontSize: 18)),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -423,7 +425,7 @@ class OfficeScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              const Text('🔴☎️', style: TextStyle(fontSize: 26)),
+              const Text('[KIRMIZI]', style: TextStyle(fontSize: 26)),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -473,7 +475,7 @@ class OfficeScreen extends ConsumerWidget {
                   ],
                 ),
                 child: const Text(
-                  'YANITLA 📞',
+                  'YANITLA ',
                   style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -495,6 +497,133 @@ class OfficeScreen extends ConsumerWidget {
     final oppName = state.currentLeague.getClubName(oppId);
     final oppBadge = state.currentLeague.getClubBadge(oppId);
 
+    // Sezon Öncesi Hazırlık Dönemi
+    if (state.clock.phase == SeasonPhase.preSeason) {
+      return RetroWindow(
+        title: 'SEZON ÖNCESİ HAZIRLIK • YAZ TRANSFER DÖNEMİ',
+        icon: '[SEZON]',
+        titleBarColor: const Color(0xFF1E3A8A),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              const RetroPixelIcon(type: RetroPixelIconType.clock, size: 32, color: AppColors.neonCyan),
+              const SizedBox(height: 8),
+              const Text(
+                'YENİ SEZON HAZIRLIK DÖNEMİ',
+                style: TextStyle(color: AppColors.neonCyan, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Yaz Transfer Penceresi açık. Kadro tescilinizi (En fazla 25 A-Takım oyuncusu) tamamlayıp 1. Hafta maçlarına başlayabilirsiniz.',
+                style: TextStyle(color: Colors.white70, fontSize: 10.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: RetroButton(
+                  onPressed: () {
+                    ref.read(gameStateProvider.notifier).startFirstHalf();
+                  },
+                  backgroundColor: AppColors.neonCyan,
+                  textColor: Colors.black,
+                  child: const Text('LİGİ BAŞLAT (1. HAFTA FİKSTÜRÜ)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Devre Arası Dönemi
+    if (state.clock.phase == SeasonPhase.midSeasonBreak) {
+      return RetroWindow(
+        title: 'DEVRE ARASI DÖNEMİ • KIŞ HAZIRLIK KAMPI',
+        icon: '[KAMP]',
+        titleBarColor: const Color(0xFF004422),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              const RetroPixelIcon(type: RetroPixelIconType.tacticsBoard, size: 32, color: AppColors.neonLime),
+              const SizedBox(height: 8),
+              const Text(
+                'LİGİN İLK YARISI TAMAMLANDI',
+                style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Kış Transfer Penceresi açıldı. Oyuncularınızın kondisyon ve moralini tazelemek, takım uyumunu artırmak için devre arası kampını organize ediniz.',
+                style: TextStyle(color: Colors.white70, fontSize: 10.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: RetroButton(
+                  onPressed: () {
+                    MidSeasonCampModal.show(context);
+                  },
+                  backgroundColor: AppColors.neonLime,
+                  textColor: Colors.black,
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      RetroPixelIcon(type: RetroPixelIconType.whistle, size: 14, color: Colors.black),
+                      SizedBox(width: 6),
+                      Text('DEVRE ARASI KAMPINI DÜZENLE & 2. YARIYA BAŞLA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Sezon Sonu Değerlendirmesi
+    if (state.clock.phase == SeasonPhase.seasonEvaluation) {
+      return RetroWindow(
+        title: 'SEZON SONU • LİG DEĞERLENDİRMESİ',
+        icon: '[KUPA]',
+        titleBarColor: const Color(0xFF4A3800),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              const RetroPixelIcon(type: RetroPixelIconType.trophy, size: 32, color: AppColors.accentGold),
+              const SizedBox(height: 8),
+              const Text(
+                'LİG MARATONU TAMAMLANDI',
+                style: TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                '21 haftalık sezon maratonu sona erdi. Kupa müzesi güncellendi ve yeni sezon hazırlıkları için bütçeler belirlendi.',
+                style: TextStyle(color: Colors.white70, fontSize: 10.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: RetroButton(
+                  onPressed: () {
+                    ref.read(gameStateProvider.notifier).startNextSeason();
+                  },
+                  backgroundColor: AppColors.accentGold,
+                  textColor: Colors.black,
+                  child: const Text('YENİ SEZONU BAŞLAT (YAZ DÖNEMİ)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final homeName = isUserHome ? state.userClub.name : oppName;
     final homeBadge = isUserHome ? state.userClub.badgeIcon : oppBadge;
     final awayName = !isUserHome ? state.userClub.name : oppName;
@@ -502,7 +631,7 @@ class OfficeScreen extends ConsumerWidget {
 
     return RetroWindow(
       title: 'MAÇ MERKEZİ • HAFTA ${state.clock.matchday}/21',
-      icon: '⚽',
+      icon: '[GOL]',
       child: Column(
         children: [
           Row(
@@ -604,7 +733,7 @@ class OfficeScreen extends ConsumerWidget {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('🎮', style: TextStyle(fontSize: 14)),
+                      Text('[CANLI]', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                       SizedBox(width: 6),
                       Text('CANLI ANLAR (90 sn)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                     ],
@@ -644,7 +773,7 @@ class OfficeScreen extends ConsumerWidget {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('⚡', style: TextStyle(fontSize: 14)),
+                      Text('[HIZLI]', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                       SizedBox(width: 6),
                       Text('HIZLI SİM (8 sn)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                     ],
@@ -665,7 +794,7 @@ class OfficeScreen extends ConsumerWidget {
       color: Colors.black,
       child: Column(
         children: [
-          const Text('☕', style: TextStyle(fontSize: 28)),
+          const Text('[DOSYA]', style: TextStyle(fontSize: 16, color: AppColors.neonLime, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
             'MASA TEMİZ • YENİ DOSYA YOK',
@@ -685,7 +814,7 @@ class OfficeScreen extends ConsumerWidget {
   Widget _buildSeasonGoalsContent(dynamic state) {
     return Row(
       children: [
-        const Text('🎯', style: TextStyle(fontSize: 28)),
+        const Text('[HEDEF]', style: TextStyle(fontSize: 28)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

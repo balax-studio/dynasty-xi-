@@ -35,6 +35,16 @@ import '../../domain/sim/player_condition.dart';
 import '../../domain/sim/injury_engine.dart';
 import '../../domain/economy/weekly_ledger.dart';
 import '../../domain/cards/dynamic_card_factory.dart';
+import '../../domain/entities/achievement.dart';
+import '../../domain/progression/coaching_license.dart';
+import '../../domain/president/president_lifestyle.dart';
+import '../../domain/transfers/transfer_hijack.dart';
+import '../../domain/president/legal_defense.dart';
+import '../../domain/transfers/transfer_window_rules.dart';
+import '../../domain/scouting/scouting_mission.dart';
+import '../../domain/facilities/training_camp.dart';
+import '../../domain/generation/scout_service.dart';
+import '../../core/time/game_clock.dart';
 
 final saveRepositoryProvider = Provider<SaveRepository>((ref) => SaveRepository());
 
@@ -114,8 +124,8 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     await _saveRepository.save(updated);
   }
 
-  /// Sıradaki Maçı Simüle Et (7 Fazlı Modüler Boru Hattı — Bölüm A & §11)
-  Future<MatchResult?> playMatch({bool isLiveMode = false}) async {
+  /// Sıradaki Maçı Simüle Et veya Canlı Maç Sonucunu Kaydet (7 Fazlı Modüler Boru Hattı — Bölüm A & §11)
+  Future<MatchResult?> playMatch({bool isLiveMode = false, MatchResult? liveResult}) async {
     final current = currentState;
     if (current == null || current.isGameOver) return null;
 
@@ -133,7 +143,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final oppClub = _getOpponentClub(current, oppClubId);
 
     // FAZ 2: MAÇ MOTORU SİMÜLASYONU (§11)
-    final matchSeed = current.clock.seasonNumber * 10000 + current.clock.matchday * 100 + _rng.nextInt(99);
+    final matchSeed = liveResult?.seed ?? (current.clock.seasonNumber * 10000 + current.clock.matchday * 100 + _rng.nextInt(99));
     final setup = MatchSetup(
       home: isUserHome ? current.userClub : oppClub,
       away: isUserHome ? oppClub : current.userClub,
@@ -143,7 +153,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     );
 
     final engine = MatchEngine(setup.seed);
-    final result = engine.simulate(setup);
+    final result = liveResult ?? engine.simulate(setup);
 
     final userGoals = isUserHome ? result.homeGoals : result.awayGoals;
     final oppGoals = isUserHome ? result.awayGoals : result.homeGoals;
@@ -247,7 +257,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       if (remaining > 0) {
         updatedSponsorships[entry.key] = contract.copyWith(weeksRemaining: remaining);
       } else {
-        sponsorExpiryLogs.add('📢 [${contract.brandName}] ile ${contract.slot.label} sponsorluk sözleşmeniz sona erdi!');
+        sponsorExpiryLogs.add('[DUYURU] [${contract.brandName}] ile ${contract.slot.label} sponsorluk sözleşmeniz sona erdi!');
         switch (contract.slot) {
           case SponsorshipSlot.mainShirt:
             updatedMainShirtIncome = 0;
@@ -350,7 +360,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
           isUpgrading: false,
           upgradeFinishEpochMs: null,
         );
-        facilityLogs.add('🏗️ Tesis Tamamlandı: ${fac.type.label} Sv.${fac.level + 1} hizmete girdi!');
+        facilityLogs.add('[TESİS] Tesis Tamamlandı: ${fac.type.label} Sv.${fac.level + 1} hizmete girdi!');
       }
     }
 
@@ -373,8 +383,27 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       isWin: isUserWin,
     );
 
-    // FAZ 6: KART SEÇİMİ & KRİZ MOTORU (D-1, D-2, D-3, D-4)
+    // FAZ 6: KART SEÇİMİ, SCOUT KUYRUĞU & KRİZ MOTORU (D-1, D-2, D-3, D-4)
     final nextClock = current.clock.advanceMatch();
+
+    // Asenkron Scout Seferleri İlerlemesi
+    final tickedScoutingMissions = <ScoutingMission>[];
+    final scoutLogs = <String>[];
+    for (final mission in current.activeScoutingMissions) {
+      final updatedMission = mission.tickMatch();
+      tickedScoutingMissions.add(updatedMission);
+      if (updatedMission.isCompleted && !mission.isCompleted) {
+        scoutLogs.add('[SCOUT] Gözlemci Raporu Hazır: ${mission.region} bölgesinden ${updatedMission.discoveredProspects.length} oyuncu analizi masanızda!');
+      }
+    }
+
+    // Sezon Fazı Bildirimleri
+    final phaseLogs = <String>[];
+    if (nextClock.phase == SeasonPhase.midSeasonBreak && current.clock.phase != SeasonPhase.midSeasonBreak) {
+      phaseLogs.add('[DEVRE ARASI] 1. Yarı tamamlandı! Devre arası kampı ve Kış Transfer Penceresi açıldı.');
+    } else if (nextClock.phase == SeasonPhase.seasonEvaluation && current.clock.phase != SeasonPhase.seasonEvaluation) {
+      phaseLogs.add('[SEZON SONU] Lig maratonu tamamlandı! Sezon değerlendirmesi ve kupa töreni hazır.');
+    }
 
     final newSessionCards = CardSelector.pickSessionCards(
       cardDatabase: CardDatabase.mvpCards,
@@ -405,6 +434,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       manager: updatedManager,
       currentLeague: updatedLeague,
       clock: nextClock,
+      activeScoutingMissions: tickedScoutingMissions,
       pendingCards: allPendingCards,
       activeSponsorships: updatedSponsorships,
       sleeveSponsorIncome: updatedSleeve,
@@ -421,10 +451,12 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       clubXp: updatedClubXp,
       notificationLog: [
         'Maç Sonucu: ${current.userClub.name} $userGoals - $oppGoals ${oppClub.name}',
-        if (extraSponsorCash > 0) '💰 Sponsor Galibiyet Primi: +₣$extraSponsorCash hesaba yattı!',
-        if (loanPaidOff) '🎉 Banka Kredisi Tamamen Ödendi ve Kapatıldı!',
-        ...injuryResult.newInjuries.map((inj) => '🏥 Sakatlık: ${inj.player.fullName} (${inj.injuryType}, ${inj.matchesOut} maç yok)'),
-        ...injuryResult.recoveredPlayers.map((rec) => '✨ İyileşme: ${rec.fullName} sahalara geri döndü!'),
+        if (extraSponsorCash > 0) '[KASA] Sponsor Galibiyet Primi: +₣$extraSponsorCash hesaba yattı!',
+        if (loanPaidOff) '[KUTLAMA] Banka Kredisi Tamamen Ödendi ve Kapatıldı!',
+        ...phaseLogs,
+        ...scoutLogs,
+        ...injuryResult.newInjuries.map((inj) => '[REVİR] Sakatlık: ${inj.player.fullName} (${inj.injuryType}, ${inj.matchesOut} maç yok)'),
+        ...injuryResult.recoveredPlayers.map((rec) => '[ETKI] İyileşme: ${rec.fullName} sahalara geri döndü!'),
         ...sponsorExpiryLogs,
         ...facilityLogs,
         ...current.notificationLog,
@@ -438,10 +470,12 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       }
     }
 
-    final finalState = updatedState.copyWith(
+    var finalState = updatedState.copyWith(
       activeCrisisCall: nextCrisis,
       clearCrisisCall: nextCrisis == null,
     );
+
+    finalState = _checkAndAwardAchievements(finalState);
 
     state = AsyncValue.data(finalState);
     await _saveRepository.save(finalState);
@@ -472,7 +506,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       crisisCooldownMatches: 3,
       resolvedCrisisIds: updatedResolvedIds,
       notificationLog: [
-        '🔴 Kırmızı Hat Kriz Çözümü: ${choice.outcomeMessage}',
+        '[KIRMIZI] Kırmızı Hat Kriz Çözümü: ${choice.outcomeMessage}',
         ...current.notificationLog,
       ],
     );
@@ -567,7 +601,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       staff: staffList,
       userClub: current.userClub.copyWith(meters: updatedMeters),
       notificationLog: [
-        '🎓 Teknik Ekip: ${staff.name} kursu tamamlayarak Seviye ${staff.level + 1} oldu! (Maliyet: ₣$cost)',
+        ' Teknik Ekip: ${staff.name} kursu tamamlayarak Seviye ${staff.level + 1} oldu! (Maliyet: ₣$cost)',
         ...current.notificationLog,
       ],
     );
@@ -603,7 +637,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       staff: staffList,
       userClub: current.userClub.copyWith(meters: updatedMeters),
       notificationLog: [
-        '🤝 Yeni Uzman İmzası: ${newStaff.name} (${newStaff.role.label}) göreve başladı!',
+        '[ANLASMA] Yeni Uzman İmzası: ${newStaff.name} (${newStaff.role.label}) göreve başladı!',
         ...current.notificationLog,
       ],
     );
@@ -628,7 +662,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         substituteIds: subs,
       ),
       notificationLog: [
-        '⚡ Taktik Panosu: En yüksek OVR\'lı ilk 11 otomatik olarak sahaya dizildi.',
+        'BOLT Taktik Panosu: En yüksek OVR\'lı ilk 11 otomatik olarak sahaya dizildi.',
         ...current.notificationLog,
       ],
     );
@@ -670,7 +704,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         meters: updatedMeters,
       ),
       notificationLog: [
-        '🌟 A Takıma Yükseltme: Genç yetenek ${player.fullName} (${player.position.code}) A Takım kadrosuna katıldı!',
+        'STAR A Takıma Yükseltme: Genç yetenek ${player.fullName} (${player.position.code}) A Takım kadrosuna katıldı!',
         ...current.notificationLog,
       ],
     );
@@ -706,7 +740,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         meters: updatedMeters,
       ),
       notificationLog: [
-        '🌱 Yeni Akademi Yeteneği: ${youthPlayer.fullName} (${youthPlayer.position.code} - POT: ${youthPlayer.potential}) altyapıya katıldı!',
+        ' Yeni Akademi Yeteneği: ${youthPlayer.fullName} (${youthPlayer.position.code} - POT: ${youthPlayer.potential}) altyapıya katıldı!',
         ...current.notificationLog,
       ],
     );
@@ -738,7 +772,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       headCoach: updatedCoach,
       notificationLog: [
-        '👔 Teknik Direktör Görüşmesi: ${option.resultSummary}',
+        ' Teknik Direktör Görüşmesi: ${option.resultSummary}',
         ...current.notificationLog,
       ],
     );
@@ -776,8 +810,8 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     );
 
     final actionLabel = isLuxuryGift
-        ? '🎁 Başkanlık Hediyesi: ${targetPlayer.fullName}\'e lüks hediye takdim edildi (+25 Moral, +15 Sadakat).'
-        : '💰 Özel Maç Primi: ${targetPlayer.fullName}\'e ₣$bonusAmount özel galibiyet primi vadedildi.';
+        ? '[ODUL] Başkanlık Hediyesi: ${targetPlayer.fullName}\'e lüks hediye takdim edildi (+25 Moral, +15 Sadakat).'
+        : '[KASA] Özel Maç Primi: ${targetPlayer.fullName}\'e ₣$bonusAmount özel galibiyet primi vadedildi.';
 
     final updated = current.copyWith(
       userClub: current.userClub.copyWith(
@@ -817,7 +851,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final updated = current.copyWith(
       userClub: current.userClub.copyWith(squad: updatedSquad),
       notificationLog: [
-        '🎽 Sırt Numarası: ${targetPlayer.fullName} artık #$newNumber numaralı formayı giyecek.',
+        ' Sırt Numarası: ${targetPlayer.fullName} artık #$newNumber numaralı formayı giyecek.',
         ...current.notificationLog,
       ],
     );
@@ -855,7 +889,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         meters: updatedMeters,
       ),
       notificationLog: [
-        '⚖️ Disiplin Cezası: ${targetPlayer.fullName}\'e ₣$fineAmount para cezası kesildi.',
+        '[HUKUK] Disiplin Cezası: ${targetPlayer.fullName}\'e ₣$fineAmount para cezası kesildi.',
         ...current.notificationLog,
       ],
     );
@@ -894,7 +928,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final updated = current.copyWith(
       userClub: current.userClub.copyWith(squad: updatedSquad),
       notificationLog: [
-        '📝 Sözleşme Maddeleri: ${targetPlayer.fullName} için sözleşme maddeleri güncellendi.',
+        ' Sözleşme Maddeleri: ${targetPlayer.fullName} için sözleşme maddeleri güncellendi.',
         ...current.notificationLog,
       ],
     );
@@ -943,7 +977,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         meters: updatedMeters,
       ),
       notificationLog: [
-        '📝 Sözleşme Yenilendi: ${targetPlayer.fullName} ile +$additionalSeasons sezonluk yeni sözleşme imzalandı.',
+        ' Sözleşme Yenilendi: ${targetPlayer.fullName} ile +$additionalSeasons sezonluk yeni sözleşme imzalandı.',
         ...current.notificationLog,
       ],
     );
@@ -958,8 +992,16 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final current = currentState;
     if (current == null) return false;
 
-    if (current.userClub.meters.cash < fee) {
-      return false; // Kasa yetersiz
+    final validation = TransferWindowRules.validatePurchase(
+      phase: current.clock.phase,
+      clubCash: current.userClub.meters.cash,
+      playerFee: fee,
+      currentSquadSize: current.userClub.squad.length,
+      isU21: player.age <= TransferWindowRules.u21AgeThreshold,
+    );
+
+    if (!validation.isValid) {
+      return false;
     }
 
     final signedPlayer = player.copyWith(
@@ -1008,8 +1050,16 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     if (current == null) return false;
 
     final totalCashRequired = fee + clauses.signingBonus;
-    if (current.userClub.meters.cash < totalCashRequired) {
-      return false; // Yetersiz bakiye
+    final validation = TransferWindowRules.validatePurchase(
+      phase: current.clock.phase,
+      clubCash: current.userClub.meters.cash,
+      playerFee: totalCashRequired,
+      currentSquadSize: current.userClub.squad.length,
+      isU21: targetPlayer.age <= TransferWindowRules.u21AgeThreshold,
+    );
+
+    if (!validation.isValid) {
+      return false;
     }
 
     var updatedSquad = List<Player>.from(current.userClub.squad);
@@ -1043,9 +1093,9 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       ),
       transferMarket: updatedMarket,
       notificationLog: [
-        '🎉 Anlaşma İmzalandı: ${newPlayer.fullName} (OVR: ${newPlayer.ovr}) kulübümüze katıldı! (Bonservis: ₣$fee, Maaş: ₣$wage/h)',
+        '[KUTLAMA] Anlaşma İmzalandı: ${newPlayer.fullName} (OVR: ${newPlayer.ovr}) kulübümüze katıldı! (Bonservis: ₣$fee, Maaş: ₣$wage/h)',
         if (clauses.swapPlayer != null)
-          '🤝 Takas Ayrılığı: ${clauses.swapPlayer!.fullName} karşı kulübe transfer oldu.',
+          '[ANLASMA] Takas Ayrılığı: ${clauses.swapPlayer!.fullName} karşı kulübe transfer oldu.',
         ...current.notificationLog,
       ],
     );
@@ -1053,6 +1103,146 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     state = AsyncValue.data(updated);
     await _saveRepository.save(updated);
     return true;
+  }
+
+  /// Yeni Asenkron Scout Görevi Başlat
+  Future<bool> startScoutingMission({
+    required String region,
+    required ScoutDurationTier tier,
+  }) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    if (current.userClub.meters.cash < tier.cost) {
+      return false;
+    }
+
+    final scoutLevel = current.userClub.facilities[FacilityType.scoutCenter]?.level ?? 1;
+
+    final report = ScoutService.generateScoutReport(
+      region: region,
+      tier: tier,
+      scoutFacilityLevel: scoutLevel,
+    );
+
+    final mission = ScoutingMission(
+      id: 'scout_mission_${DateTime.now().millisecondsSinceEpoch}',
+      region: region,
+      tier: tier,
+      totalMatches: tier.matchDuration,
+      matchesRemaining: tier.matchDuration,
+      assignedScoutLevel: scoutLevel,
+      discoveredProspects: report.players,
+      isCompleted: false,
+    );
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -tier.cost,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      activeScoutingMissions: [...current.activeScoutingMissions, mission],
+      notificationLog: [
+        '[SCOUT] Gözlemci Göreve Gönderildi: $region bölgesine ${tier.label} başlatıldı (-₣${tier.cost}).',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Tamamlanan Scout Görevini Kapat / Arşivle
+  Future<void> dismissCompletedScoutingMission(String missionId) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final updatedMissions = current.activeScoutingMissions.where((m) => m.id != missionId).toList();
+    final updated = current.copyWith(activeScoutingMissions: updatedMissions);
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Devre Arası Kampını Uygula
+  Future<bool> executeTrainingCamp(TrainingCampPackage package) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final result = TrainingCampPackage.executeCamp(
+      club: current.userClub,
+      package: package,
+    );
+
+    if (!result.isSuccess) {
+      return false;
+    }
+
+    final nextClock = current.clock.startSecondHalf();
+
+    final updated = current.copyWith(
+      userClub: result.updatedClub,
+      clock: nextClock,
+      notificationLog: [
+        result.message,
+        '[DEVRE ARASI] Devre arası kampı başarıyla tamamlandı. 2. Yarı fikstürü başladı!',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// 1. Yarıyı Başlat (Sezon Başı -> 1. Yarı)
+  Future<void> startFirstHalf() async {
+    final current = currentState;
+    if (current == null) return;
+    final nextClock = current.clock.startFirstHalf();
+    final updated = current.copyWith(
+      clock: nextClock,
+      notificationLog: [
+        '[LİG] Yeni sezonun ilk yarısı başladı! İlk maç için kadronuzu belirleyin.',
+        ...current.notificationLog,
+      ],
+    );
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// 2. Yarıyı Başlat (Devre Arası -> 2. Yarı)
+  Future<void> startSecondHalf() async {
+    final current = currentState;
+    if (current == null) return;
+    final nextClock = current.clock.startSecondHalf();
+    final updated = current.copyWith(
+      clock: nextClock,
+      notificationLog: [
+        '[LİG] Ligin 2. yarısı başladı! Şampiyonluk yarışında kritik haftalar.',
+        ...current.notificationLog,
+      ],
+    );
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Bir Sonraki Sezona Geç (Sezon Değerlendirmesi -> Yeni Sezon Pre-Season)
+  Future<void> startNextSeason() async {
+    final current = currentState;
+    if (current == null) return;
+    final nextClock = current.clock.startNextSeason();
+    final updated = current.copyWith(
+      clock: nextClock,
+      notificationLog: [
+        '[YENİ SEZON] Sezon ${nextClock.seasonNumber} hazırlık dönemi ve Yaz Transfer Penceresi açıldı!',
+        ...current.notificationLog,
+      ],
+    );
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
   }
 
   /// Yıldız Transferi İmza Töreni ve Basın Lansmanı
@@ -1082,7 +1272,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
           dynastyPoints: current.manager.dynastyPoints + 25,
         ),
         notificationLog: [
-          '🏟️ Görkemli İmza Töreni: ${player.fullName} stadyumda binlerce taraftar önünde imza attı! Net Forma Geliri: +₣$netCash, Taraftar: +%15, +25 DP',
+          ' Görkemli İmza Töreni: ${player.fullName} stadyumda binlerce taraftar önünde imza attı! Net Forma Geliri: +₣$netCash, Taraftar: +%15, +25 DP',
           ...current.notificationLog,
         ],
       );
@@ -1239,7 +1429,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         meters: current.userClub.meters.applyDeltas(deltaLockerRoom: 5),
       ),
       notificationLog: [
-        '🛡️ Yeni Takım Kaptanı: $captainName kaptanlık pazubendini taktı.',
+        'SHIELD Yeni Takım Kaptanı: $captainName kaptanlık pazubendini taktı.',
         ...current.notificationLog,
       ],
     );
@@ -1288,8 +1478,8 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(squad: updatedSquad),
       notificationLog: [
         newListedStatus
-            ? '🏷️ $pName transfer listesine konuldu.'
-            : '🏷️ $pName transfer listesinden çıkarıldı.',
+            ? '[ETIKET] $pName transfer listesine konuldu.'
+            : '[ETIKET] $pName transfer listesinden çıkarıldı.',
         ...current.notificationLog,
       ],
     );
@@ -1376,7 +1566,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
           meters: updatedMeters,
         ),
         notificationLog: [
-          '🗣️ $pName ile özel görüşme yapıldı: ${result.summaryDeltas.join(", ")}',
+          ' $pName ile özel görüşme yapıldı: ${result.summaryDeltas.join(", ")}',
           ...current.notificationLog,
         ],
       );
@@ -1393,7 +1583,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       final updated = current.copyWith(
         userClub: current.userClub.copyWith(meters: updatedMeters),
         notificationLog: [
-          '🗣️ $name ile transfer mülakatı: ${result.summaryDeltas.join(", ")}',
+          ' $name ile transfer mülakatı: ${result.summaryDeltas.join(", ")}',
           ...current.notificationLog,
         ],
       );
@@ -1431,7 +1621,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       manager: updatedManager,
       dailyQuests: updatedQuests,
       notificationLog: [
-        '🎉 Günlük Görev Tamamlandı: ${claimedQuest!.title} (+₣${claimedQuest!.cashReward}, +${claimedQuest!.xpReward} XP)',
+        '[KUTLAMA] Günlük Görev Tamamlandı: ${claimedQuest!.title} (+₣${claimedQuest!.cashReward}, +${claimedQuest!.xpReward} XP)',
         ...current.notificationLog,
       ],
     );
@@ -1449,7 +1639,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
           principalAmount: principalAmount,
           interestRate: 0.10,
           totalWeeks: 8,
-          icon: '🏦',
+          icon: '',
           description: 'Yönetim Kurulu Kredisi',
         ),
       );
@@ -1478,7 +1668,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: updatedClub,
       ticketPrice: price,
       notificationLog: [
-        '🎟️ Bilet Fiyatı Güncellendi: Maç başı ₣$price olarak belirlendi.',
+        ' Bilet Fiyatı Güncellendi: Maç başı ₣$price olarak belirlendi.',
         ...current.notificationLog,
       ],
     );
@@ -1535,7 +1725,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       sleeveSponsorIncome: updatedSleeve,
       stadiumNamingIncome: updatedStadiumNaming,
       notificationLog: [
-        '✍️ Resmi Sponsorluk İmzalandı: ${contract.brandName} (+₣${contract.signingBonus} peşin, +₣${contract.weeklyIncome}/hf, ${contract.durationWeeks} Hafta)',
+        ' Resmi Sponsorluk İmzalandı: ${contract.brandName} (+₣${contract.signingBonus} peşin, +₣${contract.weeklyIncome}/hf, ${contract.durationWeeks} Hafta)',
         ...current.notificationLog,
       ],
     );
@@ -1586,7 +1776,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       sleeveSponsorIncome: updatedSleeve,
       stadiumNamingIncome: updatedStadiumNaming,
       notificationLog: [
-        '⚠️ Sponsorluk Feshedildi: ${active.brandName} ile sözleşme tek taraflı feshedildi (-₣$penalty tazminat ödendi).',
+        '[UYARI] Sponsorluk Feshedildi: ${active.brandName} ile sözleşme tek taraflı feshedildi (-₣$penalty tazminat ödendi).',
         ...current.notificationLog,
       ],
     );
@@ -1606,7 +1796,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final contract = SponsorshipContract(
       id: 'legacy_${slot.name}_${DateTime.now().millisecondsSinceEpoch}',
       brandName: brandName,
-      brandIcon: '✍️',
+      brandIcon: '',
       sector: 'Kurumsal',
       slot: slot,
       weeklyIncome: weeklyIncome,
@@ -1640,7 +1830,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       activeLoan: newLoan,
       notificationLog: [
-        '🏦 ${package.name} Onaylandı: Kasaya +₣${package.principalAmount} aktarıldı (Haftalık ödeme: ₣${newLoan.weeklyPayment}).',
+        ' ${package.name} Onaylandı: Kasaya +₣${package.principalAmount} aktarıldı (Haftalık ödeme: ₣${newLoan.weeklyPayment}).',
         ...current.notificationLog,
       ],
     );
@@ -1670,7 +1860,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       activeLoanDeals: updatedLoanDeals,
       signedMarketIds: updatedSignedIds,
       notificationLog: [
-        '🤝 Kiralık Transfer: ${deal.player.fullName} (${deal.parentClubName}) ${deal.seasons} sezonluğuna kiralandı (Haftalık maaş: ₣${deal.weeklyWageToPay}).',
+        '[ANLASMA] Kiralık Transfer: ${deal.player.fullName} (${deal.parentClubName}) ${deal.seasons} sezonluğuna kiralandı (Haftalık maaş: ₣${deal.weeklyWageToPay}).',
         ...current.notificationLog,
       ],
     );
@@ -1710,7 +1900,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       activeLoan: null,
       clearLoan: true,
       notificationLog: [
-        '🎉 Banka Kredisi Erken Kapatıldı! ₣$cost ödendi ve kulüp tüm faiz yükümlülüğünden kurtuldu.',
+        '[KUTLAMA] Banka Kredisi Erken Kapatıldı! ₣$cost ödendi ve kulüp tüm faiz yükümlülüğünden kurtuldu.',
         ...current.notificationLog,
       ],
     );
@@ -1731,7 +1921,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       treasuryDeposit: current.treasuryDeposit + amount,
       notificationLog: [
-        '📈 Kulüp Hazinesine ₣$amount vadeli mevduat yatırıldı (Haftalık %2.5 bileşik faiz).',
+        '[ARTIS] Kulüp Hazinesine ₣$amount vadeli mevduat yatırıldı (Haftalık %2.5 bileşik faiz).',
         ...current.notificationLog,
       ],
     );
@@ -1752,7 +1942,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       treasuryDeposit: current.treasuryDeposit - amount,
       notificationLog: [
-        '📉 Kulüp Hazinesinden ₣$amount nakit çekilerek kulüp kasasına aktarıldı.',
+        '[DUSUS] Kulüp Hazinesinden ₣$amount nakit çekilerek kulüp kasasına aktarıldı.',
         ...current.notificationLog,
       ],
     );
@@ -1778,7 +1968,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       headCoach: coach,
       notificationLog: [
-        '👔 Yeni Teknik Direktör Göreve Getirildi: ${coach.fullName} (${coach.archetype.label})',
+        ' Yeni Teknik Direktör Göreve Getirildi: ${coach.fullName} (${coach.archetype.label})',
         ...current.notificationLog,
       ],
     );
@@ -1805,7 +1995,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       clearHeadCoach: true,
       notificationLog: [
-        '🚨 Teknik Direktör ${coach.fullName} Görevden Alındı (₣$severance fesih tazminatı ödendi).',
+        '[ACIL] Teknik Direktör ${coach.fullName} Görevden Alındı (₣$severance fesih tazminatı ödendi).',
         ...current.notificationLog,
       ],
     );
@@ -1827,7 +2017,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       headCoach: updatedCoach,
       notificationLog: [
-        '📋 Teknik Direktöre Yeni Kulüp Vizyonu Dikte Edildi: ${vision.label}',
+        '[RAPOR] Teknik Direktöre Yeni Kulüp Vizyonu Dikte Edildi: ${vision.label}',
         ...current.notificationLog,
       ],
     );
@@ -1850,7 +2040,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final updated = current.copyWith(
       userClub: current.userClub.copyWith(meters: updatedMeters),
       notificationLog: [
-        '🏛️ Başkanlık Sermaye Enjeksiyonu: Kasaya +₣${option.cashAmount} aktarıldı (${option.title}).',
+        '[YÖNETİM] Başkanlık Sermaye Enjeksiyonu: Kasaya +₣${option.cashAmount} aktarıldı (${option.title}).',
         ...current.notificationLog,
       ],
     );
@@ -1885,7 +2075,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       vipBoxDeals: updatedBoxes,
       notificationLog: [
-        '🥂 VIP Protokol Locası Kiralandı: ${soldBox!.companyName} (+₣${soldBox!.seasonPrice} peşin gelir).',
+        ' VIP Protokol Locası Kiralandı: ${soldBox!.companyName} (+₣${soldBox!.seasonPrice} peşin gelir).',
         ...current.notificationLog,
       ],
     );
@@ -1907,7 +2097,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       accumulatedIdleCash: 0,
       notificationLog: [
-        '💰 Çevrimdışı Birikmiş Gelir Kasaya Aktarıldı: +₣$earned',
+        '[KASA] Çevrimdışı Birikmiş Gelir Kasaya Aktarıldı: +₣$earned',
         ...current.notificationLog,
       ],
     );
@@ -1925,7 +2115,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final updated = current.copyWith(
       targetLeaguePosition: position,
       notificationLog: [
-        '🎯 Sezon Hedefi Taahhüt Edildi: Sezon sonu $position. sıra veya üstü.',
+        '[HEDEF] Sezon Hedefi Taahhüt Edildi: Sezon sonu $position. sıra veya üstü.',
         ...current.notificationLog,
       ],
     );
@@ -2246,16 +2436,16 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     } else if (awayScore > homeScore) {
       winnerId = match.awayClubId;
     } else {
-      homePens = 4 + _rng.nextInt(2);
-      awayPens = 3 + _rng.nextInt(2);
-      if (homePens == awayPens) {
+      homePens = 3 + _rng.nextInt(3);
+      awayPens = 3 + _rng.nextInt(3);
+      while (homePens == awayPens) {
         if (_rng.chance(0.5)) {
-          homePens += 1;
+          homePens = (homePens ?? 0) + 1;
         } else {
-          awayPens += 1;
+          awayPens = (awayPens ?? 0) + 1;
         }
       }
-      winnerId = homePens > awayPens ? match.homeClubId : match.awayClubId;
+      winnerId = (homePens ?? 0) > (awayPens ?? 0) ? match.homeClubId : match.awayClubId;
     }
 
     final updatedMatches = current.cupTournament.matches.map((m) {
@@ -2272,7 +2462,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       return m;
     }).toList();
 
-    // Diğer AI kupa maçlarını da gerçekçi skorlarla simüle et
+    // Diğer AI kupa maçlarını da gerçekçi skorlarla simüle et (adil penaltı motoru)
     final fullySimulated = updatedMatches.map((m) {
       if (m.round == match.round && !m.isPlayed) {
         final hG = _rng.nextInt(3);
@@ -2285,12 +2475,16 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         } else if (aG > hG) {
           wId = m.awayClubId;
         } else {
-          hP = 4 + _rng.nextInt(2);
-          aP = 3 + _rng.nextInt(2);
-          if (hP == aP) {
-            hP += 1;
+          hP = 3 + _rng.nextInt(3);
+          aP = 3 + _rng.nextInt(3);
+          while (hP == aP) {
+            if (_rng.chance(0.5)) {
+              hP = (hP ?? 0) + 1;
+            } else {
+              aP = (aP ?? 0) + 1;
+            }
           }
-          wId = hP > aP ? m.homeClubId : m.awayClubId;
+          wId = (hP ?? 0) > (aP ?? 0) ? m.homeClubId : m.awayClubId;
         }
         return m.copyWith(
           isPlayed: true,
@@ -2312,7 +2506,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final deltaFans = isUserWinner ? 6 : -2;
 
     final penaltyLog = (homePens != null && awayPens != null) ? ' (Penaltılar: $homePens - $awayPens)' : '';
-    final updated = current.copyWith(
+    var updated = current.copyWith(
       cupTournament: updatedCup,
       userClub: current.userClub.copyWith(
         meters: current.userClub.meters.applyDeltas(deltaCash: deltaCash, deltaFans: deltaFans),
@@ -2323,6 +2517,8 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         ...current.notificationLog,
       ],
     );
+
+    updated = _checkAndAwardAchievements(updated);
 
     state = AsyncValue.data(updated);
     await _saveRepository.save(updated);
@@ -2478,7 +2674,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       id: 'comeback_c',
       name: 'Yıldıztepe SK',
       city: 'Kayseri',
-      badgeIcon: '⭐',
+      badgeIcon: 'STAR',
       primaryColorHex: '#1E3A8A',
       secondaryColorHex: '#F59E0B',
       leagueTier: 20,
@@ -2574,10 +2770,543 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     await _saveRepository.save(updated);
   }
 
+  /// Başarımları Değerlendir ve Menajere XP / Hanedan Puanı Teslim Et
+  GameState _checkAndAwardAchievements(GameState current) {
+    final newlyUnlocked = AchievementEvaluator.evaluateAchievements(
+      state: current,
+      previouslyUnlockedIds: current.unlockedAchievementIds,
+    );
+    if (newlyUnlocked.isEmpty) return current;
+
+    var updatedManager = current.manager;
+    final updatedIds = Set<String>.from(current.unlockedAchievementIds);
+    final logs = <String>[];
+
+    for (final ach in newlyUnlocked) {
+      updatedIds.add(ach.id);
+      updatedManager = updatedManager.addXp(ach.xpReward).copyWith(
+        dynastyPoints: updatedManager.dynastyPoints + ach.dynastyPoints,
+      );
+      logs.add('[KUPA] Başarım Açıldı: ${ach.title} (+${ach.xpReward} XP, +${ach.dynastyPoints} Hanedan Puanı)');
+    }
+
+    return current.copyWith(
+      manager: updatedManager,
+      unlockedAchievementIds: updatedIds,
+      notificationLog: [...logs, ...current.notificationLog],
+    );
+  }
+
+  /// Teknik Direktör Lisansını Kalıcı Olarak Yükselt
+  Future<bool> upgradeCoachingLicense(CoachingLicense newLicense) async {
+    final current = currentState;
+    if (current == null) return false;
+    if (current.userClub.meters.cash < newLicense.courseCost) return false;
+    if (current.manager.level < newLicense.requiredManagerLevel) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -newLicense.courseCost,
+      deltaBoardTrust: 5,
+    );
+    final updatedManager = current.manager.copyWith(license: newLicense);
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      manager: updatedManager,
+      notificationLog: [
+        ' Antrenörlük Lisansı: Tebrikler! ${newLicense.title} başarıyla alındı! (Tüm perkler x${newLicense.allPerkMultiplier} etkili)',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Ezeli Rakipten Transfer Çalımı At (Gerçek Oyuncu Kadroya Eklenir)
+  Future<bool> hijackTransfer(TransferHijackTarget target) async {
+    final current = currentState;
+    if (current == null) return false;
+    final totalCost = target.requiredHijackBid + target.requiredAgentCommission;
+    if (current.userClub.meters.cash < totalCost) return false;
+
+    Position pos = Position.cm;
+    if (target.playerPosition.contains('ST') || target.playerPosition.contains('Forvet')) {
+      pos = Position.st;
+    } else if (target.playerPosition.contains('CB') || target.playerPosition.contains('Stoper') || target.playerPosition.contains('Defans')) {
+      pos = Position.cb;
+    } else if (target.playerPosition.contains('GK') || target.playerPosition.contains('Kaleci')) {
+      pos = Position.gk;
+    }
+
+    final newPlayer = Player(
+      id: 'hijack_${target.playerName.hashCode.abs()}',
+      firstName: target.playerName.split(' ').first,
+      lastName: target.playerName.split(' ').length > 1 ? target.playerName.split(' ').sublist(1).join(' ') : 'Yıldız',
+      countryCode: 'TR',
+      position: pos,
+      age: 26,
+      pace: target.overallRating,
+      shooting: target.overallRating,
+      passing: target.overallRating,
+      technique: target.overallRating,
+      defending: target.overallRating,
+      physical: target.overallRating,
+      mentality: target.overallRating,
+      potential: (target.overallRating + 2).clamp(1, 99),
+      weeklyWage: 12500,
+      contractSeasonsLeft: 3,
+      morale: 95,
+      loyalty: 85,
+    );
+
+    final updatedSquad = [...current.userClub.squad, newPlayer];
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -totalCost,
+      deltaFans: target.fansHypeBonus,
+      deltaBoardTrust: 8,
+      deltaLockerRoom: 5,
+    );
+    final updatedHijacked = [...current.hijackedPlayerIds, target.playerName];
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        squad: updatedSquad,
+        meters: updatedMeters,
+      ),
+      hijackedPlayerIds: updatedHijacked,
+      notificationLog: [
+        '[FORM] Dev Transfer Çalımı: ${target.playerName} (${target.overallRating} OVR) kadromuza katıldı! (-₣$totalCost)',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Altyapı Turnuvasından Keşfedilen Genci Akademiye Bedelsiz Ekle
+  Future<void> signGrassrootsTalent({
+    required String name,
+    required String position,
+    required int potentialRating,
+    required int overallRating,
+  }) async {
+    final current = currentState;
+    if (current == null) return;
+
+    Position pos = Position.am;
+    if (position.contains('Forvet') || position.contains('Numara')) {
+      pos = Position.st;
+    } else if (position.contains('Stoper') || position.contains('Defans')) {
+      pos = Position.cb;
+    } else if (position.contains('Kaleci')) {
+      pos = Position.gk;
+    }
+
+    final newProspect = Player(
+      id: 'grassroots_${name.hashCode.abs()}_${DateTime.now().millisecondsSinceEpoch}',
+      firstName: name.split(' ').first,
+      lastName: name.split(' ').length > 1 ? name.split(' ').sublist(1).join(' ') : 'Genç',
+      countryCode: 'TR',
+      position: pos,
+      age: 16,
+      pace: overallRating,
+      shooting: overallRating,
+      passing: overallRating,
+      technique: overallRating,
+      defending: overallRating,
+      physical: overallRating,
+      mentality: overallRating,
+      potential: potentialRating,
+      weeklyWage: 600,
+      contractSeasonsLeft: 4,
+      isYouthProduct: true,
+      morale: 95,
+      loyalty: 90,
+    );
+
+    final updatedU19 = [...current.userClub.u19Squad, newProspect];
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaFans: 5,
+      deltaBoardTrust: 5,
+    );
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        u19Squad: updatedU19,
+        meters: updatedMeters,
+      ),
+      notificationLog: [
+        'STAR Altyapı İmzası: Geleceğin Yıldızı $name ($potentialRating Potansiyel) U19 Akademimize katıldı!',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Başkanın Lüks Varlık Satın Alımı (Kalıcı Envanter)
+  Future<bool> buyLuxuryAsset(PresidentLuxuryAsset asset) async {
+    final current = currentState;
+    if (current == null) return false;
+    if (current.ownedLuxuryAssetIds.contains(asset.id)) return false;
+    if (current.userClub.meters.cash < asset.purchaseCost) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -asset.purchaseCost,
+      deltaFans: asset.fansBonus,
+      deltaBoardTrust: 8,
+    );
+    final updatedOwned = [...current.ownedLuxuryAssetIds, asset.id];
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      ownedLuxuryAssetIds: updatedOwned,
+      notificationLog: [
+        'CROWN Başkanlık Envanteri: ${asset.name} satın alındı! (+${asset.fansBonus} Taraftar Hype, +${asset.prestigeBonus} Prestij)',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Pilot Takım Protokolü İmzala (Kalıcı İşbirliği)
+  Future<bool> signAffiliateProtocol(String clubName, int cost) async {
+    final current = currentState;
+    if (current == null) return false;
+    if (current.activeAffiliateClubIds.contains(clubName)) return false;
+    if (current.userClub.meters.cash < cost) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -cost,
+      deltaBoardTrust: 6,
+    );
+    final updatedAffiliates = [...current.activeAffiliateClubIds, clubName];
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      activeAffiliateClubIds: updatedAffiliates,
+      notificationLog: [
+        '[ANLASMA] Pilot Kulüp Protokolü: $clubName ile 1 yıllık resmi uydu kulüp anlaşması imzalandı! (-₣$cost)',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Hukuk Bürosu & Tahkim Davası İtirazını Çözümle
+  Future<bool> resolveLegalAppeal(LegalCaseItem item) async {
+    final current = currentState;
+    if (current == null) return false;
+    if (current.resolvedLegalCaseIds.contains(item.id)) return false;
+    if (current.userClub.meters.cash < item.appealCost) return false;
+
+    final isSuccess = _rng.chance(item.successChancePercent / 100.0);
+    int deltaCash = -item.appealCost;
+    int deltaBoard = isSuccess ? 6 : -4;
+    if (!isSuccess) {
+      deltaCash -= item.initialPenalty;
+    }
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: deltaCash,
+      deltaBoardTrust: deltaBoard,
+    );
+    final updatedResolved = [...current.resolvedLegalCaseIds, item.id];
+
+    final outcomeMsg = isSuccess
+        ? '[HUKUK] Tahkim Zaferi: ${item.victoryOutcome}'
+        : '[HUKUK] Tahkim Reddi: İtiraz reddedildi ve ₣${item.initialPenalty} ceza uygulandı.';
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      resolvedLegalCaseIds: updatedResolved,
+      notificationLog: [
+        outcomeMsg,
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return isSuccess;
+  }
+
+  /// Menajer Pazarlığı ile Oyuncu Sözleşmesini ve Maaşını Güncelle
+  Future<bool> resolveAgentMeeting({
+    required String playerId,
+    required int wageDiscountPercent,
+    required int extendSeasons,
+    required int cost,
+    required int loyaltyBonus,
+  }) async {
+    final current = currentState;
+    if (current == null) return false;
+    if (cost > 0 && current.userClub.meters.cash < cost) return false;
+
+    final updatedSquad = current.userClub.squad.map((p) {
+      if (p.id == playerId) {
+        final newWage = wageDiscountPercent > 0
+            ? (p.weeklyWage * (1.0 - wageDiscountPercent / 100.0)).round()
+            : p.weeklyWage;
+        return p.copyWith(
+          weeklyWage: newWage,
+          contractSeasonsLeft: p.contractSeasonsLeft + extendSeasons,
+          loyalty: (p.loyalty + loyaltyBonus).clamp(0, 100),
+          morale: 95,
+        );
+      }
+      return p;
+    }).toList();
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -cost,
+      deltaLockerRoom: 4,
+      deltaBoardTrust: 4,
+    );
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        squad: updatedSquad,
+        meters: updatedMeters,
+      ),
+      notificationLog: [
+        '[ANLASMA] Menajer Zirvesi: Oyuncu sözleşmesi revize edildi ve bağlılık arttırıldı.',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Kulüp Hissesi Satışı (Maksimum %49 Limitli)
+  Future<bool> sellClubShares({required int percent, required int cashAmount}) async {
+    final current = currentState;
+    if (current == null) return false;
+    if (current.soldClubSharePercent + percent > 49) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: cashAmount,
+      deltaBoardTrust: -10,
+    );
+    final newSharePercent = current.soldClubSharePercent + percent;
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      soldClubSharePercent: newSharePercent,
+      notificationLog: [
+        '[MENAJER] Kulüp Yatırım Ortaklığı: %$percent kulüp hissesi satıldı (+₣$cashAmount, Toplam Satılan: %$newSharePercent).',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Gece Yarısı TV Canlı Yayın Tartışmasına Katılım
+  Future<void> participateInDebate(
+    String debateId, {
+    int cashDelta = 0,
+    int fansDelta = 0,
+    int boardDelta = 0,
+    required String outcomeText,
+  }) async {
+    final current = currentState;
+    if (current == null) return;
+    if (current.resolvedDebateIds.contains(debateId)) return;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: cashDelta,
+      deltaFans: fansDelta,
+      deltaBoardTrust: boardDelta,
+    );
+    final updatedDebates = [...current.resolvedDebateIds, debateId];
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      resolvedDebateIds: updatedDebates,
+      notificationLog: [
+        '[TV] Canlı Yayın Düellosu: $outcomeText',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Kulüpler Birliği Zirvesi Gündem Oylaması
+  Future<void> voteSummitAgenda(
+    String agendaId, {
+    int cashDelta = 0,
+    int fansDelta = 0,
+    int boardDelta = 0,
+    required String outcomeText,
+  }) async {
+    final current = currentState;
+    if (current == null) return;
+    if (current.votedSummitAgendaIds.contains(agendaId)) return;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: cashDelta,
+      deltaFans: fansDelta,
+      deltaBoardTrust: boardDelta,
+    );
+    final updatedAgendas = [...current.votedSummitAgendaIds, agendaId];
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      votedSummitAgendaIds: updatedAgendas,
+      notificationLog: [
+        '[YÖNETİM] Kulüpler Birliği Oylaması: $outcomeText',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
+  /// Avrupa Kupası Maçı Simülasyonu & Tur Atlama
+  Future<void> playContinentalCupMatch(String matchId) async {
+    final current = currentState;
+    if (current == null || current.continentalCup == null) return;
+
+    final cup = current.continentalCup!;
+    final match = cup.fixtures.firstWhere((m) => m.id == matchId);
+    if (match.isPlayed) return;
+
+    final isHome = match.homeClubName == current.userClub.name;
+    final oppName = isHome ? match.awayClubName : match.homeClubName;
+    final oppBadge = isHome ? match.awayBadge : match.homeBadge;
+
+    final oppClub = Club(
+      id: 'cont_opp_${oppName.hashCode.abs()}',
+      name: oppName,
+      city: match.awayCountry,
+      leagueTier: 1,
+      badgeIcon: oppBadge,
+      squad: current.userClub.squad,
+      starting11Ids: current.userClub.starting11Ids,
+    );
+
+    final seed = current.clock.seasonNumber * 80000 + match.id.hashCode.abs() + _rng.nextInt(99);
+    final setup = MatchSetup(
+      home: isHome ? current.userClub : oppClub,
+      away: isHome ? oppClub : current.userClub,
+      seed: seed,
+      hasTacticianPerk: current.manager.hasPerk('tactician_1'),
+    );
+    final result = MatchEngine(seed).simulate(setup);
+
+    final hScore = isHome ? result.homeGoals : result.awayGoals;
+    final aScore = isHome ? result.awayGoals : result.homeGoals;
+    final isKnockout = match.stage.contains('Final');
+    String winner = hScore > aScore ? match.homeClubName : (aScore > hScore ? match.awayClubName : match.homeClubName);
+
+    if (hScore == aScore && isKnockout) {
+      winner = _rng.chance(0.5) ? match.homeClubName : match.awayClubName;
+    }
+
+    final updatedFixtures = cup.fixtures.map((m) {
+      if (m.id == matchId) {
+        return ContinentalMatch(
+          id: m.id,
+          stage: m.stage,
+          homeClubName: m.homeClubName,
+          homeCountry: m.homeCountry,
+          homeBadge: m.homeBadge,
+          awayClubName: m.awayClubName,
+          awayCountry: m.awayCountry,
+          awayBadge: m.awayBadge,
+          isPlayed: true,
+          homeScore: hScore,
+          awayScore: aScore,
+          winnerName: winner,
+        );
+      }
+      return m;
+    }).toList();
+
+    // AI maçlarını da simüle et
+    final fullySimulated = updatedFixtures.map((m) {
+      if (!m.isPlayed && m.stage == match.stage) {
+        final hG = _rng.nextInt(3);
+        final aG = _rng.nextInt(3);
+        final w = hG >= aG ? m.homeClubName : m.awayClubName;
+        return ContinentalMatch(
+          id: m.id,
+          stage: m.stage,
+          homeClubName: m.homeClubName,
+          homeCountry: m.homeCountry,
+          homeBadge: m.homeBadge,
+          awayClubName: m.awayClubName,
+          awayCountry: m.awayCountry,
+          awayBadge: m.awayBadge,
+          isPlayed: true,
+          homeScore: hG,
+          awayScore: aG,
+          winnerName: w,
+        );
+      }
+      return m;
+    }).toList();
+
+    final isUserWinner = winner == current.userClub.name;
+    final prize = match.stage.contains('Büyük Final')
+        ? (isUserWinner ? cup.prizeMoney : 50000)
+        : (isUserWinner ? 35000 : 10000);
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: prize,
+      deltaFans: isUserWinner ? 8 : -2,
+      deltaBoardTrust: isUserWinner ? 6 : -2,
+    );
+
+    var updatedCup = cup.copyWith(fixtures: fullySimulated);
+    var updated = current.copyWith(
+      continentalCup: updatedCup,
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      manager: current.manager.addXp(isUserWinner ? 150 : 40),
+      notificationLog: [
+        '[KUPA] Avrupa Kupası (${match.stage}): ${match.homeClubName} $hScore - $aScore ${match.awayClubName} (${isUserWinner ? "GALİBİYET +₣$prize" : "MAĞLUBİYET"})',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
   Club _getOpponentClub(GameState current, String oppClubId) {
     final entry = current.currentLeague.getEntry(oppClubId);
     final customName = entry?.clubName ?? 'Demirspor';
-    final badge = entry?.badgeIcon ?? '⚡';
+    final badge = entry?.badgeIcon ?? 'BOLT';
 
     final oppSeed = oppClubId.hashCode.abs() + (current.clock.seasonNumber * 1000);
     final oppRng = DeterministicRng(oppSeed);

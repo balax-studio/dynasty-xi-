@@ -124,7 +124,7 @@ class DecisionCardWidget extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('💬', style: TextStyle(fontSize: 16)),
+                      const Text('[MESAJ]', style: TextStyle(fontSize: 16)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -139,7 +139,7 @@ class DecisionCardWidget extends StatelessWidget {
 
                 // 4. Karar Seçenek Butonları (Y2K Neon Kutuları)
                 Text(
-                  '⚡ MENAJER KARARI:',
+                  'BOLT MENAJER KARARI:',
                   style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 11),
                 ),
                 const SizedBox(height: 6),

@@ -44,7 +44,7 @@ class PrestigeScreen extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      const Text('🏆', style: TextStyle(fontSize: 32)),
+                      const Text('[KUPA]', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -82,7 +82,7 @@ class PrestigeScreen extends ConsumerWidget {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('👑', style: TextStyle(fontSize: 16)),
+                        Text('CROWN', style: TextStyle(fontSize: 16)),
                         SizedBox(width: 6),
                         Text('BAŞKANIN LÜKS YAŞAMI & ŞAHSİ ENVANTERİ (JET, YAT, YALI)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                       ],
@@ -139,7 +139,7 @@ class PrestigeScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             color: AppColors.neonLime,
-                            child: const Text('AÇIK ✅', style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
+                            child: const Text('AÇIK [ONAY]', style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
                           )
                         else
                           RetroButton(
@@ -147,7 +147,7 @@ class PrestigeScreen extends ConsumerWidget {
                                 ? () {
                                     ref.read(gameStateProvider.notifier).unlockLegacyPerk(perk);
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('⭐ "${perk.title}" kalıcı mirasa eklendi!')),
+                                      SnackBar(content: Text('STAR "${perk.title}" kalıcı mirasa eklendi!')),
                                     );
                                   }
                                 : null,

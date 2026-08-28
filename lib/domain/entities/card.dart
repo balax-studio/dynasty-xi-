@@ -2,19 +2,19 @@
 // Pure Dart. Decision Card entity with options, meter deltas, prerequisites and story chain hooks.
 
 enum CardCategory {
-  board('Yönetim', '🏛️'),
-  press('Basın', '🎙️'),
-  fans('Taraftar', '📢'),
-  lockerRoom('Soyunma Odası', '👕'),
-  squad('Kadro', '⚽'),
-  medical('Sağlık & Tıp', '🏥'),
-  transfer('Transfer & Menajer', '💼'),
-  scouting('Scout', '🔍'),
-  finance('Finans', '💰'),
-  youth('Gençlik & Altyapı', '🌱'),
-  sponsor('Sponsorluk', '🤝'),
-  personal('Kişisel', '⭐'),
-  crisis('Kriz', '⚠️');
+  board('Yönetim', '[YÖNETİM]'),
+  press('Basın', '[BASIN]'),
+  fans('Taraftar', '[DUYURU]'),
+  lockerRoom('Soyunma Odası', '[KADRO]'),
+  squad('Kadro', '[GOL]'),
+  medical('Sağlık & Tıp', '[REVİR]'),
+  transfer('Transfer & Menajer', '[MENAJER]'),
+  scouting('Scout', '[ARAMA]'),
+  finance('Finans', '[KASA]'),
+  youth('Gençlik & Altyapı', ''),
+  sponsor('Sponsorluk', '[ANLASMA]'),
+  personal('Kişisel', 'STAR'),
+  crisis('Kriz', '[UYARI]');
 
   final String label;
   final String icon;
@@ -128,7 +128,7 @@ class DecisionCard {
         id: json['id'] as String,
         characterName: json['characterName'] as String,
         characterRole: json['characterRole'] as String,
-        characterAvatar: json['characterAvatar'] as String? ?? '👤',
+        characterAvatar: json['characterAvatar'] as String? ?? '[OYUNCU]',
         headline: json['headline'] as String,
         storyText: json['storyText'] as String,
         category: CardCategory.values.firstWhere(

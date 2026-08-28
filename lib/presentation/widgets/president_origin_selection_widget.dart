@@ -84,12 +84,12 @@ class PresidentOriginSelectionWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '🌟 AVANTAJ: ${origin.perkDescription}',
+                          'STAR AVANTAJ: ${origin.perkDescription}',
                           style: const TextStyle(color: AppColors.neonLime, fontSize: 9.5),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '⚠️ DEZAVANTAJ: ${origin.flawDescription}',
+                          '[UYARI] DEZAVANTAJ: ${origin.flawDescription}',
                           style: const TextStyle(color: AppColors.comicRed, fontSize: 9.5),
                         ),
                       ],

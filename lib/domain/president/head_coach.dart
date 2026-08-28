@@ -4,7 +4,7 @@
 enum HeadCoachArchetype {
   tactician(
     'Kurt Taktisyen',
-    '🧠',
+    '[AI]',
     'Yüksek maç aklı. Maç simülasyonunda +%8 güç artışı ve kritik anlarda galibiyet getirir.',
     weeklyWage: 6000,
     signingFee: 15000,
@@ -14,7 +14,7 @@ enum HeadCoachArchetype {
   ),
   starName(
     'Yıldız İsim',
-    '🌟',
+    'STAR',
     'Global şöhret. Maçlarda +%15 taraftar ilgisi, +%20 forma satışı ve ekstra bilet geliri sağlar.',
     weeklyWage: 9000,
     signingFee: 30000,
@@ -24,7 +24,7 @@ enum HeadCoachArchetype {
   ),
   youthDeveloper(
     'Altyapıcı Proje Hocası',
-    '🌱',
+    '',
     'Genç oyuncuların potansiyel gelişim hızını 2 katına çıkarır, düşük maliyetle çalışır.',
     weeklyWage: 3200,
     signingFee: 8000,
@@ -34,7 +34,7 @@ enum HeadCoachArchetype {
   ),
   disciplinarian(
     'Sert Disiplinci',
-    '🧱',
+    '',
     'Soyunma odası huzursuzluğunu sıfırlar, antrenman verimini ve kondisyonu zirvede tutar.',
     weeklyWage: 4800,
     signingFee: 12000,

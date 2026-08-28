@@ -2,11 +2,12 @@
 // Pure Dart. Manager RPG progression with 1-30 level curve, 3 talent branches and perks.
 
 import 'dart:math' as math;
+import '../progression/coaching_license.dart';
 
 enum TalentBranch {
-  tactician('Taktisyen', '🧠', 'Maç yönetimi, taktiksel esneklik ve kondisyon.'),
-  persuader('İkna Ustası', '🤝', 'Pazarlık, moral kontrolü ve kriz yönetimi.'),
-  visionary('Vizyoner', '🏛️', 'Tesis inşası, altyapı yetenekleri ve ekonomi.');
+  tactician('Taktisyen', '[AI]', 'Maç yönetimi, taktiksel esneklik ve kondisyon.'),
+  persuader('İkna Ustası', '[ANLASMA]', 'Pazarlık, moral kontrolü ve kriz yönetimi.'),
+  visionary('Vizyoner', '[YÖNETİM]', 'Tesis inşası, altyapı yetenekleri ve ekonomi.');
 
   final String label;
   final String icon;
@@ -40,7 +41,7 @@ class Perk {
       description: 'Devre arası ve canlı anlardaki taktik kararları %15 daha etkilidir.',
       branch: TalentBranch.tactician,
       tier: 1,
-      icon: '🧠',
+      icon: '[AI]',
     ),
     Perk(
       id: 'tactician_2',
@@ -48,7 +49,7 @@ class Perk {
       description: '60. dakikadan sonraki maç yorgunluğu ve kondisyon kaybı %20 azalır.',
       branch: TalentBranch.tactician,
       tier: 2,
-      icon: '⚡',
+      icon: 'BOLT',
     ),
     Perk(
       id: 'tactician_3',
@@ -56,7 +57,7 @@ class Perk {
       description: 'Korner ve serbest vuruşlardan gol bulma olasılığı %25 artar.',
       branch: TalentBranch.tactician,
       tier: 3,
-      icon: '🎯',
+      icon: '[HEDEF]',
     ),
 
     // İkna Ustası
@@ -66,7 +67,7 @@ class Perk {
       description: 'Transfer görüşmelerinde kulüplerin bonservis talebi %10 daha düşüktür.',
       branch: TalentBranch.persuader,
       tier: 1,
-      icon: '🤝',
+      icon: '[ANLASMA]',
     ),
     Perk(
       id: 'persuader_2',
@@ -74,7 +75,7 @@ class Perk {
       description: 'Maç kayıpları sonrası oyuncu morali ve soyunma odası düşüşü yarıya iner.',
       branch: TalentBranch.persuader,
       tier: 2,
-      icon: '🗣️',
+      icon: '',
     ),
     Perk(
       id: 'persuader_3',
@@ -82,7 +83,7 @@ class Perk {
       description: 'Transferlerdeki menajer (agent) komisyonu %30 azalır.',
       branch: TalentBranch.persuader,
       tier: 3,
-      icon: '💼',
+      icon: '[MENAJER]',
     ),
 
     // Vizyoner
@@ -92,7 +93,7 @@ class Perk {
       description: 'Tüm tesis inşaat ve yükseltme masrafları %12 daha ucuzdur.',
       branch: TalentBranch.visionary,
       tier: 1,
-      icon: '🏗️',
+      icon: '[TESİS]',
     ),
     Perk(
       id: 'visionary_2',
@@ -100,15 +101,15 @@ class Perk {
       description: 'Scout raporları oyuncuların gizli potansiyelini kesin doğrulukla açar.',
       branch: TalentBranch.visionary,
       tier: 2,
-      icon: '🔍',
+      icon: '[ARAMA]',
     ),
     Perk(
       id: 'visionary_3',
       title: 'Akademi Fabrikası',
-      description: 'Her sezon başı altyapıdan en az 1 adet 4★+ yüksek potansiyelli genç çıkar.',
+      description: 'Her sezon başı altyapıdan en az 1 adet 4+ yüksek potansiyelli genç çıkar.',
       branch: TalentBranch.visionary,
       tier: 3,
-      icon: '⭐',
+      icon: 'STAR',
     ),
   ];
 }
@@ -120,6 +121,7 @@ class Manager {
   final List<String> unlockedPerkIds;
   final int reputation; // İtibar
   final int dynastyPoints; // Hanedan / Prestij Puanı
+  final CoachingLicense license;
 
   const Manager({
     this.name = 'Hoca',
@@ -128,6 +130,7 @@ class Manager {
     this.unlockedPerkIds = const [],
     this.reputation = 50,
     this.dynastyPoints = 0,
+    this.license = CoachingLicense.uefaC,
   });
 
   /// Seviye atlamak için gereken toplam XP: GerekliXP(n) = 320 * n^1.62 (Ek C.5)
@@ -177,6 +180,7 @@ class Manager {
     List<String>? unlockedPerkIds,
     int? reputation,
     int? dynastyPoints,
+    CoachingLicense? license,
   }) {
     return Manager(
       name: name ?? this.name,
@@ -185,6 +189,7 @@ class Manager {
       unlockedPerkIds: unlockedPerkIds ?? this.unlockedPerkIds,
       reputation: reputation ?? this.reputation,
       dynastyPoints: dynastyPoints ?? this.dynastyPoints,
+      license: license ?? this.license,
     );
   }
 
@@ -195,6 +200,7 @@ class Manager {
         'unlockedPerkIds': unlockedPerkIds,
         'reputation': reputation,
         'dynastyPoints': dynastyPoints,
+        'license': license.name,
       };
 
   factory Manager.fromJson(Map<String, dynamic> json) => Manager(
@@ -207,5 +213,11 @@ class Manager {
             const [],
         reputation: json['reputation'] as int? ?? 50,
         dynastyPoints: json['dynastyPoints'] as int? ?? 0,
+        license: json['license'] != null
+            ? CoachingLicense.values.firstWhere(
+                (l) => l.name == json['license'],
+                orElse: () => CoachingLicense.uefaC,
+              )
+            : CoachingLicense.uefaC,
       );
 }

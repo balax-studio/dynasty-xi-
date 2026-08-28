@@ -69,7 +69,7 @@ void main() {
       );
 
       expect(result.deltaMorale, greaterThanOrEqualTo(15));
-      expect(result.reactionEmoji, '🔥');
+      expect(result.reactionEmoji, '[FORM]');
       expect(result.playerReplyText, contains('bu güveninizi boşa çıkarmayacağım'));
     });
 
@@ -89,7 +89,7 @@ void main() {
 
       expect(result.deltaMorale, lessThan(-15));
       expect(result.deltaLockerRoom, lessThan(0));
-      expect(result.reactionEmoji, '😠');
+      expect(result.reactionEmoji, '');
       expect(result.playerReplyText, contains('Beni günah keçisi yapamazsınız'));
     });
 
@@ -110,7 +110,7 @@ void main() {
       expect(result.deltaCash, -2500);
       expect(result.deltaMorale, 25);
       expect(result.deltaSharpness, 15);
-      expect(result.reactionEmoji, '🤑');
+      expect(result.reactionEmoji, '');
     });
 
     test('Transfer vision pitch secures 20% transfer discount with Ambitious targets', () {
@@ -128,7 +128,7 @@ void main() {
       );
 
       expect(result.transferDiscountPercent, 20);
-      expect(result.reactionEmoji, '🏆');
+      expect(result.reactionEmoji, '[KUPA]');
       expect(result.summaryDeltas, contains('%20 Transfer İndirimi'));
     });
 
@@ -148,7 +148,7 @@ void main() {
 
       expect(result.deltaLockerRoom, greaterThanOrEqualTo(10));
       expect(result.deltaMorale, greaterThanOrEqualTo(10));
-      expect(result.reactionEmoji, '🛡️');
+      expect(result.reactionEmoji, 'SHIELD');
     });
   });
 }

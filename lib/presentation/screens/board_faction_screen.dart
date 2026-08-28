@@ -56,7 +56,7 @@ class _BoardFactionScreenState extends ConsumerState<BoardFactionScreen> {
       SnackBar(
         backgroundColor: AppColors.primaryDeep,
         content: Text(
-          '🤝 ${member.name} ile akşam yemeği yenildi (-15.000 €). Sadakat +20 arttı!',
+          '[ANLASMA] ${member.name} ile akşam yemeği yenildi (-15.000 €). Sadakat +20 arttı!',
           style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
         ),
       ),
@@ -92,7 +92,7 @@ class _BoardFactionScreenState extends ConsumerState<BoardFactionScreen> {
                       // 1. Yönetim Güven & Oy Hakimiyeti Özeti
                       RetroWindow(
                         title: 'YÖNETİM KURULU OY HAKİMİYETİ',
-                        icon: '🏛️',
+                        icon: '[YÖNETİM]',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -118,8 +118,8 @@ class _BoardFactionScreenState extends ConsumerState<BoardFactionScreen> {
                             const SizedBox(height: 6),
                             Text(
                               supportPercent >= 51
-                                  ? '✅ Yönetim Kurulunda çoğunluk elinizde. Kararlarınız veto edilemez.'
-                                  : '⚠️ DİKKAT: Çoğunluğu kaybettiniz! Muhalif üyeler erken seçim başlatabilir.',
+                                  ? '[ONAY] Yönetim Kurulunda çoğunluk elinizde. Kararlarınız veto edilemez.'
+                                  : '[UYARI] DİKKAT: Çoğunluğu kaybettiniz! Muhalif üyeler erken seçim başlatabilir.',
                               style: TextStyle(
                                 color: supportPercent >= 51 ? const Color(0xFF006600) : AppColors.comicRed,
                                 fontSize: 10.5,
@@ -134,7 +134,7 @@ class _BoardFactionScreenState extends ConsumerState<BoardFactionScreen> {
                       // 2. Yönetim Kurulu Üyeleri Listesi
                       RetroWindow(
                         title: 'YÖNETİM KURULU ÜYELERİ & SADAKAT DURUMU',
-                        icon: '👔',
+                        icon: '',
                         child: Column(
                           children: _factionsState.members.map((member) {
                             return Container(
@@ -207,13 +207,13 @@ class _BoardFactionScreenState extends ConsumerState<BoardFactionScreen> {
                               const SnackBar(
                                 backgroundColor: AppColors.primaryDeep,
                                 content: Text(
-                                  '📢 OLAĞANÜSTÜ SEÇİMLİ GENEL KURUL ÇAĞRISI YAPILDI! Güvenoyu tazelendi (+15).',
+                                  '[DUYURU] OLAĞANÜSTÜ SEÇİMLİ GENEL KURUL ÇAĞRISI YAPILDI! Güvenoyu tazelendi (+15).',
                                   style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                                 ),
                               ),
                             );
                           },
-                          child: const Text('⚡ OLAĞANÜSTÜ ERKEN SEÇİM ÇAĞRISI YAP (GÜVENOYU TAZELE)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                          child: const Text('BOLT OLAĞANÜSTÜ ERKEN SEÇİM ÇAĞRISI YAP (GÜVENOYU TAZELE)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
                         ),
                       ),
                     ],

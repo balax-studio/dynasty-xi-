@@ -64,7 +64,7 @@ class ForeignTakeoverOffer {
       ForeignTakeoverOffer(
         investorName: 'Al-Hilal Capital Group',
         investorCountry: 'Birleşik Arap Emirlikleri',
-        investorBadge: '🇦🇪',
+        investorBadge: '',
         stakePercentage: 25,
         cashOfferAmount: 500000,
         investorAgenda: 'Kulübün %25 hissesine karşılık anında 500.000 € nakit enjeksiyonu. Yönetimde 1 koltuk talep ediyorlar.',
@@ -72,7 +72,7 @@ class ForeignTakeoverOffer {
       ForeignTakeoverOffer(
         investorName: 'RedPeak Sports Ventures',
         investorCountry: 'Amerika Birleşik Devletleri',
-        investorBadge: '🇺🇸',
+        investorBadge: '',
         stakePercentage: 40,
         cashOfferAmount: 1000000,
         investorAgenda: 'Kulübün %40 hissesi için 1.000.000 € fon. Gelirlerin %20 temettü olarak dağıtılmasını şart koşuyorlar.',

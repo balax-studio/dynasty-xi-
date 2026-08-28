@@ -84,13 +84,13 @@ class ContinentalCup {
     int season = 1,
   }) {
     final europeanGiants = [
-      {'name': 'Real Madrid FC', 'country': 'İspanya', 'badge': '👑'},
-      {'name': 'Bayern München', 'country': 'Almanya', 'badge': '🔴'},
-      {'name': 'Manchester Blue', 'country': 'İngiltere', 'badge': '🌊'},
-      {'name': 'Paris Saint', 'country': 'Fransa', 'badge': '🗼'},
-      {'name': 'Inter Milan', 'country': 'İtalya', 'badge': '🐍'},
-      {'name': 'Ajax Amsterdam', 'country': 'Hollanda', 'badge': '⚪'},
-      {'name': 'Benfica Lisbon', 'country': 'Portekiz', 'badge': '🦅'},
+      {'name': 'Real Madrid FC', 'country': 'İspanya', 'badge': 'CROWN'},
+      {'name': 'Bayern München', 'country': 'Almanya', 'badge': '[KIRMIZI]'},
+      {'name': 'Manchester Blue', 'country': 'İngiltere', 'badge': ''},
+      {'name': 'Paris Saint', 'country': 'Fransa', 'badge': ''},
+      {'name': 'Inter Milan', 'country': 'İtalya', 'badge': ''},
+      {'name': 'Ajax Amsterdam', 'country': 'Hollanda', 'badge': '[BEYAZ]'},
+      {'name': 'Benfica Lisbon', 'country': 'Portekiz', 'badge': 'EAGLE'},
     ];
 
     final matches = <ContinentalMatch>[
@@ -139,10 +139,10 @@ class ContinentalCup {
         stage: 'Büyük Final',
         homeClubName: 'Finalist 1',
         homeCountry: 'Avrupa',
-        homeBadge: '🏆',
+        homeBadge: '[KUPA]',
         awayClubName: 'Finalist 2',
         awayCountry: 'Avrupa',
-        awayBadge: '⭐',
+        awayBadge: 'STAR',
       ),
     ];
 

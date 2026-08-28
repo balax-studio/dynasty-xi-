@@ -8,7 +8,9 @@ import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
 import '../../domain/entities/achievement.dart';
 import '../../domain/entities/player.dart';
+import '../widgets/brutalist_icons.dart';
 import '../widgets/president_statue_unveiling_modal.dart';
+import '../widgets/retro_pixel_icon.dart';
 import '../widgets/retro_window.dart';
 import 'prestige_screen.dart';
 
@@ -80,8 +82,8 @@ class TrophyRoomScreen extends StatelessWidget {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('🗿', style: TextStyle(fontSize: 16)),
-                            SizedBox(width: 6),
+                            BrutalistIcon(BrutalistIconType.statue, size: 16, color: Colors.black),
+                            SizedBox(width: 8),
                             Text('STADYUM MEYDANINA HEYKEL DİKME TÖRENİ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5)),
                           ],
                         ),
@@ -92,12 +94,12 @@ class TrophyRoomScreen extends StatelessWidget {
                     // 1. Hanedan Puanı Penceresi
                     RetroWindow(
                       title: 'HANEDAN BAŞARI VE SKOR TABLOSU',
-                      icon: '🏛️',
+                      icon: 'capitol',
                       titleBarColor: AppColors.win95TitleNavy,
                       child: Row(
                         children: [
-                          const Text('🏆', style: TextStyle(fontSize: 40)),
-                          const SizedBox(width: 12),
+                          const BrutalistIcon(BrutalistIconType.trophy, size: 40, color: AppColors.accentGold),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +139,7 @@ class TrophyRoomScreen extends StatelessWidget {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('⭐', style: TextStyle(fontSize: 18)),
+                            Text('STAR', style: TextStyle(fontSize: 18)),
                             SizedBox(width: 8),
                             Text('HANEDAN PRESTİJ MAĞAZASI & YADİGÂR PERKLER', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                           ],
@@ -149,23 +151,23 @@ class TrophyRoomScreen extends StatelessWidget {
                     // 2. Kupa Vitrini Penceresi
                     RetroWindow(
                       title: 'KAZANILAN KUPALAR & MADALYALAR',
-                      icon: '🥇',
+                      icon: '[VİTRİN]',
                       titleBarColor: AppColors.neoCardBg,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _buildTrophySlot(
-                            icon: '🏆',
+                            icon: '[KUPA]',
                             name: 'LİG ŞAMPİYONLUĞU',
-                            count: (20 - state.currentLeague.tier).clamp(0, 20),
+                            count: (state.userClub.totalTrophies > 0 ? state.userClub.totalTrophies : ((20 - state.currentLeague.tier) ~/ 2)).clamp(0, 20),
                           ),
                           _buildTrophySlot(
-                            icon: '🥈',
+                            icon: '[MADALYA]',
                             name: 'TERFİ MADALYASI',
                             count: (20 - state.currentLeague.tier).clamp(0, 20),
                           ),
                           _buildTrophySlot(
-                            icon: '👑',
+                            icon: '[ÖDÜL]',
                             name: 'YILIN MENAJERİ',
                             count: state.manager.level >= 3 ? 1 : 0,
                           ),
@@ -177,15 +179,15 @@ class TrophyRoomScreen extends StatelessWidget {
                     // 3. Kulüp Tarihi Rekorlar Müzesi (§14.4)
                     RetroWindow(
                       title: 'KULÜP TARİHİ REKORLAR MÜZESİ',
-                      icon: '📜',
+                      icon: '[MÜZE]',
                       titleBarColor: AppColors.win95TitleNavy,
                       child: Column(
                         children: [
-                          _buildRecordTile('EN FARKLI GALİBİYET', '${records.biggestWinScore} vs ${records.biggestWinOpponent}', '⚽'),
-                          _buildRecordTile('EN UZUN YENİLMEZLİK SERİSİ', '${records.unbeatenStreak} Maç Üst Üste', '🛡️'),
-                          _buildRecordTile('REKOR TRANSFER ALIMI', '${records.recordSigningName} (₣${records.recordSigningFee})', '💎'),
-                          _buildRecordTile('REKOR TRANSFER SATIŞI', '${records.recordSaleName} (₣${records.recordSaleFee})', '💰'),
-                          _buildRecordTile('TARİHİN EN GOLCÜ OYUNCUSU', '${records.allTimeTopScorerName} (${records.allTimeTopScorerGoals} Gol)', '🌟'),
+                          _buildRecordTile('EN FARKLI GALİBİYET', '${records.biggestWinScore} vs ${records.biggestWinOpponent}', '[GOL]'),
+                          _buildRecordTile('EN UZUN YENİLMEZLİK SERİSİ', '${records.unbeatenStreak} Maç Üst Üste', 'SHIELD'),
+                          _buildRecordTile('REKOR TRANSFER ALIMI', '${records.recordSigningName} (₣${records.recordSigningFee})', 'DIAMOND'),
+                          _buildRecordTile('REKOR TRANSFER SATIŞI', '${records.recordSaleName} (₣${records.recordSaleFee})', '[KASA]'),
+                          _buildRecordTile('TARİHİN EN GOLCÜ OYUNCUSU', '${records.allTimeTopScorerName} (${records.allTimeTopScorerGoals} Gol)', 'STAR'),
                         ],
                       ),
                     ),
@@ -194,7 +196,7 @@ class TrophyRoomScreen extends StatelessWidget {
                     // 4. 12 Başarım Listesi Penceresi
                     RetroWindow(
                       title: 'KULÜP BAŞARIMLARI (${unlockedIds.length}/${allAchievements.length})',
-                      icon: '🎖️',
+                      icon: '[MADALYA]',
                       titleBarColor: AppColors.neoCardBg,
                       child: ListView.builder(
                         shrinkWrap: true,
@@ -226,7 +228,11 @@ class TrophyRoomScreen extends StatelessWidget {
                                     border: Border.all(color: isUnlocked ? AppColors.neonLime : AppColors.win95DarkGrey),
                                   ),
                                   alignment: Alignment.center,
-                                  child: Text(ach.icon, style: const TextStyle(fontSize: 20)),
+                                  child: RetroPixelIcon.fromEmoji(
+                                    ach.icon,
+                                    size: 20,
+                                    color: isUnlocked ? AppColors.neonLime : AppColors.neutral300,
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -340,10 +346,10 @@ class TrophyRoomScreen extends StatelessWidget {
   }
 
   String _getDynastyTitle(int score) {
-    if (score >= 5000) return '👑 EFSANEVİ DÜNYA HANEDANI';
-    if (score >= 2500) return '⭐ AVRUPA DEVLERİ KATİLLERİ';
-    if (score >= 1000) return '🏆 ULUSAL FUTBOL KALESİ';
-    if (score >= 400) return '⚔️ PROFESYONEL LİG SAVAŞÇISI';
-    return '🌱 AMATÖR KÜME RÜYASI';
+    if (score >= 5000) return 'CROWN EFSANEVİ DÜNYA HANEDANI';
+    if (score >= 2500) return 'STAR AVRUPA DEVLERİ KATİLLERİ';
+    if (score >= 1000) return '[KUPA] ULUSAL FUTBOL KALESİ';
+    if (score >= 400) return 'SWORDS PROFESYONEL LİG SAVAŞÇISI';
+    return ' AMATÖR KÜME RÜYASI';
   }
 }

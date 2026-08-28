@@ -106,7 +106,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('⚽', style: TextStyle(fontSize: 48)),
+                const Text('[GOL]', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 12),
                 Text('DYNASTY XI', style: AppTypography.h1(color: AppColors.neonLime)),
                 const SizedBox(height: 6),
@@ -129,7 +129,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
             padding: const EdgeInsets.all(16.0),
             child: RetroWindow(
               title: 'SİSTEM HATASI',
-              icon: '⚠️',
+              icon: '[UYARI]',
               titleBarColor: AppColors.comicRed,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -188,14 +188,14 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
     final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
 
     final navItems = [
-      (icon: '🏢', label: 'OFİS'),
-      (icon: '⚽', label: 'KADRO'),
-      (icon: '🔍', label: 'TRANSFER'),
-      (icon: '💰', label: 'FİNANS'),
-      (icon: '🏗️', label: 'TESİS'),
-      (icon: '🏆', label: 'LİG'),
-      (icon: '👔', label: 'MENAJER'),
-      (icon: '💎', label: 'MAĞAZA'),
+      (icon: '[KULÜP]', label: 'OFİS'),
+      (icon: '[GOL]', label: 'KADRO'),
+      (icon: '[ARAMA]', label: 'TRANSFER'),
+      (icon: '[KASA]', label: 'FİNANS'),
+      (icon: '[TESİS]', label: 'TESİS'),
+      (icon: '[KUPA]', label: 'LİG'),
+      (icon: '', label: 'MENAJER'),
+      (icon: 'DIAMOND', label: 'MAĞAZA'),
     ];
 
     return Container(
@@ -224,7 +224,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('⚡', style: TextStyle(fontSize: 14)),
+                  const Text('BOLT', style: TextStyle(fontSize: 14)),
                   const SizedBox(width: 4),
                   Text(
                     'DYNASTY',
@@ -337,7 +337,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
               padding: const EdgeInsets.all(12.0),
               child: RetroWindow(
                 title: 'DYNASTY HUD — MERKEZ KISAYOL KONSOLU',
-                icon: '🎮',
+                icon: '',
                 titleBarColor: AppColors.neoCardBg,
                 onClose: () => Navigator.pop(ctx),
                 child: SingleChildScrollView(
@@ -409,7 +409,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
                               child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('⚙️', style: TextStyle(fontSize: 11)),
+                                  Text('', style: TextStyle(fontSize: 11)),
                                   SizedBox(width: 4),
                                   Text(
                                     'DÜZENLE (+ / -)',
@@ -522,7 +522,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(AudioSynthesizer.soundEnabled ? '🔊' : '🔇'),
+                                  Text(AudioSynthesizer.soundEnabled ? '' : ''),
                                   const SizedBox(width: 6),
                                   Text(
                                     AudioSynthesizer.soundEnabled ? 'SES: AÇIK' : 'SES: KAPALI',
@@ -544,7 +544,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text('⚠️'),
+                                  Text('[UYARI]'),
                                   SizedBox(width: 6),
                                   Text(
                                     'SIFIRLA',
@@ -576,7 +576,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
           side: const BorderSide(color: AppColors.comicRed, width: 3),
           borderRadius: BorderRadius.circular(0),
         ),
-        title: Text('⚠️ KARİYERİ SIFIRLA?', style: AppTypography.h2(color: AppColors.comicRed)),
+        title: Text('[UYARI] KARİYERİ SIFIRLA?', style: AppTypography.h2(color: AppColors.comicRed)),
         content: Text(
           'Tüm ilerlemeniz, tesisleriniz ve kupalarınız silinecek. Baştan başlamak istediğinize emin misiniz?',
           style: AppTypography.body(color: Colors.white),

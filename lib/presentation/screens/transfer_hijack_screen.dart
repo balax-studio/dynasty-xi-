@@ -35,10 +35,10 @@ class TransferHijackScreen extends ConsumerWidget {
                 children: [
                   const RetroWindow(
                     title: 'OTEL BASKINI VE TRANSFERİ KAÇIRMA',
-                    icon: '🕵️‍♂️',
+                    icon: '[SCOUT]',
                     child: Row(
                       children: [
-                        Text('🏨✈️', style: TextStyle(fontSize: 32)),
+                        Text('[ÇALIM]', style: TextStyle(fontSize: 14, color: AppColors.comicRed, fontWeight: FontWeight.bold)),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -53,13 +53,14 @@ class TransferHijackScreen extends ConsumerWidget {
 
                   ...targets.map((target) {
                     final totalCost = target.requiredHijackBid + target.requiredAgentCommission;
+                    final isAlreadyHijacked = state?.hijackedPlayerIds.contains(target.playerName) ?? false;
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: AppColors.win95Grey,
-                        border: Border.all(color: AppColors.comicRed, width: 1.5),
+                        border: Border.all(color: isAlreadyHijacked ? AppColors.neonLime : AppColors.comicRed, width: 1.5),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +76,7 @@ class TransferHijackScreen extends ConsumerWidget {
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 color: Colors.black,
                                 child: Text(
-                                  'OVR: ${target.overallRating}',
+                                  isAlreadyHijacked ? 'KULÜPTE' : 'OVR: ${target.overallRating}',
                                   style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 11),
                                 ),
                               ),
@@ -95,7 +96,7 @@ class TransferHijackScreen extends ConsumerWidget {
                               children: [
                                 Text('Rakibin Teklifi: ₣${target.rivalBidAmount}', style: const TextStyle(color: Colors.white70, fontSize: 9.5)),
                                 Text('Çalım Bedeli: ₣${target.requiredHijackBid} + ₣${target.requiredAgentCommission} Komisyon', style: const TextStyle(color: AppColors.accentGold, fontSize: 9.5, fontWeight: FontWeight.bold)),
-                                Text('🌟 TARAFTAR COŞKUSU BONUSU: +%${target.fansHypeBonus}', style: const TextStyle(color: AppColors.neonLime, fontSize: 9.5, fontWeight: FontWeight.bold)),
+                                Text('STAR TARAFTAR COŞKUSU BONUSU: +%${target.fansHypeBonus}', style: const TextStyle(color: AppColors.neonLime, fontSize: 9.5, fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -103,24 +104,39 @@ class TransferHijackScreen extends ConsumerWidget {
                           SizedBox(
                             width: double.infinity,
                             child: RetroButton(
-                              backgroundColor: AppColors.comicRed,
-                              onPressed: () {
-                                ref.read(gameStateProvider.notifier).adjustCash(-totalCost);
-                                ref.read(gameStateProvider.notifier).adjustFans(target.fansHypeBonus);
-                                ref.read(gameStateProvider.notifier).adjustBoardTrust(8);
-                                Navigator.pop(context);
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: AppColors.primaryDeep,
-                                    content: Text(
-                                      '🔥 DEV TRANSFER ÇALIMI! ${target.playerName} özel jetle kulübe getirildi (-₣$totalCost)!',
-                                      style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Text('✈️ ÖZEL JET KALDIR & ÇALIMI AT (-₣${(totalCost / 1000).toInt()}K)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                              backgroundColor: isAlreadyHijacked ? AppColors.win95DarkGrey : AppColors.comicRed,
+                              onPressed: isAlreadyHijacked
+                                  ? null
+                                  : () async {
+                                      final success = await ref.read(gameStateProvider.notifier).hijackTransfer(target);
+                                      if (context.mounted) {
+                                        if (success) {
+                                          Navigator.pop(context);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              backgroundColor: AppColors.primaryDeep,
+                                              content: Text(
+                                                '[FORM] DEV TRANSFER ÇALIMI! ${target.playerName} (${target.overallRating} OVR) A Takım kadrosuna katıldı (-₣$totalCost)!',
+                                                style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              backgroundColor: AppColors.comicRed,
+                                              content: Text('[RED] Bakiye yetersiz! Transfer çalımı için yeterli bütçe yok.'),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                              child: Text(
+                                isAlreadyHijacked
+                                    ? ' KADROYA KATILDI (ÇALIM ATILDI)'
+                                    : ' ÖZEL JET KALDIR & ÇALIMI AT (-₣${(totalCost / 1000).toInt()}K)',
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5),
+                              ),
                             ),
                           ),
                         ],

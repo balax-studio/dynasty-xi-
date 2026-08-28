@@ -22,7 +22,7 @@ class ClubsAssociationSummitScreen extends ConsumerWidget {
       backgroundColor: AppColors.primaryDeep,
       appBar: AppBar(
         backgroundColor: AppColors.neoCardBg,
-        title: Text('🏛️ KULÜPLER BİRLİĞİ VAKFI ZİRVESİ', style: AppTypography.h2(color: Colors.white)),
+        title: Text('[YÖNETİM] KULÜPLER BİRLİĞİ VAKFI ZİRVESİ', style: AppTypography.h2(color: Colors.white)),
       ),
       body: Column(
         children: [
@@ -35,10 +35,10 @@ class ClubsAssociationSummitScreen extends ConsumerWidget {
                 children: [
                   const RetroWindow(
                     title: 'SÜPER LİG BAŞKANLAR MECLİSİ',
-                    icon: '🤝',
+                    icon: '[ANLASMA]',
                     child: Row(
                       children: [
-                        Text('🏛️👔', style: TextStyle(fontSize: 32)),
+                        Text('[YÖNETİM]', style: TextStyle(fontSize: 32)),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -52,56 +52,86 @@ class ClubsAssociationSummitScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
 
                   ...agendas.map((agenda) {
+                    final isVoted = state?.votedSummitAgendaIds.contains(agenda.id) ?? false;
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 14),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: AppColors.win95Grey,
-                        border: Border.all(color: AppColors.win95DarkGrey),
+                        border: Border.all(color: isVoted ? AppColors.neonLime : AppColors.win95DarkGrey),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(agenda.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.win95TitleNavy)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(agenda.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.win95TitleNavy)),
+                              ),
+                              if (isVoted)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  color: Colors.black,
+                                  child: const Text('OYLANDI', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 9.5)),
+                                ),
+                            ],
+                          ),
                           const SizedBox(height: 4),
                           Text(agenda.description, style: const TextStyle(fontSize: 10.5, color: Colors.black87)),
                           const SizedBox(height: 8),
 
-                          ...agenda.options.map((opt) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: SizedBox(
-                                width: double.infinity,
-                                child: RetroButton(
-                                  onPressed: () {
-                                    if (opt.cashDelta != 0) {
-                                      ref.read(gameStateProvider.notifier).adjustCash(opt.cashDelta);
-                                    }
-                                    ref.read(gameStateProvider.notifier).adjustFans(opt.fansDelta);
-                                    ref.read(gameStateProvider.notifier).adjustBoardTrust(opt.boardDelta);
-                                    Navigator.pop(context);
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        backgroundColor: AppColors.primaryDeep,
-                                        content: Text(
-                                          '🗳️ OYLAMA SONUCU (%${opt.supportPercent} Destek): ${opt.outcomeText}',
-                                          style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(child: Text(opt.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5))),
-                                      Text('%${opt.supportPercent} DESTEK', style: const TextStyle(color: AppColors.neonCyan, fontWeight: FontWeight.bold, fontSize: 9.5)),
-                                    ],
-                                  ),
+                          if (isVoted)
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              color: AppColors.win95DarkGrey,
+                              child: const Center(
+                                child: Text(
+                                  ' OY KULLANILDI / ZİRVE KARARI RESMİLEŞTİ',
+                                  style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold),
                                 ),
                               ),
-                            );
-                          }),
+                            )
+                          else
+                            ...agenda.options.map((opt) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: RetroButton(
+                                    onPressed: () async {
+                                      await ref.read(gameStateProvider.notifier).voteSummitAgenda(
+                                            agenda.id,
+                                            cashDelta: opt.cashDelta,
+                                            fansDelta: opt.fansDelta,
+                                            boardDelta: opt.boardDelta,
+                                            outcomeText: opt.outcomeText,
+                                          );
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            backgroundColor: AppColors.primaryDeep,
+                                            content: Text(
+                                              ' OYLAMA SONUCU (%${opt.supportPercent} Destek): ${opt.outcomeText}',
+                                              style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(child: Text(opt.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5))),
+                                        Text('%${opt.supportPercent} DESTEK', style: const TextStyle(color: AppColors.neonCyan, fontWeight: FontWeight.bold, fontSize: 9.5)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
                         ],
                       ),
                     );

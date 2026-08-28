@@ -25,11 +25,11 @@ import '../../presentation/screens/u19_squad_screen.dart';
 import '../../presentation/screens/youth_academy_screen.dart';
 
 enum DynastyShortcutCategory {
-  management('YÖNETİM & DİREKTÖRLÜK', '👔'),
-  competitions('TURNUVALAR & ÖDÜLLER', '🏆'),
-  clubAssets('KULÜP TESİSLERİ & KADRO', '🏟️'),
-  mediaAndFinance('MEDYA, SCOUT & FİNANS', '📊'),
-  specialEvents('ÖZEL ZİRVELER & YAŞAM', '⭐');
+  management('YÖNETİM & DİREKTÖRLÜK', 'coach'),
+  competitions('TURNUVALAR & ÖDÜLLER', 'trophy'),
+  clubAssets('KULÜP TESİSLERİ & KADRO', 'stadium'),
+  mediaAndFinance('MEDYA, SCOUT & FİNANS', 'cash'),
+  specialEvents('ÖZEL ZİRVELER & YAŞAM', 'star');
 
   final String title;
   final String icon;
@@ -77,7 +77,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'head_coach',
       label: 'TEKNİK DİREKTÖR MERKEZİ',
-      icon: '👔',
+      icon: 'coach',
       color: AppColors.neonLime,
       category: DynastyShortcutCategory.management,
       badgeEvaluator: (state) => state.headCoach == null ? 'ATAMA YAP' : null,
@@ -86,7 +86,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'head_coach_dialogue',
       label: 'HOCA SOHBET ODASI',
-      icon: '💬',
+      icon: 'chat',
       color: AppColors.neonCyan,
       category: DynastyShortcutCategory.management,
       badgeEvaluator: (state) => state.headCoach != null ? 'GÖRÜŞ' : null,
@@ -95,7 +95,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'boardroom_summit',
       label: 'BAŞKANLIK ZİRVESİ',
-      icon: '🏛️',
+      icon: 'capitol',
       color: AppColors.accentGold,
       category: DynastyShortcutCategory.management,
       badgeEvaluator: (state) => state.userClub.meters.boardTrust < 40 ? 'KRİTİK' : null,
@@ -104,7 +104,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'board_room',
       label: 'YÖNETİM KURULU',
-      icon: '🤝',
+      icon: 'briefcase',
       color: AppColors.neonCyan,
       category: DynastyShortcutCategory.management,
       screenBuilder: (_) => const BoardRoomScreen(),
@@ -112,7 +112,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'factions',
       label: 'YÖNETİM FRAKSİYONLARI',
-      icon: '⚖️',
+      icon: 'law',
       color: const Color(0xFF818CF8),
       category: DynastyShortcutCategory.management,
       screenBuilder: (_) => const BoardFactionScreen(),
@@ -122,7 +122,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'cup_tournament',
       label: 'TÜRKİYE KUPASI',
-      icon: '🏆',
+      icon: 'trophy',
       color: AppColors.comicYellow,
       category: DynastyShortcutCategory.competitions,
       badgeEvaluator: (state) => state.cupTournament.isCompleted ? null : 'AKTİF',
@@ -131,7 +131,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'prestige',
       label: 'HANEDAN MAĞAZASI',
-      icon: '⭐',
+      icon: 'star',
       color: AppColors.neonPink,
       category: DynastyShortcutCategory.competitions,
       screenBuilder: (_) => const PrestigeScreen(),
@@ -139,7 +139,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'trophy_room',
       label: 'KUPA ODASI',
-      icon: '🥇',
+      icon: 'trophy',
       color: AppColors.accentGold,
       category: DynastyShortcutCategory.competitions,
       screenBuilder: (_) => const TrophyRoomScreen(),
@@ -147,7 +147,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'grassroots',
       label: 'MAHALLE TURNUVASI',
-      icon: '⚽',
+      icon: 'ball',
       color: AppColors.neonLime,
       category: DynastyShortcutCategory.competitions,
       screenBuilder: (_) => const GrassrootsTournamentScreen(),
@@ -157,7 +157,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'facilities',
       label: '12 KULÜP TESİSİ',
-      icon: '🏟️',
+      icon: 'stadium',
       color: AppColors.neonLime,
       category: DynastyShortcutCategory.clubAssets,
       screenBuilder: (_) => const FacilitiesScreen(),
@@ -165,7 +165,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'staff',
       label: 'TEKNİK EKİP',
-      icon: '📋',
+      icon: 'tactics',
       color: AppColors.neonLime,
       category: DynastyShortcutCategory.clubAssets,
       screenBuilder: (_) => const StaffScreen(),
@@ -173,7 +173,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'u19_squad',
       label: 'U19 GENÇ TAKIMI',
-      icon: '🌱',
+      icon: 'squad',
       color: AppColors.neonLime,
       category: DynastyShortcutCategory.clubAssets,
       badgeEvaluator: (state) => state.userClub.u19Squad.isNotEmpty ? '${state.userClub.u19Squad.length} GENÇ' : null,
@@ -182,7 +182,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'youth_academy',
       label: 'ALTYAPI AKADEMİSİ',
-      icon: '🏛️',
+      icon: 'academy',
       color: const Color(0xFF10B981),
       category: DynastyShortcutCategory.clubAssets,
       screenBuilder: (_) => const YouthAcademyScreen(),
@@ -192,7 +192,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'press_conference',
       label: 'BASIN SALONU',
-      icon: '🎙️',
+      icon: 'media',
       color: const Color(0xFFF59E0B),
       category: DynastyShortcutCategory.mediaAndFinance,
       screenBuilder: (_) => const PressConferenceScreen(),
@@ -200,7 +200,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'scouting',
       label: 'SCOUT & AKADEMİ',
-      icon: '🛰️',
+      icon: 'scout',
       color: AppColors.comicYellow,
       category: DynastyShortcutCategory.mediaAndFinance,
       screenBuilder: (_) => const ScoutingScreen(),
@@ -208,10 +208,10 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'finance',
       label: 'FİNANS & BÜTÇE',
-      icon: '💰',
+      icon: 'cash',
       color: AppColors.neonLime,
       category: DynastyShortcutCategory.mediaAndFinance,
-      badgeEvaluator: (state) => state.userClub.meters.cash < 15000 ? '⚠️ NAKİT' : null,
+      badgeEvaluator: (state) => state.userClub.meters.cash < 15000 ? '[UYARI] NAKİT' : null,
       screenBuilder: (_) => const FinanceScreen(),
     ),
 
@@ -219,7 +219,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'affiliates',
       label: 'PİLOT KULÜPLER',
-      icon: '🌐',
+      icon: 'handshake',
       color: AppColors.neonCyan,
       category: DynastyShortcutCategory.specialEvents,
       screenBuilder: (_) => const AffiliateClubsScreen(),
@@ -227,7 +227,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'summit',
       label: 'KULÜPLER BİRLİĞİ',
-      icon: '👔',
+      icon: 'summit',
       color: AppColors.accentGold,
       category: DynastyShortcutCategory.specialEvents,
       screenBuilder: (_) => const ClubsAssociationSummitScreen(),
@@ -235,7 +235,7 @@ class DynastyNavigationRegistry {
     DynastyShortcutDefinition(
       id: 'lifestyle',
       label: 'BAŞKANLIK LÜKS YAŞAM',
-      icon: '🏎️',
+      icon: 'crown',
       color: AppColors.neonPink,
       category: DynastyShortcutCategory.specialEvents,
       screenBuilder: (_) => const PresidentLuxuryLifestyleScreen(),

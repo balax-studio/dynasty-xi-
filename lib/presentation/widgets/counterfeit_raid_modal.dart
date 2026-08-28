@@ -23,7 +23,7 @@ class CounterfeitRaidModal extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: RetroWindow(
-        title: '👮‍♂️ KORSAN ÜRÜNLE MÜCADELE OPERASYONU',
+        title: ' KORSAN ÜRÜNLE MÜCADELE OPERASYONU',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -36,7 +36,7 @@ class CounterfeitRaidModal extends ConsumerWidget {
                   color: Colors.black,
                   child: const Row(
                     children: [
-                      Text('👕📦', style: TextStyle(fontSize: 26)),
+                      Text('[KADRO]', style: TextStyle(fontSize: 26)),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -62,7 +62,7 @@ class CounterfeitRaidModal extends ConsumerWidget {
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            '🚨 Zabıta operasyonu tamamlandı! Ele geçirilen ürünlerden kulüp kasasına +₣20.000 girdi.',
+                            '[ACIL] Zabıta operasyonu tamamlandı! Ele geçirilen ürünlerden kulüp kasasına +₣20.000 girdi.',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -84,7 +84,7 @@ class CounterfeitRaidModal extends ConsumerWidget {
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            '🤝 Seyyar satıcılara dokunulmadı. Dar gelirli taraftarlar memnun oldu (+6 Taraftar).',
+                            '[ANLASMA] Seyyar satıcılara dokunulmadı. Dar gelirli taraftarlar memnun oldu (+6 Taraftar).',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),

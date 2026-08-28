@@ -79,7 +79,7 @@ class _PresidentialIncentivesModalState extends ConsumerState<PresidentialIncent
                   children: [
                     Row(
                       children: [
-                        const Text('👑', style: TextStyle(fontSize: 18)),
+                        const Text('CROWN', style: TextStyle(fontSize: 18)),
                         const SizedBox(width: 8),
                         Text(
                           'BAŞKANLIK ÖZEL MÜDAHALELERİ & TEŞVİK',
@@ -138,7 +138,7 @@ class _PresidentialIncentivesModalState extends ConsumerState<PresidentialIncent
                       // 1. Özel Maç Primi
                       RetroWindow(
                         title: '1. ÖZEL MAÇ PRİMİ TANIMLA (GALİBİYET TEŞVİĞİ)',
-                        icon: '💰',
+                        icon: '[KASA]',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -188,7 +188,7 @@ class _PresidentialIncentivesModalState extends ConsumerState<PresidentialIncent
                       // 2. Lüks Hediye Takdim Et
                       RetroWindow(
                         title: '2. LÜKS HEDİYE TAKDİM ET (SAAT / LÜKS ARABA)',
-                        icon: '🎁',
+                        icon: '[ODUL]',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -212,7 +212,7 @@ class _PresidentialIncentivesModalState extends ConsumerState<PresidentialIncent
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text('🏎️', style: TextStyle(fontSize: 14)),
+                                    Text('[HEDİYE]', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                                     SizedBox(width: 6),
                                     Text('LÜKS HEDİYE SUN (₣7.500)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                                   ],
@@ -227,7 +227,7 @@ class _PresidentialIncentivesModalState extends ConsumerState<PresidentialIncent
                       // 3. Sırt Numarası Atama
                       RetroWindow(
                         title: '3. ÖZEL SIRT NUMARASI ATA (1 - 99)',
-                        icon: '🎽',
+                        icon: '',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -278,7 +278,7 @@ class _PresidentialIncentivesModalState extends ConsumerState<PresidentialIncent
                       // 4. Disiplin Para Cezası Kes
                       RetroWindow(
                         title: '4. DİSİPLİN CEZASI & MAAŞ KESİNTİSİ',
-                        icon: '⚖️',
+                        icon: '[HUKUK]',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -300,7 +300,7 @@ class _PresidentialIncentivesModalState extends ConsumerState<PresidentialIncent
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text('⚖️', style: TextStyle(fontSize: 14)),
+                                    Text('[HUKUK]', style: TextStyle(fontSize: 14)),
                                     SizedBox(width: 6),
                                     Text('₣2.000 DİSİPLİN CEZASI KES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                                   ],

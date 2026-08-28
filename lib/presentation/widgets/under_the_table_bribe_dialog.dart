@@ -26,7 +26,7 @@ class UnderTheTableBribeDialog extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: RetroWindow(
-        title: '🎁 ELDEN GİZLİ PRİM & HEDİYE MASASI',
+        title: '[ODUL] ELDEN GİZLİ PRİM & HEDİYE MASASI',
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
@@ -47,7 +47,7 @@ class UnderTheTableBribeDialog extends ConsumerWidget {
                 _buildIncentiveRow(
                   context: context,
                   ref: ref,
-                  title: '⌚ İsviçre Lüks Kol Saati (-10.000 €)',
+                  title: ' İsviçre Lüks Kol Saati (-10.000 €)',
                   desc: 'Oyuncunun moralini ve bağlılığını anında +15 artırır.',
                   cost: 10000,
                   moraleBoost: 15,
@@ -57,7 +57,7 @@ class UnderTheTableBribeDialog extends ConsumerWidget {
                 _buildIncentiveRow(
                   context: context,
                   ref: ref,
-                  title: '🏎️ Lüks Spor Araba Tahsisi (-40.000 €)',
+                  title: ' Lüks Spor Araba Tahsisi (-40.000 €)',
                   desc: 'Oyuncunun moralini +35 artırır. Transfer tekliflerini reddeder.',
                   cost: 40000,
                   moraleBoost: 35,
@@ -67,7 +67,7 @@ class UnderTheTableBribeDialog extends ConsumerWidget {
                 _buildIncentiveRow(
                   context: context,
                   ref: ref,
-                  title: '🏡 Şehir Merkezinde Lüks Rezidans Dairesi (-100.000 €)',
+                  title: ' Şehir Merkezinde Lüks Rezidans Dairesi (-100.000 €)',
                   desc: 'Kulüpte kalma garantisi verir, ömür boyu sadakat kazanır (+60).',
                   cost: 100000,
                   moraleBoost: 60,
@@ -113,7 +113,7 @@ class UnderTheTableBribeDialog extends ConsumerWidget {
                   SnackBar(
                     backgroundColor: AppColors.primaryDeep,
                     content: Text(
-                      '🎁 Hediye ${player.fullName} oyuncusuna teslim edildi (-₣$cost)!',
+                      '[ODUL] Hediye ${player.fullName} oyuncusuna teslim edildi (-₣$cost)!',
                       style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                     ),
                   ),

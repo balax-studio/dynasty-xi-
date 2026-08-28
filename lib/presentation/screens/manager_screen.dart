@@ -27,7 +27,6 @@ class ManagerScreen extends StatefulWidget {
 
 class _ManagerScreenState extends State<ManagerScreen> {
   late ManagerSkillTree _skillTree;
-  CoachingLicense _currentLicense = CoachingLicense.uefaC;
 
   @override
   void initState() {
@@ -174,7 +173,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                           // 1.5. Kulüp Teknik Heyeti & Yardımcı Uzmanlar Paneli
                           RetroWindow(
                             title: 'KULÜP TEKNİK HEYETİ & ASİSTANLAR (${gameState.staff.length} UZMAN)',
-                            icon: '👔',
+                            icon: '',
                             titleBarColor: AppColors.win95TitleNavy,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,7 +233,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Text('👔', style: TextStyle(fontSize: 16)),
+                                          Text('[KADRO]', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
                                           SizedBox(width: 8),
                                           Text(
                                             'TEKNİK EKİP YÖNETİMİ & UZMAN GELİŞTİR (STAFF)',
@@ -253,25 +252,25 @@ class _ManagerScreenState extends State<ManagerScreen> {
                           // 2. UEFA Antrenörlük Lisansı Modülü (§13.2)
                           RetroWindow(
                             title: 'UEFA ANTRENÖRLÜK LİSANSI & AKREDİTASYON',
-                            icon: '📜',
+                            icon: '',
                             titleBarColor: const Color(0xFF6E5000),
                             child: Row(
                               children: [
-                                Text(_currentLicense.badge, style: const TextStyle(fontSize: 32)),
+                                Text(manager.license.badge, style: const TextStyle(fontSize: 32)),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(_currentLicense.title, style: AppTypography.label(color: AppColors.accentGold).copyWith(fontSize: 12)),
+                                      Text(manager.license.title, style: AppTypography.label(color: AppColors.accentGold).copyWith(fontSize: 12)),
                                       Text(
-                                        'Tüm Yetenek Çarpanı: +%${((_currentLicense.allPerkMultiplier - 1.0) * 100).round()} • İtibar Desteği',
+                                        'Tüm Yetenek Çarpanı: +%${((manager.license.allPerkMultiplier - 1.0) * 100).round()} • İtibar Desteği',
                                         style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 10),
                                       ),
                                     ],
                                   ),
                                 ),
-                                if (_currentLicense != CoachingLicense.uefaPro)
+                                if (manager.license != CoachingLicense.uefaPro)
                                   RetroButton(
                                     onPressed: () {
                                       _showLicenseUpgradeDialog(context, ref, manager, gameState.userClub.meters.cash);
@@ -288,7 +287,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                           // 3. 5-Branş Yetenek Ağacı
                           RetroWindow(
                             title: 'RPG YETENEK AĞACI (5 ANA BRANŞ - 25 PERK)',
-                            icon: '⚡',
+                            icon: 'BOLT',
                             titleBarColor: AppColors.win95TitleNavy,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,15 +349,20 @@ class _ManagerScreenState extends State<ManagerScreen> {
               Text(branch.name.toUpperCase(), style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 11)),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Column(
             children: branch.skills.map((skill) {
+              final isUnlocked = manager.unlockedPerkIds.contains(skill.id) || skill.isUnlocked;
+              final canUnlock = !isUnlocked && manager.availableSkillPoints >= skill.costPoints;
+
               return Container(
-                margin: const EdgeInsets.only(bottom: 4),
-                padding: const EdgeInsets.all(6),
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: skill.isUnlocked ? const Color(0xFF003311) : Colors.black45,
-                  border: Border.all(color: skill.isUnlocked ? AppColors.neonLime : Colors.white12),
+                  color: isUnlocked ? const Color(0xFF1E3A1E) : Colors.black45,
+                  border: Border.all(
+                    color: isUnlocked ? AppColors.neonLime : (canUnlock ? AppColors.accentGold : Colors.white12),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -368,31 +372,24 @@ class _ManagerScreenState extends State<ManagerScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(skill.name, style: AppTypography.label(color: skill.isUnlocked ? AppColors.neonLime : Colors.white).copyWith(fontSize: 11)),
-                          Text(skill.description, style: const TextStyle(color: Colors.white70, fontSize: 9)),
+                          Text(skill.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                          Text(skill.description, style: const TextStyle(color: Colors.white60, fontSize: 9.5)),
                         ],
                       ),
                     ),
-                    if (!skill.isUnlocked)
+                    if (!isUnlocked)
                       RetroButton(
-                        onPressed: manager.availableSkillPoints >= skill.costPoints
+                        onPressed: canUnlock
                             ? () {
-                                setState(() {
-                                  _skillTree = _skillTree.unlockSkill(
-                                    branchType: branch.type,
-                                    skillId: skill.id,
-                                    availablePoints: manager.availableSkillPoints,
-                                  );
-                                });
                                 ref.read(gameStateProvider.notifier).spendSkillPoint(skill.id);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('⚡ "${skill.name}" yeteneği başarıyla açıldı!')),
+                                  SnackBar(content: Text('[YETENEK] "${skill.name}" yeteneği başarıyla açıldı!')),
                                 );
                               }
                             : null,
-                        backgroundColor: manager.availableSkillPoints >= skill.costPoints ? AppColors.neonCyan : Colors.grey,
+                        backgroundColor: canUnlock ? AppColors.neonLime : AppColors.win95DarkGrey,
                         textColor: Colors.black,
-                        child: Text('${skill.costPoints} TP', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                        child: Text('${skill.costPoints} PUAN', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9)),
                       )
                     else
                       Container(
@@ -411,9 +408,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
   }
 
   void _showLicenseUpgradeDialog(BuildContext context, WidgetRef ref, Manager manager, int cash) {
-    final nextLicense = _currentLicense == CoachingLicense.uefaC
+    final nextLicense = manager.license == CoachingLicense.uefaC
         ? CoachingLicense.uefaB
-        : (_currentLicense == CoachingLicense.uefaB ? CoachingLicense.uefaA : CoachingLicense.uefaPro);
+        : (manager.license == CoachingLicense.uefaB ? CoachingLicense.uefaA : CoachingLicense.uefaPro);
 
     showDialog(
       context: context,
@@ -441,12 +438,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
             onPressed: (manager.level >= nextLicense.requiredManagerLevel && cash >= nextLicense.courseCost)
                 ? () {
                     Navigator.pop(ctx);
-                    setState(() {
-                      _currentLicense = nextLicense;
-                    });
-                    ref.read(gameStateProvider.notifier).claimSponsorReward(-nextLicense.courseCost);
+                    ref.read(gameStateProvider.notifier).upgradeCoachingLicense(nextLicense);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('🎉 Tebrikler! ${nextLicense.title} başarıyla alındı!')),
+                      SnackBar(content: Text('[KUTLAMA] Tebrikler! ${nextLicense.title} başarıyla alındı!')),
                     );
                   }
                 : null,
@@ -476,7 +470,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 border: Border.all(color: AppColors.neonLime, width: 2),
               ),
               alignment: Alignment.center,
-              child: const Text('👔', style: TextStyle(fontSize: 28)),
+              child: const RetroPixelIcon(type: RetroPixelIconType.suit, size: 26, color: AppColors.neonLime),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -486,7 +480,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                   Text(manager.name.toUpperCase(), style: AppTypography.h2(color: Colors.white).copyWith(fontSize: 16)),
                   const SizedBox(height: 2),
                   Text(
-                    'SEVİYE ${manager.level} TEKNİK DİREKTÖR • ${_currentLicense.badge}',
+                    'SEVİYE ${manager.level} TEKNİK DİREKTÖR • ${manager.license.badge}',
                     style: AppTypography.label(color: AppColors.neonLime).copyWith(fontSize: 11),
                   ),
                 ],

@@ -142,7 +142,7 @@ class CupTournament {
         name: 'Kupa FC ${participants.length}',
         city: 'Anadolu',
         leagueTier: 3,
-        badgeIcon: '🛡️',
+        badgeIcon: 'SHIELD',
         squad: const [],
         starting11Ids: const [],
       ));

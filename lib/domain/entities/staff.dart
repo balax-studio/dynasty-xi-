@@ -2,11 +2,11 @@
 // Backroom staff specialists: Assistant Manager, Head Physio, Chief Scout, Data Analyst, Brand Specialist (§8.2, §13)
 
 enum StaffRole {
-  assistantManager('Asistan Menajer', '📋', 'Antrenman verimini artırır, rotasyon tavsiyesi verir.'),
-  headPhysio('Baş Fizyoterapist', '🏥', 'Sakatlık sürelerini kısaltır ve kondisyonu korur.'),
-  chiefScout('Şef Scout', '🔍', 'Oyuncu potansiyel tahmin kesinliğini artırır.'),
-  dataAnalyst('Veri Analisti', '📊', 'Rakip zayıflıklarını çözer, maç xG avantajı sağlar.'),
-  brandSpecialist('Kulüp Marka & Pazarlama Direktörü', '💎', 'Taraftar büyümesini, sponsorluk gelirlerini ve ticari prestiji katlar.');
+  assistantManager('Asistan Menajer', '[RAPOR]', 'Antrenman verimini artırır, rotasyon tavsiyesi verir.'),
+  headPhysio('Baş Fizyoterapist', '[REVİR]', 'Sakatlık sürelerini kısaltır ve kondisyonu korur.'),
+  chiefScout('Şef Scout', '[ARAMA]', 'Oyuncu potansiyel tahmin kesinliğini artırır.'),
+  dataAnalyst('Veri Analisti', '[GRAFIK]', 'Rakip zayıflıklarını çözer, maç xG avantajı sağlar.'),
+  brandSpecialist('Kulüp Marka & Pazarlama Direktörü', 'DIAMOND', 'Taraftar büyümesini, sponsorluk gelirlerini ve ticari prestiji katlar.');
 
   final String label;
   final String icon;

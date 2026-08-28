@@ -63,7 +63,7 @@ void main() {
 
       final finance = DynastyNavigationRegistry.getById('finance')!;
       // cash is 10000 (< 15000)
-      expect(finance.badgeEvaluator?.call(testState), '⚠️ NAKİT');
+      expect(finance.badgeEvaluator?.call(testState), '[UYARI] NAKİT');
     });
 
     test('Default shortcuts list contains valid registered items', () {

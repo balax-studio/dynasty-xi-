@@ -25,7 +25,7 @@ class CareerShareDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: RetroWindow(
         title: 'MENAJER KARİYER KARTI (SHARE.PNG)',
-        icon: '📇',
+        icon: '',
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -101,7 +101,7 @@ class CareerShareDialog extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('📸 Kariyer kartı panoya kopyalandı!')),
+                      const SnackBar(content: Text(' Kariyer kartı panoya kopyalandı!')),
                     );
                   },
                   backgroundColor: AppColors.neonLime,

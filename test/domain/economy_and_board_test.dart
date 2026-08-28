@@ -9,6 +9,7 @@ import 'package:futbol/domain/entities/player.dart';
 import 'package:futbol/domain/economy/financial_statement.dart';
 import 'package:futbol/domain/progression/daily_quest.dart';
 import 'package:futbol/domain/generation/scout_service.dart';
+import 'package:futbol/domain/scouting/scouting_mission.dart';
 
 void main() {
   group('Sprint 2: Economy, Boardroom, Daily Quests & Scouting Depth Tests', () {
@@ -105,15 +106,15 @@ void main() {
     });
 
     test('ScoutService calculates duration tiers, error margins and wonderkid 4% chance', () {
-      final instantScout = ScoutService.generateScoutReport(
+      final quickScout = ScoutService.generateScoutReport(
         region: 'Bölgesel Amatör',
-        tier: ScoutDurationTier.instant,
+        tier: ScoutDurationTier.quick,
         scoutFacilityLevel: 1,
       );
 
-      expect(instantScout.players.length, greaterThanOrEqualTo(3));
+      expect(quickScout.players.length, greaterThanOrEqualTo(3));
       // Error margin should be wider for low scout level
-      expect(instantScout.accuracyMargin, greaterThanOrEqualTo(3));
+      expect(quickScout.accuracyMargin, greaterThanOrEqualTo(3));
 
       final deepScout = ScoutService.generateScoutReport(
         region: 'Uluslararası / Latin Amerika',

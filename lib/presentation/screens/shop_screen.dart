@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../application/providers/game_state_provider.dart';
+import '../../domain/entities/game_state.dart';
 import '../widgets/counterfeit_raid_modal.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
@@ -45,7 +46,7 @@ class ShopScreen extends ConsumerWidget {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('👮‍♂️', style: TextStyle(fontSize: 16)),
+                              Text('[OPERASYON]', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
                               SizedBox(width: 6),
                               Text('KORSAN ÜRÜN & SEYYAR SATICI OPERASYONU', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
                             ],
@@ -57,16 +58,16 @@ class ShopScreen extends ConsumerWidget {
                       // 1. Sezon Bileti (Dynasty Pass) Penceresi
                       RetroWindow(
                         title: 'DYNASTY PASS SEZON KART PROVİZYONU',
-                        icon: '🎫',
+                        icon: '[BİLET]',
                         titleBarColor: AppColors.win95TitleNavy,
-                        child: _buildSeasonPassBanner(context),
+                        child: _buildSeasonPassBanner(context, gameState),
                       ),
                       const SizedBox(height: 10),
 
                       // 2. Sponsor Destekleri Penceresi
                       RetroWindow(
                         title: 'SPONSOR REKLAM VE HIZLANDIRMA MODÜLÜ',
-                        icon: '📡',
+                        icon: '',
                         titleBarColor: AppColors.win95TitleNavy,
                         child: Column(
                           children: [
@@ -74,7 +75,7 @@ class ShopScreen extends ConsumerWidget {
                               context,
                               title: 'YEREL SPONSOR REKLAMI (+₣5.000)',
                               description: '30 saniyelik video ile kulüp kasasına doğrudan ₣5.000 ekleyin.',
-                              icon: '📺',
+                              icon: '[TV]',
                               rewardLabel: '+₣5.000 AL',
                               onClaim: () {
                                 ref.read(gameStateProvider.notifier).claimSponsorReward(5000);
@@ -88,7 +89,7 @@ class ShopScreen extends ConsumerWidget {
                               context,
                               title: 'İNŞAAT HIZLANDIRICI (-30 DAKİKA)',
                               description: 'Devam eden tesis bakım sürelerini 30 dakika kısaltın.',
-                              icon: '⚡',
+                              icon: 'BOLT',
                               rewardLabel: 'HIZLANDIR',
                               onClaim: () {
                                 ref.read(gameStateProvider.notifier).claimSponsorReward(0, reduceConstructionMinutes: 30);
@@ -105,7 +106,7 @@ class ShopScreen extends ConsumerWidget {
                       // 3. Altın Rozet Paketleri Penceresi
                       RetroWindow(
                         title: 'ALTIN ROZET MAĞAZASI (KOZMETİK & TEMA)',
-                        icon: '💎',
+                        icon: 'DIAMOND',
                         titleBarColor: AppColors.neoCardBg,
                         child: Row(
                           children: [
@@ -116,7 +117,7 @@ class ShopScreen extends ConsumerWidget {
                                 amount: '100 ROZET',
                                 price: '₺29,99',
                                 bonus: 'BAŞLANGIÇ',
-                                icon: '🥉',
+                                icon: '3.',
                                 cashReward: 10000,
                               ),
                             ),
@@ -128,7 +129,7 @@ class ShopScreen extends ConsumerWidget {
                                 amount: '500 ROZET',
                                 price: '₺119,99',
                                 bonus: '+%20 BONUS',
-                                icon: '🥈',
+                                icon: '2.',
                                 cashReward: 60000,
                                 isPopular: true,
                               ),
@@ -141,7 +142,7 @@ class ShopScreen extends ConsumerWidget {
                                 amount: '1200 ROZET',
                                 price: '₺249,99',
                                 bonus: '+%40 BONUS',
-                                icon: '🥇',
+                                icon: '1.',
                                 cashReward: 150000,
                               ),
                             ),
@@ -159,7 +160,10 @@ class ShopScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSeasonPassBanner(BuildContext context) {
+  Widget _buildSeasonPassBanner(BuildContext context, GameState gameState) {
+    final passLevel = gameState.manager.level.clamp(1, 30);
+    final progressFactor = (passLevel / 30.0).clamp(0.03, 1.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -168,7 +172,7 @@ class ShopScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Text('🏆', style: TextStyle(fontSize: 22)),
+                const Text('[KUPA]', style: TextStyle(fontSize: 22)),
                 const SizedBox(width: 6),
                 Text('SEZON BİLETİ SEVİYESİ', style: AppTypography.label(color: Colors.black).copyWith(fontSize: 11)),
               ],
@@ -200,7 +204,7 @@ class ShopScreen extends ConsumerWidget {
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
-            widthFactor: 0.25,
+            widthFactor: progressFactor,
             child: Container(color: AppColors.neonLime),
           ),
         ),
@@ -208,8 +212,8 @@ class ShopScreen extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('MEVCUT KADEME: 7 / 30', style: AppTypography.label(color: Colors.black).copyWith(fontSize: 9)),
-            Text('ÖDÜL: ₣15.000 KASA DESTEĞİ', style: AppTypography.label(color: AppColors.win95TitleNavy).copyWith(fontSize: 9)),
+            Text('MEVCUT KADEME: $passLevel / 30', style: AppTypography.label(color: Colors.black).copyWith(fontSize: 9)),
+            Text('ÖDÜL: ₣${passLevel * 2500} KASA DESTEĞİ', style: AppTypography.label(color: AppColors.win95TitleNavy).copyWith(fontSize: 9)),
           ],
         ),
       ],

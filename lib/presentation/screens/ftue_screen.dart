@@ -12,6 +12,7 @@ import '../../domain/president/president_origin.dart';
 import '../widgets/decision_card_widget.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/president_origin_selection_widget.dart';
+import '../widgets/retro_pixel_icon.dart';
 import '../widgets/retro_window.dart';
 
 class FtueScreen extends ConsumerStatefulWidget {
@@ -27,7 +28,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
   int _step = 0;
   final TextEditingController _clubNameController = TextEditingController(text: 'Angora Gücü');
   final TextEditingController _managerNameController = TextEditingController(text: 'Hoca');
-  String _selectedBadge = '🛡️';
+  String _selectedBadge = 'SHIELD';
   PresidentOriginType _selectedOrigin = PresidentOriginType.industrialist;
 
   @override
@@ -105,7 +106,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
                 padding: const EdgeInsets.all(10.0),
                 child: RetroWindow(
                   title: 'KURULUM SİHİRBAZI MODÜLÜ',
-                  icon: '💾',
+                  icon: '',
                   child: _buildCurrentStepView(state),
                 ),
               ),
@@ -143,7 +144,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('⚽', style: TextStyle(fontSize: 54)),
+        const Text('[GOL]', style: TextStyle(fontSize: 54)),
         const SizedBox(height: 10),
         Text('DYNASTY XI', style: AppTypography.display(color: AppColors.neonPink)),
         const SizedBox(height: 4),
@@ -193,7 +194,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
             border: Border.all(color: AppColors.accentGold, width: 2),
           ),
           alignment: Alignment.center,
-          child: const Text('👔', style: TextStyle(fontSize: 44)),
+          child: const RetroPixelIcon(type: RetroPixelIconType.suit, size: 36, color: AppColors.accentGold),
         ),
         const SizedBox(height: 12),
         Text('Recep Vardar', style: AppTypography.h2()),
@@ -234,10 +235,10 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
           style: AppTypography.bodySmall(),
         ),
         const SizedBox(height: 16),
-        _buildMeterInfo('💰 KASA (₣)', 'Maaşlar, transferler ve tesis yatırımları için nakit para. Borca batarsan transfer yasağı alırsın.'),
-        _buildMeterInfo('📢 TARAFTAR (%)', 'Tribünlerin desteği. Yüksek taraftar maç gelirini ve ev sahibi atmosferini katlar.'),
-        _buildMeterInfo('👕 SOYUNMA ODASI (%)', 'Futbolcuların morali ve bağlılığı. Düşerse takım sahada mücadele etmeyi bırakır.'),
-        _buildMeterInfo('🏛️ YÖNETİM GÜVENİ (%)', 'Başkanın sana olan sabrı. 3 maç üst üste %15 altına inerse kovulursun!'),
+        _buildMeterInfo('[KASA] KASA (₣)', 'Maaşlar, transferler ve tesis yatırımları için nakit para. Borca batarsan transfer yasağı alırsın.'),
+        _buildMeterInfo('[DUYURU] TARAFTAR (%)', 'Tribünlerin desteği. Yüksek taraftar maç gelirini ve ev sahibi atmosferini katlar.'),
+        _buildMeterInfo('[KADRO] SOYUNMA ODASI (%)', 'Futbolcuların morali ve bağlılığı. Düşerse takım sahada mücadele etmeyi bırakır.'),
+        _buildMeterInfo('[YÖNETİM] YÖNETİM GÜVENİ (%)', 'Başkanın sana olan sabrı. 3 maç üst üste %15 altına inerse kovulursun!'),
         const SizedBox(height: 24),
         RetroButton(
           onPressed: _nextStep,
@@ -251,7 +252,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
 
   // Adım 3: Kulüp Kimliği Oluşturma
   Widget _buildClubBrandingStep() {
-    final badges = ['🛡️', '🦁', '🦅', '⚡', '⚓', '🐺'];
+    final badges = ['SHIELD', 'LION', 'EAGLE', 'BOLT', 'ANCHOR', 'WOLF'];
 
     return SingleChildScrollView(
       child: Column(
@@ -396,7 +397,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('🏟️', style: TextStyle(fontSize: 54)),
+        const Text('[MAÇ GÜNÜ]', style: TextStyle(fontSize: 22, color: AppColors.accentGold, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         Text('İLK RESMİ MAÇ GÜNÜ!', style: AppTypography.h2(color: AppColors.accentGold)),
         const SizedBox(height: 8),
@@ -481,7 +482,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
               children: [
                 Row(
                   children: [
-                    const Text('⭐', style: TextStyle(fontSize: 28)),
+                    const Text('STAR', style: TextStyle(fontSize: 28)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -522,7 +523,7 @@ class _FtueScreenState extends ConsumerState<FtueScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('🏗️', style: TextStyle(fontSize: 54)),
+        const Text('[TESİS]', style: TextStyle(fontSize: 54)),
         const SizedBox(height: 12),
         Text('İLK TESİS YATIRIMI', style: AppTypography.h2(color: AppColors.accentGold)),
         const SizedBox(height: 8),

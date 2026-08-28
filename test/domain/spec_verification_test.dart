@@ -13,7 +13,7 @@ void main() {
           caller: CrisisCallerType.mayor,
           callerName: 'Recep Vardar',
           callerTitle: 'Belediye Başkanı',
-          callerAvatar: '🏛️',
+          callerAvatar: '[YÖNETİM]',
           dialogQuote: 'Kulüp kasası kritik seviyede.',
           choices: [
             CrisisChoice(
@@ -51,7 +51,7 @@ void main() {
           caller: CrisisCallerType.ultraLeader,
           callerName: 'P',
           callerTitle: 'T',
-          callerAvatar: '📢',
+          callerAvatar: '[DUYURU]',
           dialogQuote: 'D',
           choices: [],
         ),

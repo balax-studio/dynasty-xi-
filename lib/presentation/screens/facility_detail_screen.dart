@@ -111,7 +111,7 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                       if (isUpgrading) ...[
                         RetroWindow(
                           title: 'AKTİF ŞANTİYE VE İNŞAAT DURUMU',
-                          icon: '⚠️',
+                          icon: '[UYARI]',
                           titleBarColor: const Color(0xFFB45309),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,11 +151,11 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                                             .claimSponsorReward(0, reduceConstructionMinutes: 30);
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(
-                                            content: Text('⚡ İnşaat süresi 30 dakika kısaltıldı!'),
+                                            content: Text('BOLT İnşaat süresi 30 dakika kısaltıldı!'),
                                           ),
                                         );
                                       },
-                                      child: const Text('⚡ HIZLANDIR (-30 Dk)'),
+                                      child: const Text('BOLT HIZLANDIR (-30 Dk)'),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -172,11 +172,11 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                                         });
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(
-                                            content: Text('🎉 Tesis yükseltmesi anında tamamlandı!'),
+                                            content: Text('[KUTLAMA] Tesis yükseltmesi anında tamamlandı!'),
                                           ),
                                         );
                                       },
-                                      child: const Text('🏆 ANINDA BİTİR'),
+                                      child: const Text('[KUPA] ANINDA BİTİR'),
                                     ),
                                   ),
                                 ],
@@ -190,7 +190,7 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                       // Current Tier Overview Window
                       RetroWindow(
                         title: 'TESİS DURUMU VE OPERASYON RAPORU',
-                        icon: '📋',
+                        icon: '[RAPOR]',
                         titleBarColor: AppColors.win95TitleNavy,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,7 +247,7 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                                     border: Border.all(color: AppColors.neonLime.withValues(alpha: 0.5), width: 1),
                                   ),
                                   child: Text(
-                                    '✔ $h',
+                                    ' $h',
                                     style: const TextStyle(color: Colors.white, fontSize: 10),
                                   ),
                                 );
@@ -276,7 +276,7 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                       // 5-Tier Roadmap & Perks Browser
                       RetroWindow(
                         title: '5 AŞAMALI GELİŞİM VE YÜKSELTME YOL HARİTASI',
-                        icon: '🗺️',
+                        icon: '',
                         titleBarColor: AppColors.win95TitleNavy,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,7 +450,7 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                  '🏗️ ${fac.type.label} için inşaat başlatıldı! (${fac.upgradeDurationMinutes} dk)',
+                                                  '[TESİS] ${fac.type.label} için inşaat başlatıldı! (${fac.upgradeDurationMinutes} dk)',
                                                 ),
                                               ),
                                             );
@@ -459,8 +459,8 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                                       : null,
                                   child: Text(
                                     canAfford
-                                        ? '🏗️ AŞAMA ${fac.level + 1} GELİŞTİRMESİNİ BAŞLAT'
-                                        : '❌ YETERSİZ KASA BAKİYESİ',
+                                        ? '[TESİS] AŞAMA ${fac.level + 1} GELİŞTİRMESİNİ BAŞLAT'
+                                        : '[RED] YETERSİZ KASA BAKİYESİ',
                                     style: const TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
@@ -478,7 +478,7 @@ class _FacilityDetailScreenState extends ConsumerState<FacilityDetailScreen> {
                           ),
                           alignment: Alignment.center,
                           child: const Text(
-                            '★ BU TESİS MAKSİMUM HANEDAN SEVİYESİNE ULAŞTI ★',
+                            ' BU TESİS MAKSİMUM HANEDAN SEVİYESİNE ULAŞTI ',
                             style: TextStyle(
                               color: Color(0xFFFFD700),
                               fontWeight: FontWeight.bold,

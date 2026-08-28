@@ -27,13 +27,13 @@ class WinBackDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: RetroWindow(
         title: 'KULÜBE TEKRAR HOŞ GELDİN HOCAM!',
-        icon: '🎉',
+        icon: '[KUTLAMA]',
         titleBarColor: const Color(0xFF0F3826),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('☕', style: TextStyle(fontSize: 32)),
+            const Text('[KULÜP]', style: TextStyle(fontSize: 18, color: AppColors.accentGold, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text(
               'Sensiz geçen $daysAway günün ardından takım seni bekliyordu!',
@@ -54,7 +54,7 @@ class WinBackDialog extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('💰 Sadakat Teşvik Primi:', style: TextStyle(color: Colors.white, fontSize: 11)),
+                      const Text('[KASA] Sadakat Teşvik Primi:', style: TextStyle(color: Colors.white, fontSize: 11)),
                       Text('+₣$welcomeBonusCash', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),
@@ -62,7 +62,7 @@ class WinBackDialog extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('⭐ Motivasyon XP Desteği:', style: TextStyle(color: Colors.white, fontSize: 11)),
+                      const Text('STAR Motivasyon XP Desteği:', style: TextStyle(color: Colors.white, fontSize: 11)),
                       Text('+$welcomeBonusXp XP', style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),

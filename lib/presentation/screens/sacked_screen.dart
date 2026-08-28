@@ -29,13 +29,13 @@ class SackedScreen extends ConsumerWidget {
           child: Center(
             child: RetroWindow(
               title: 'DİVAN KURULU KARARI: BAŞKANLIK DÜŞÜRÜLDÜ!',
-              icon: '❌',
+              icon: '[RED]',
               titleBarColor: AppColors.comicRed,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🚨', style: TextStyle(fontSize: 48)),
+                    const Text('[ACIL]', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 10),
                     Text(
                       'BAŞKANLIK YETKİLERİ DONDURULDU',
@@ -70,7 +70,7 @@ class SackedScreen extends ConsumerWidget {
                         children: [
                           Row(
                             children: [
-                              Text('📩', style: TextStyle(fontSize: 16)),
+                              Text('[KULÜP]', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10)),
                               SizedBox(width: 6),
                               Text(
                                 'YENİ KULÜP SAHİPLİĞİ TEKLİFİ (KÜLLERİNDEN DOĞUŞ)',
@@ -98,7 +98,7 @@ class SackedScreen extends ConsumerWidget {
                         backgroundColor: AppColors.accentGold,
                         textColor: Colors.black,
                         onPressed: () => HostileTakeoverRescueModal.show(context),
-                        child: const Text('💰 ACİL KULÜP KURTARMA & SERMAYE ARTIRIMI (İFLASI ÖNLE)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                        child: const Text('[KASA] ACİL KULÜP KURTARMA & SERMAYE ARTIRIMI (İFLASI ÖNLE)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                       ),
                     ),
                     const SizedBox(height: 8),

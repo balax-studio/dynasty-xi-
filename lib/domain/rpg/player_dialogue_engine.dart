@@ -4,12 +4,12 @@
 import '../entities/player.dart';
 
 enum DialogueTopicCategory {
-  performance('Performans & Moral', '⚽'),
-  playingTime('Oyun Süresi & Rol', '⏱️'),
-  training('Gelişim & Özel Çalışma', '⚡'),
-  leadership('Liderlik & Soyunma Odası', '🛡️'),
-  transferPersuasion('Transfer İknası & Vizyon', '🤝'),
-  characterScout('Mentalite & Karakter Analizi', '🔍');
+  performance('Performans & Moral', '[GOL]'),
+  playingTime('Oyun Süresi & Rol', '[SURE]'),
+  training('Gelişim & Özel Çalışma', 'BOLT'),
+  leadership('Liderlik & Soyunma Odası', 'SHIELD'),
+  transferPersuasion('Transfer İknası & Vizyon', '[ANLASMA]'),
+  characterScout('Mentalite & Karakter Analizi', '[ARAMA]');
 
   final String label;
   final String icon;
@@ -94,30 +94,30 @@ class PlayerDialogueEngine {
           category: DialogueTopicCategory.performance,
           title: 'Saha İçi Performansı ve Moral',
           subtitle: 'Son maçlardaki oyunu değerlendir, motive et veya disiplin uyarısı yap.',
-          icon: '🔥',
+          icon: '[FORM]',
           options: [
             DialogueOption(
               id: 'perf_praise',
               title: 'Harika bir tutkuyla oynuyorsun, sahadaki liderliğin tüm takımı ateşliyor!',
-              tone: '🌟 Övgü & Coşku',
+              tone: 'STAR Övgü & Coşku',
               description: 'Oyuncunun moralini ve formunu yükseltir; duygusal ve hırslı oyuncular çok olumlu karşılar.',
             ),
             DialogueOption(
               id: 'perf_constructive',
               title: 'Taktik disiplininden memnunum ama son vuruşlarda daha soğukkanlı olmalısın.',
-              tone: '🛡️ Taktiksel & Mantıklı',
+              tone: 'SHIELD Taktiksel & Mantıklı',
               description: 'Dengeli geri bildirim. Profesyonel ve mütevazı oyuncular için keskinlik ve form artışı sağlar.',
             ),
             DialogueOption(
               id: 'perf_warning',
               title: 'Son haftalardaki lakayt oyunun kabul edilemez! Kendine gelmezsen yedek kulübesi seni bekler.',
-              tone: '⚡ Sert Disiplin Uyarısı',
+              tone: 'BOLT Sert Disiplin Uyarısı',
               description: 'Riskli. Hırslı veya profesyonel oyuncuları hırslandırabilir; asi veya duygusal oyuncularda moral çöker.',
             ),
             DialogueOption(
               id: 'perf_bonus_promise',
               title: 'Gelecek maçta gol veya asist katkısı yaparsan özel galibiyet primi hesabında!',
-              tone: '💰 Bireysel Prim Vaadi (₣2,500)',
+              tone: '[KASA] Bireysel Prim Vaadi (₣2,500)',
               description: 'Özellikle paragöz ve hırslı oyuncularda anlık keskinlik ve motivasyon patlaması yaratır.',
             ),
           ],
@@ -129,24 +129,24 @@ class PlayerDialogueEngine {
           category: DialogueTopicCategory.playingTime,
           title: 'Oyun Süresi ve Kadro Hiyerarşisi',
           subtitle: 'İlk 11 beklentisini yönet, rotasyon planını açıkla veya rolünü netleştir.',
-          icon: '⏱️',
+          icon: '[SURE]',
           options: [
             DialogueOption(
               id: 'role_starter_promise',
               title: 'Sen bu takımın değişilmez omurgasısın. Önümüzdeki maçlarda sahaya 11’de çıkacaksın.',
-              tone: '⭐ İlk 11 Garantisi',
+              tone: 'STAR İlk 11 Garantisi',
               description: 'Morali ve sadakati hızla yükseltir, ayrılma isteğini sıfırlar.',
             ),
             DialogueOption(
               id: 'role_rotation_patience',
               title: 'Önümüzde yoğun bir fikstür var. Sana kesinlikle ihtiyacım olacak, hazır kal ve sıranı bekle.',
-              tone: '🤝 Rotasyon & Sabır',
+              tone: '[ANLASMA] Rotasyon & Sabır',
               description: 'Mütevazı ve sadık oyuncular sabırla karşılar, soyunma odası dengesini korur.',
             ),
             DialogueOption(
               id: 'role_harsh_reality',
               title: 'Şu anki formunla ilk 11’i hak etmiyorsun. Formayı ancak antrenmanda savaşarak kaparsın.',
-              tone: '🧱 Katı Gerçeklik',
+              tone: ' Katı Gerçeklik',
               description: 'Taviz vermeyen tutum. Asi oyuncularla kriz yaratabilir ama profesyonel oyuncuları kamçılar.',
             ),
           ],
@@ -158,24 +158,24 @@ class PlayerDialogueEngine {
           category: DialogueTopicCategory.training,
           title: 'Bireysel Gelişim ve Taktiksel Odak',
           subtitle: 'Niteliklerini geliştirmesi için özel antrenman ödevi ver.',
-          icon: '⚡',
+          icon: 'BOLT',
           options: [
             DialogueOption(
               id: 'train_technique_mentality',
               title: 'Teknik zekânı ve karar verme hızını geliştirmek için ekstra taktik seanslarına katılmanı istiyorum.',
-              tone: '🧠 Taktik & Mental Gelişim',
+              tone: '[AI] Taktik & Mental Gelişim',
               description: 'Mentalite ve teknik niteliklere anlık gelişim bonusu kazandırır.',
             ),
             DialogueOption(
               id: 'train_physical_pace',
               title: 'İkili mücadelelerde ve patlayıcı güçte rakipleri ezmen için ekstra salon programı yazıyorum.',
-              tone: '🏋️ Fiziksel & Kondisyon Yüklemesi',
+              tone: ' Fiziksel & Kondisyon Yüklemesi',
               description: 'Fiziksel güce ve patlayıcılığa odaklanır; kondisyon tüketir.',
             ),
             DialogueOption(
               id: 'train_relax',
               title: 'Son zamanlarda çok yıprandın. Bu hafta sana özel hafif rejenerasyon programı uyguluyoruz.',
-              tone: '☕ Dinlenme & Rejenerasyon',
+              tone: ' Dinlenme & Rejenerasyon',
               description: 'Kondisyonu yeniler, sakatlık riskini düşürür.',
             ),
           ],
@@ -187,18 +187,18 @@ class PlayerDialogueEngine {
           category: DialogueTopicCategory.leadership,
           title: 'Soyunma Odası Atmosferi ve Liderlik',
           subtitle: 'Takım arkadaşlarını motive etmesi ve kulüp kültürünü taşıması için görev ver.',
-          icon: '🛡️',
+          icon: 'SHIELD',
           options: [
             DialogueOption(
               id: 'lead_rally_team',
               title: 'Soyunma odasında gençlere ve yeni gelenlere abilik yap, takımı tek yürek halinde tutmanı bekliyorum.',
-              tone: '🗣️ Takımı Toparlama Görevi',
+              tone: ' Takımı Toparlama Görevi',
               description: 'Lider ve sadık oyuncularda soyunma odası barına doğrudan (+6-+12) destek sağlar.',
             ),
             DialogueOption(
               id: 'lead_protect_manager',
               title: 'Yönetim ve taraftar baskısı artsa da biz bir aileyiz. Sahaya çıkıp kulübün onurunu koruyacağız.',
-              tone: '🔥 Kulüp Ruhunu Savunma',
+              tone: '[FORM] Kulüp Ruhunu Savunma',
               description: 'Takım aidiyetini ve oyuncunun kulübe bağlılığını derinleştirir.',
             ),
           ],
@@ -213,25 +213,25 @@ class PlayerDialogueEngine {
           category: DialogueTopicCategory.transferPersuasion,
           title: 'Kulüp Vizyonu ve Transfer İkna Mülakatı',
           subtitle: 'Oyuncuyu projenize inandırarak bonservis ve maaş talebinde indirim sağlayın.',
-          icon: '🤝',
+          icon: '[ANLASMA]',
           isOwnedOnly: false,
           options: [
             DialogueOption(
               id: 'trans_vision_trophies',
               title: 'Kulübümüz hızla yükselen bir hanedan inşa ediyor. Bizimle ligi ve kupaları domine edebilirsin!',
-              tone: '🏆 Şampiyonluk & Başarı Vizyonu',
+              tone: '[KUPA] Şampiyonluk & Başarı Vizyonu',
               description: 'Hırslı, profesyonel ve lider oyuncuları çok etkiler. Transfer maliyetinde %10-%20 indirim sağlar.',
             ),
             DialogueOption(
               id: 'trans_financial_splurge',
               title: 'Bütçemiz hazır. Seni kulübün en yüksek maaşlı yıldızlarından biri yapmaya ve bol bonus vermeye hazırız.',
-              tone: '💰 Cazip Finansal Teklif',
+              tone: '[KASA] Cazip Finansal Teklif',
               description: 'Özellikle paragöz ve asi oyuncuları derhal ikna eder; transfer kabul şansını zirveye çıkarır.',
             ),
             DialogueOption(
               id: 'trans_starter_core',
               title: 'Takımımızın oyun planı tamamen senin yeteneklerin etrafında kurulacak. 1. dakikadan itibaren sahadaki komutanımız sensin.',
-              tone: '👑 Kilit Oyuncu Statüsü',
+              tone: 'CROWN Kilit Oyuncu Statüsü',
               description: 'Hırslı ve duygusal oyuncuları etkileyerek transfer isteklerini perçinler.',
             ),
           ],
@@ -243,19 +243,19 @@ class PlayerDialogueEngine {
           category: DialogueTopicCategory.characterScout,
           title: 'Karakter ve Zihniyet Mülakatı',
           subtitle: 'Oyuncunun gizli kişilik dinamiklerini, sadakatini ve profesyonellik seviyesini test edin.',
-          icon: '🔍',
+          icon: '[ARAMA]',
           isOwnedOnly: false,
           options: [
             DialogueOption(
               id: 'scout_pressure_test',
               title: 'Tribünlerin homurdandığı, skorun geride olduğu 90. dakikada sorumluluk almaktan korkar mısın?',
-              tone: '🎯 Baskı Altında Karakter Testi',
+              tone: '[HEDEF] Baskı Altında Karakter Testi',
               description: 'Oyuncunun mental dayanıklılığını ve liderlik kapasitesini açığa çıkarır.',
             ),
             DialogueOption(
               id: 'scout_loyalty_check',
               title: 'Daha büyük bir kulüpten cazip bir teklif gelirse bizi yarı yolda bırakır mısın?',
-              tone: '⚖️ Sadakat & Profesyonellik Sorgusu',
+              tone: '[HUKUK] Sadakat & Profesyonellik Sorgusu',
               description: 'Sadakat ve karakter eğilimlerini öğrenmenizi sağlar.',
             ),
           ],
@@ -286,7 +286,7 @@ class PlayerDialogueEngine {
     int transferDiscountPercent = 0;
     String? statBoost;
     int statBoostAmount = 0;
-    String reaction = '😎';
+    String reaction = '';
 
     switch (option.id) {
       // 1.1 Övgü & Coşku
@@ -295,21 +295,21 @@ class PlayerDialogueEngine {
           deltaMorale = 18;
           deltaForm = 0.6;
           deltaSharpness = 5;
-          reaction = '🔥';
+          reaction = '[FORM]';
           buffer.write('"Hocam bu güveninizi boşa çıkarmayacağım! Sahaya çıktığımda her şeyimi vereceğime söz veriyorum."');
         } else if (pType == PersonalityType.humble || pType == PersonalityType.professional) {
           deltaMorale = 10;
           deltaForm = 0.3;
-          reaction = '🤝';
+          reaction = '[ANLASMA]';
           buffer.write('"Teşekkürler hocam. Bu sadece benim değil, tüm takımın ortak emeği. Aynen devam edeceğim."');
         } else if (pType == PersonalityType.rebel) {
           deltaMorale = 8;
-          reaction = '😏';
+          reaction = '';
           buffer.write('"Biliyorum hocam, sahanın en iyisi bendim zaten. İzlemeye devam edin."');
         } else {
           deltaMorale = 12;
           deltaForm = 0.4;
-          reaction = '👏';
+          reaction = '[ALKIS]';
           buffer.write('"Güveniniz için teşekkürler patron! Takım için elimden gelenin en iyisini yapmaya devam edeceğim."');
         }
         break;
@@ -322,16 +322,16 @@ class PlayerDialogueEngine {
           deltaForm = 0.5;
           statBoost = 'MEN';
           statBoostAmount = 1;
-          reaction = '🧠';
+          reaction = '[AI]';
           buffer.write('"Tam olarak üzerinde düşündüğüm noktaya değindiniz hocam. Taktiksel detayları analiz edip bir sonraki maçta daha kusursuz olacağım."');
         } else if (pType == PersonalityType.temperamental) {
           deltaMorale = -4;
-          reaction = '😕';
+          reaction = '';
           buffer.write('"Elimden geleni yapıyorum ama bazen şans yanımda olmuyor... Yine de deneyeceğim."');
         } else {
           deltaMorale = 6;
           deltaSharpness = 6;
-          reaction = '👍';
+          reaction = '';
           buffer.write('"Haklısınız hocam, videolara bakıp o pozisyonları düzelteceğim."');
         }
         break;
@@ -342,23 +342,23 @@ class PlayerDialogueEngine {
           deltaMorale = -22;
           deltaLoyalty = -10;
           deltaLockerRoom = -5;
-          reaction = '😠';
+          reaction = '';
           buffer.write('"Beni günah keçisi yapamazsınız! Takımda yürüyen o kadar adam varken suçu bana yıkamazsınız!"');
         } else if (pType == PersonalityType.temperamental) {
           deltaMorale = -18;
           deltaForm = -0.5;
-          reaction = '😢';
+          reaction = '';
           buffer.write('"Bütün baskıyı benim üzerime kurmanız haksızlık... Motivasyonumu tamamen kırıyorsunuz."');
         } else if (pType == PersonalityType.ambitious || pType == PersonalityType.professional) {
           deltaMorale = 5;
           deltaSharpness = 12;
           deltaForm = 0.7;
-          reaction = '😤';
+          reaction = '';
           buffer.write('"Haklısınız, bu seviye bana yakışmadı. Size kim olduğumu bir sonraki maçta sahada göstereceğim!"');
         } else {
           deltaMorale = -8;
           deltaSharpness = 8;
-          reaction = '😐';
+          reaction = '';
           buffer.write('"Mesajı aldım hocam. Kendime çeki düzen vereceğim."');
         }
         break;
@@ -371,17 +371,17 @@ class PlayerDialogueEngine {
             deltaMorale = 25;
             deltaSharpness = 15;
             deltaForm = 0.8;
-            reaction = '🤑';
+            reaction = '';
             buffer.write('"İşte konuşulması gereken dil bu patron! O maçta kaleyi delip geçeceğim, primi hazırlayın!"');
           } else {
             deltaMorale = 14;
             deltaSharpness = 8;
-            reaction = '💰';
+            reaction = '[KASA]';
             buffer.write('"Teşekkürler hocam! Maddi manevi desteğinizi hissetmek ekstra güç veriyor."');
           }
         } else {
           deltaMorale = -5;
-          reaction = '🤨';
+          reaction = '';
           buffer.write('"Hocam kasada para yokken prim vaat etmeniz pek inandırıcı gelmedi açıkçası..."');
         }
         break;
@@ -390,7 +390,7 @@ class PlayerDialogueEngine {
       case 'role_starter_promise':
         deltaMorale = 20;
         deltaLoyalty = 12;
-        reaction = '⭐';
+        reaction = 'STAR';
         if (pType == PersonalityType.ambitious) {
           buffer.write('"Aradığım saygı tam olarak bu. Sahada liderliği alıp takımı galibiyete taşıyacağım!"');
         } else {
@@ -404,16 +404,16 @@ class PlayerDialogueEngine {
           deltaMorale = 10;
           deltaLoyalty = 8;
           deltaLockerRoom = 4;
-          reaction = '🤝';
+          reaction = '[ANLASMA]';
           buffer.write('"Anlıyorum hocam. Kulübün başarısı her şeyden önemli, bana ne zaman görev verirseniz hazırım."');
         } else if (pType == PersonalityType.ambitious || pType == PersonalityType.rebel) {
           deltaMorale = -12;
           deltaLoyalty = -6;
-          reaction = '😒';
+          reaction = '';
           buffer.write('"Ben yedek kulübesinde çürüyecek oyuncu değilim. Süre alamazsam menajerimle konuşmak zorunda kalırım."');
         } else {
           deltaMorale = 4;
-          reaction = '👌';
+          reaction = '';
           buffer.write('"Pekala patron, sıramı bekleyeceğim ve fırsat geldiğinde değerlendireceğim."');
         }
         break;
@@ -423,17 +423,17 @@ class PlayerDialogueEngine {
         if (pType == PersonalityType.professional) {
           deltaMorale = 4;
           deltaSharpness = 12;
-          reaction = '🏋️';
+          reaction = '';
           buffer.write('"Dürüstlüğünüze saygı duyuyorum. Antrenman temposunu iki katına çıkarıp o formayı söke söke alacağım."');
         } else if (pType == PersonalityType.rebel || pType == PersonalityType.temperamental) {
           deltaMorale = -20;
           deltaLoyalty = -15;
-          reaction = '🚪';
+          reaction = '';
           buffer.write('"Bana bu tavırla yaklaşırsanız takıma hiçbir faydam dokunmaz. Ocak ayında transfer listesine konmak istiyorum!"');
         } else {
           deltaMorale = -6;
           deltaSharpness = 6;
-          reaction = '🤐';
+          reaction = '';
           buffer.write('"Anlaşıldı hocam, çok daha fazla çalışmam gerekiyor."');
         }
         break;
@@ -444,7 +444,7 @@ class PlayerDialogueEngine {
         deltaMorale = 6;
         statBoost = 'TEC';
         statBoostAmount = 1;
-        reaction = '🪄';
+        reaction = '';
         buffer.write('"Taktik analiz ve karar alma üzerine çalışmak oyun zekâmı bir üst seviyeye taşıyacak. Hemen başlıyorum!"');
         break;
 
@@ -454,7 +454,7 @@ class PlayerDialogueEngine {
         deltaSharpness = 10;
         statBoost = 'PHY';
         statBoostAmount = 1;
-        reaction = '💪';
+        reaction = '[GUC]';
         buffer.write('"Kas kütlesini ve patlayıcı gücü artırmak tam da aradığım şeydi. Sahada kimse beni yıkamayacak!"');
         break;
 
@@ -462,7 +462,7 @@ class PlayerDialogueEngine {
       case 'train_relax':
         deltaFitness = 18;
         deltaMorale = 12;
-        reaction = '🔋';
+        reaction = '';
         buffer.write('"Nefes almaya gerçekten çok ihtiyacım vardı patron. Önümüzdeki maça %100 zinde çıkacağım!"');
         break;
 
@@ -472,12 +472,12 @@ class PlayerDialogueEngine {
           deltaLockerRoom = 12;
           deltaMorale = 15;
           deltaLoyalty = 10;
-          reaction = '🛡️';
+          reaction = 'SHIELD';
           buffer.write('"Bana güvenebilirsiniz hocam. Soyunma odasında kimsenin kafasını eğmesine izin vermeyeceğim, tek yumruk olacağız!"');
         } else {
           deltaLockerRoom = 4;
           deltaMorale = 6;
-          reaction = '🗣️';
+          reaction = '';
           buffer.write('"Elimden geldiğince arkadaşlara destek olmaya çalışırım hocam."');
         }
         break;
@@ -487,7 +487,7 @@ class PlayerDialogueEngine {
         deltaLoyalty = 15;
         deltaMorale = 10;
         deltaLockerRoom = 6;
-        reaction = '🔥';
+        reaction = '[FORM]';
         buffer.write('"Bu kulübün armasını gururla taşıyoruz. Sahaya çıkıp kimin patron olduğunu herkese göstereceğiz!"');
         break;
 
@@ -496,11 +496,11 @@ class PlayerDialogueEngine {
       case 'trans_vision_trophies':
         if (pType == PersonalityType.ambitious || pType == PersonalityType.leader) {
           transferDiscountPercent = 20;
-          reaction = '🏆';
+          reaction = '[KUPA]';
           buffer.write('"Kupa kaldırmak ve tarih yazmak tam da kariyerimde aradığım sıçrama! Projeniz beni çok heyecanlandırdı, transfer şartlarında fedakarlık yapmaya hazırım."');
         } else {
           transferDiscountPercent = 10;
-          reaction = '🌟';
+          reaction = 'STAR';
           buffer.write('"Kulübünüzün hedefleri etkileyici. Böyle bir projede yer almak benim için onur olur."');
         }
         break;
@@ -509,11 +509,11 @@ class PlayerDialogueEngine {
       case 'trans_financial_splurge':
         if (pType == PersonalityType.mercenary || pType == PersonalityType.rebel) {
           transferDiscountPercent = 25;
-          reaction = '💎';
+          reaction = 'DIAMOND';
           buffer.write('"Bana hak ettiğim değeri verecek bir kulüple çalışmaktan mutluluk duyarım. Menajerimle hemen el sıkışabilirsiniz!"');
         } else {
           transferDiscountPercent = 10;
-          reaction = '🤝';
+          reaction = '[ANLASMA]';
           buffer.write('"Cömert teklifiniz için teşekkürler. Şartlar gayet tatmin edici görünüyor."');
         }
         break;
@@ -522,11 +522,11 @@ class PlayerDialogueEngine {
       case 'trans_starter_core':
         if (pType == PersonalityType.ambitious || pType == PersonalityType.temperamental) {
           transferDiscountPercent = 18;
-          reaction = '👑';
+          reaction = 'CROWN';
           buffer.write('"Bana takımın merkezinde olma fırsatı vermeniz benim için paradan daha değerli. Bu formayı sırtıma geçirmek için sabırsızlanıyorum!"');
         } else {
           transferDiscountPercent = 10;
-          reaction = '🎯';
+          reaction = '[HEDEF]';
           buffer.write('"Saha içi rolümün net olması çok sevindirici. Kulübünüze katılmaktan memnuniyet duyarım."');
         }
         break;
@@ -534,13 +534,13 @@ class PlayerDialogueEngine {
       // 6.1 Baskı Testi
       case 'scout_pressure_test':
         if (pType == PersonalityType.leader || pType == PersonalityType.ambitious) {
-          reaction = '🦁';
+          reaction = 'LION';
           buffer.write('"Baskı benim için yakıttır hocam. Taraftar ıslıkladığında veya maç zora girdiğinde saklanmam, topu ben isterim!"');
         } else if (pType == PersonalityType.temperamental) {
-          reaction = '🫣';
+          reaction = '';
           buffer.write('"Dürüst olmak gerekirse tribünlerin homurdanması bazen beni geriyor ama takım desteğiyle üstesinden gelmeye çalışıyorum."');
         } else {
-          reaction = '⚖️';
+          reaction = '[HUKUK]';
           buffer.write('"Her maçın stresi farklıdır ama sahada elimden gelenin en iyisini yapmaya odaklanırım."');
         }
         break;
@@ -548,13 +548,13 @@ class PlayerDialogueEngine {
       // 6.2 Sadakat Sorgusu
       case 'scout_loyalty_check':
         if (pType == PersonalityType.loyal || pType == PersonalityType.humble) {
-          reaction = '🤝';
+          reaction = '[ANLASMA]';
           buffer.write('"Beni transfer eden ve bana inanan kulübü asla yarı yolda bırakmam. İmza attıysam sonuna kadar savaşırım."');
         } else if (pType == PersonalityType.mercenary) {
-          reaction = '💼';
+          reaction = '[MENAJER]';
           buffer.write('"Futbol profesyonel bir iş. Şartlar iki taraf için de uygun olduğu sürece en iyimi veririm, gerisine zaman karar verir."');
         } else {
-          reaction = '📜';
+          reaction = '';
           buffer.write('"Sözleşmeme ve kulübün menfaatlerine her zaman saygı gösteririm."');
         }
         break;
