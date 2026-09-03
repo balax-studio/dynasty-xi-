@@ -123,7 +123,7 @@ class UrgentPhoneCallModal extends ConsumerWidget {
                             SnackBar(
                               backgroundColor: AppColors.primaryDeep,
                               content: Text(
-                                ' ${choice.outcomeMessage}',
+                                '[KRİZ] ${choice.outcomeMessage}',
                                 style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -153,6 +153,23 @@ class UrgentPhoneCallModal extends ConsumerWidget {
                       ),
                     ),
                   ),
+
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: double.infinity,
+                  child: RetroButton(
+                    backgroundColor: Colors.white24,
+                    textColor: Colors.black,
+                    onPressed: () {
+                      ref.read(gameStateProvider.notifier).dismissCrisisCall();
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text(
+                      'ÇAĞRIYI ERTELE / DAHA SONRA CEVAPLA',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: Colors.black87),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

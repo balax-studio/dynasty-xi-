@@ -10,10 +10,12 @@ import '../../core/audio/audio_synthesizer.dart';
 import '../../domain/entities/game_state.dart';
 import '../../domain/entities/league.dart';
 import '../../domain/match/match_depth_models.dart';
+import '../../domain/entities/player.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/retro_window.dart';
 import '../widgets/season_summary_dialog.dart';
 import 'clubs_association_summit_screen.dart';
+import 'player_detail_screen.dart';
 
 class LeagueScreen extends ConsumerStatefulWidget {
   const LeagueScreen({super.key});
@@ -138,54 +140,82 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
                       final rank = entry.key + 1;
                       final s = entry.value;
                       final isUserClub = s.clubName == gameState.userClub.name;
+                      final userPlayer = isUserClub
+                          ? gameState.userClub.squad.cast<Player?>().firstWhere(
+                              (p) => p?.id == s.playerId || p?.fullName == s.playerName,
+                              orElse: () => null,
+                            )
+                          : null;
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 4),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
-                          border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 24,
-                              alignment: Alignment.center,
-                              child: Text(
-                                '$rank',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: rank == 1 ? AppColors.accentGold : Colors.white,
+                      return InkWell(
+                        onTap: userPlayer != null
+                            ? () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => PlayerDetailScreen(player: userPlayer, isOwned: true),
+                                  ),
+                                );
+                              }
+                            : null,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
+                            border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 24,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '$rank',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: rank == 1 ? AppColors.accentGold : Colors.white,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    s.playerName,
-                                    style: AppTypography.label(
-                                      color: isUserClub ? AppColors.neonLime : Colors.white,
-                                    ).copyWith(fontSize: 11),
-                                  ),
-                                  Text(
-                                    s.clubName,
-                                    style: const TextStyle(color: Colors.white60, fontSize: 9),
-                                  ),
-                                ],
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            s.playerName,
+                                            style: AppTypography.label(
+                                              color: isUserClub ? AppColors.neonLime : Colors.white,
+                                            ).copyWith(fontSize: 11),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (userPlayer != null) ...[
+                                          const SizedBox(width: 4),
+                                          const Text('[DETAY]', style: TextStyle(color: AppColors.neonLime, fontSize: 8, fontWeight: FontWeight.bold)),
+                                        ],
+                                      ],
+                                    ),
+                                    Text(
+                                      s.clubName,
+                                      style: const TextStyle(color: Colors.white60, fontSize: 9),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              color: Colors.black,
-                              child: Text(
-                                '${s.goals} GOL',
-                                style: AppTypography.monoNumber(color: AppColors.accentGold).copyWith(fontSize: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                color: Colors.black,
+                                child: Text(
+                                  '${s.goals} GOL',
+                                  style: AppTypography.monoNumber(color: AppColors.accentGold).copyWith(fontSize: 12),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     }).toList(),
@@ -209,54 +239,82 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> with SingleTickerPr
                       final rank = entry.key + 1;
                       final a = entry.value;
                       final isUserClub = a.clubName == gameState.userClub.name;
+                      final userPlayer = isUserClub
+                          ? gameState.userClub.squad.cast<Player?>().firstWhere(
+                              (p) => p?.id == a.playerId || p?.fullName == a.playerName,
+                              orElse: () => null,
+                            )
+                          : null;
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 4),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
-                          border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 24,
-                              alignment: Alignment.center,
-                              child: Text(
-                                '$rank',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: rank == 1 ? AppColors.neonCyan : Colors.white,
+                      return InkWell(
+                        onTap: userPlayer != null
+                            ? () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => PlayerDetailScreen(player: userPlayer, isOwned: true),
+                                  ),
+                                );
+                              }
+                            : null,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isUserClub ? const Color(0xFF003311) : AppColors.neoInnerBg,
+                            border: Border.all(color: isUserClub ? AppColors.neonLime : Colors.white12),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 24,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '$rank',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: rank == 1 ? AppColors.neonCyan : Colors.white,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    a.playerName,
-                                    style: AppTypography.label(
-                                      color: isUserClub ? AppColors.neonLime : Colors.white,
-                                    ).copyWith(fontSize: 11),
-                                  ),
-                                  Text(
-                                    a.clubName,
-                                    style: const TextStyle(color: Colors.white60, fontSize: 9),
-                                  ),
-                                ],
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            a.playerName,
+                                            style: AppTypography.label(
+                                              color: isUserClub ? AppColors.neonLime : Colors.white,
+                                            ).copyWith(fontSize: 11),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (userPlayer != null) ...[
+                                          const SizedBox(width: 4),
+                                          const Text('[DETAY]', style: TextStyle(color: AppColors.neonLime, fontSize: 8, fontWeight: FontWeight.bold)),
+                                        ],
+                                      ],
+                                    ),
+                                    Text(
+                                      a.clubName,
+                                      style: const TextStyle(color: Colors.white60, fontSize: 9),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              color: Colors.black,
-                              child: Text(
-                                '${a.assists} ASİST',
-                                style: AppTypography.monoNumber(color: AppColors.neonCyan).copyWith(fontSize: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                color: Colors.black,
+                                child: Text(
+                                  '${a.assists} ASİST',
+                                  style: AppTypography.monoNumber(color: AppColors.neonCyan).copyWith(fontSize: 12),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     }).toList(),

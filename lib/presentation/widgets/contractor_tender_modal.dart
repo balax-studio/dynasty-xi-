@@ -62,7 +62,7 @@ class ContractorTenderModal extends StatelessWidget {
                 _buildTenderCard(
                   context: context,
                   name: 'Öz-Kardeşler İnşaat (Yerel)',
-                  avatar: '',
+                  avatar: '[İNŞAAT]',
                   cost: (baseCost * 0.85).toInt(),
                   weeks: 8,
                   desc: 'Maliyet %15 daha ucuz fakat inşaat süresi 8 hafta sürer.',

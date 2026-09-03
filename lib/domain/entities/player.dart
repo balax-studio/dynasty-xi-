@@ -157,6 +157,7 @@ class Player {
   final int releaseClause;
   final bool isYouthProduct;
   final bool isTransferListed;
+  final bool isBannedFromSquad;
 
   // Sakatlık
   final int injuryMatchesLeft;
@@ -214,6 +215,7 @@ class Player {
     this.releaseClause = 0,
     this.isYouthProduct = false,
     this.isTransferListed = false,
+    this.isBannedFromSquad = false,
     this.injuryMatchesLeft = 0,
     this.injuryType,
     this.injurySeverity = InjurySeverity.none,
@@ -460,6 +462,7 @@ class Player {
     int? releaseClause,
     bool? isYouthProduct,
     bool? isTransferListed,
+    bool? isBannedFromSquad,
     int? injuryMatchesLeft,
     String? injuryType,
     InjurySeverity? injurySeverity,
@@ -512,6 +515,7 @@ class Player {
       releaseClause: releaseClause ?? this.releaseClause,
       isYouthProduct: isYouthProduct ?? this.isYouthProduct,
       isTransferListed: isTransferListed ?? this.isTransferListed,
+      isBannedFromSquad: isBannedFromSquad ?? this.isBannedFromSquad,
       injuryMatchesLeft: clearInjury ? 0 : (injuryMatchesLeft ?? this.injuryMatchesLeft),
       injuryType: clearInjury ? null : (injuryType ?? this.injuryType),
       injurySeverity: clearInjury ? InjurySeverity.none : (injurySeverity ?? this.injurySeverity),
@@ -565,6 +569,7 @@ class Player {
         'releaseClause': releaseClause,
         'isYouthProduct': isYouthProduct,
         'isTransferListed': isTransferListed,
+        'isBannedFromSquad': isBannedFromSquad,
         'injuryMatchesLeft': injuryMatchesLeft,
         'injuryType': injuryType,
         'injurySeverity': injurySeverity.name,
@@ -632,6 +637,7 @@ class Player {
         releaseClause: json['releaseClause'] as int? ?? 0,
         isYouthProduct: json['isYouthProduct'] as bool? ?? false,
         isTransferListed: json['isTransferListed'] as bool? ?? false,
+        isBannedFromSquad: json['isBannedFromSquad'] as bool? ?? false,
         injuryMatchesLeft: json['injuryMatchesLeft'] as int? ?? 0,
         injuryType: json['injuryType'] as String?,
         injurySeverity: InjurySeverity.values.firstWhere(

@@ -2,6 +2,7 @@
 // Shareable Retro Manager Career Summary Card Dialog (§13.6, §27.6)
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../../domain/entities/game_state.dart';
@@ -25,7 +26,7 @@ class CareerShareDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: RetroWindow(
         title: 'MENAJER KARİYER KARTI (SHARE.PNG)',
-        icon: '',
+        icon: '[KART]',
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -98,11 +99,26 @@ class CareerShareDialog extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 RetroButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text(' Kariyer kartı panoya kopyalandı!')),
-                    );
+                  onPressed: () async {
+                    final shareText = '[DYNASTY XI] Menajer Kariyer Özeti\n'
+                        'Menajer: ${manager.name}\n'
+                        'Kulüp: ${club.name} (${gameState.currentLeague.name})\n'
+                        'Lisans: $licenseName | Seviye: ${manager.level}\n'
+                        'İtibar: ${manager.reputation}/100 | Kupa İndeksi: $trophiesCount\n'
+                        'Kasa: ₣${club.meters.cash}';
+                    await Clipboard.setData(ClipboardData(text: shareText));
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          backgroundColor: AppColors.primaryDeep,
+                          content: Text(
+                            '[KOPYALANDI] Kariyer kartı özeti panoya kopyalandı!',
+                            style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      );
+                    }
                   },
                   backgroundColor: AppColors.neonLime,
                   textColor: Colors.black,

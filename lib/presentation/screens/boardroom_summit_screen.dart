@@ -45,7 +45,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
             backgroundColor: AppColors.win95TitleNavy,
             elevation: 0,
             leading: IconButton(
-              icon: const Text('◀', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              icon: const Text('<', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               onPressed: () => Navigator.pop(context),
             ),
             title: Row(
@@ -97,16 +97,11 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // 1. Şahsi Servetten Sermaye Enjeksiyonu
                       _buildCapitalInjectionSection(capitalOptions),
                       const SizedBox(height: 12),
-
-                      // 2. Sezonluk VIP Loca Satış Masası
                       _buildVipBoxSection(vipBoxes),
                       const SizedBox(height: 12),
-
-                      // 3. Divan Kurulu Karar Tasarıları
-                      _buildMotionsSection(motions, club.meters.cash),
+                      _buildMotionsSection(motions, club.meters.cash, gameState.votedSummitAgendaIds),
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -119,7 +114,6 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
     );
   }
 
-  /// 1. Şahsi Servetten Sermaye Enjeksiyonu
   Widget _buildCapitalInjectionSection(List<CapitalInjectionOption> options) {
     return RetroWindow(
       title: 'BAŞKANLIK ŞAHSİ SERMAYE ENJEKSİYONU & HİBE',
@@ -185,7 +179,6 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
     );
   }
 
-  /// 2. Sezonluk VIP Loca Satış Masası
   Widget _buildVipBoxSection(List<VipBoxDeal> boxes) {
     return RetroWindow(
       title: 'SEZONLUK VIP PROTOKOL LOCA KİRALAMA BORSASI',
@@ -251,8 +244,7 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
     );
   }
 
-  /// 3. Divan Kurulu Karar Tasarıları
-  Widget _buildMotionsSection(List<BoardroomMotion> motions, int clubCash) {
+  Widget _buildMotionsSection(List<BoardroomMotion> motions, int clubCash, List<String> votedMotionIds) {
     return RetroWindow(
       title: 'DİVAN KURULU VE YÖNETİM OYLAMALARI',
       icon: '[HUKUK]',
@@ -263,6 +255,8 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
           const Text('Kulübün geleceğine yön veren stratejik tüzük ve yatırım tasarıları:', style: TextStyle(color: Colors.white70, fontSize: 10.5)),
           const SizedBox(height: 8),
           ...motions.map((m) {
+            final isAlreadyVoted = votedMotionIds.contains(m.id);
+
             return Container(
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(8),
@@ -289,21 +283,31 @@ class _BoardroomSummitScreenState extends ConsumerState<BoardroomSummitScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Gerekli Bütçe: ₣${m.requiredCost}', style: AppTypography.monoNumber(color: Colors.white70).copyWith(fontSize: 10)),
-                      RetroButton(
-                        onPressed: clubCash >= m.requiredCost
-                            ? () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: AppColors.neonLime,
-                                    content: Text('[HUKUK] ${m.title} kabul edildi ve yürürlüğe girdi!', style: const TextStyle(color: Colors.black)),
-                                  ),
-                                );
-                              }
-                            : null,
-                        backgroundColor: clubCash >= m.requiredCost ? AppColors.neonLime : Colors.grey,
-                        textColor: Colors.black,
-                        child: const Text('ONAYLA & UYGULA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
-                      ),
+                      if (isAlreadyVoted)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          color: Colors.white12,
+                          child: const Text('YÜRÜRLÜKTE', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 9.5)),
+                        )
+                      else
+                        RetroButton(
+                          onPressed: clubCash >= m.requiredCost
+                              ? () async {
+                                  final success = await ref.read(gameStateProvider.notifier).passBoardroomMotion(m);
+                                  if (success && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: AppColors.neonLime,
+                                        content: Text('[HUKUK] ${m.title} kabul edildi ve yürürlüğe girdi!', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
+                          backgroundColor: clubCash >= m.requiredCost ? AppColors.neonLime : Colors.grey,
+                          textColor: Colors.black,
+                          child: const Text('ONAYLA & UYGULA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
+                        ),
                     ],
                   ),
                 ],

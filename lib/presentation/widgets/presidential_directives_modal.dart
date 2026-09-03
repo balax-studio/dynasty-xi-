@@ -133,13 +133,10 @@ class _PresidentialDirectivesModalState extends ConsumerState<PresidentialDirect
                     onPressed: () {
                       final notifier = ref.read(gameStateProvider.notifier);
 
-                      if (_selectedBannedPlayerId != null) {
-                        notifier.adjustLockerRoom(-5);
-                        notifier.adjustBoardTrust(4);
-                      }
-                      if (_selectedCaptainId != null) {
-                        notifier.adjustLockerRoom(3);
-                      }
+                      notifier.formalizePresidentialDirectives(
+                        bannedPlayerId: _selectedBannedPlayerId,
+                        captainId: _selectedCaptainId,
+                      );
 
                       Navigator.of(context).pop();
 
@@ -147,7 +144,7 @@ class _PresidentialDirectivesModalState extends ConsumerState<PresidentialDirect
                         const SnackBar(
                           backgroundColor: AppColors.primaryDeep,
                           content: Text(
-                            ' Başkanlık Kararnamesi Resmi Olarak Tebliğ Edildi!',
+                            '[YÖNETİM] Başkanlık Kararnamesi Resmi Olarak Tebliğ Edildi!',
                             style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
                           ),
                         ),

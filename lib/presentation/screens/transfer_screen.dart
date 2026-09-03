@@ -9,6 +9,7 @@ import '../../application/providers/game_state_provider.dart';
 import '../../core/audio/audio_synthesizer.dart';
 import '../../domain/economy/transfer_models.dart';
 import '../../domain/entities/player.dart';
+import '../../domain/entities/game_state.dart';
 import '../../domain/transfers/transfer_window_rules.dart';
 import '../../core/time/game_clock.dart';
 import 'player_detail_screen.dart';
@@ -606,41 +607,67 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
                     isFreeAgent ? 'Bonservis: ₣0 (Serbest)' : 'Piyasa: ₣${p.marketValue}',
                     style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 11),
                   ),
-                  RetroButton(
-                    onPressed: () {
-                      final isOpen = (gameState.clock.isTransferWindowOpen as bool);
-                      if (!isOpen) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: AppColors.signalRed,
-                            content: Text('[TESCİL KAPALI] ${TransferWindowRules.getWindowStatusLabel(gameState.clock.phase)}. Resmi imza atılamaz!'),
-                          ),
-                        );
-                        return;
-                      }
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => TransferNegotiationScreen(player: p),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isFreeAgent) ...[
+                        RetroButton(
+                          onPressed: () {
+                            final isOpen = (gameState.clock.isTransferWindowOpen as bool);
+                            if (!isOpen) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  backgroundColor: AppColors.signalRed,
+                                  content: Text('[TESCİL KAPALI] ${TransferWindowRules.getWindowStatusLabel(gameState.clock.phase)}. Resmi takas yapılamaz!'),
+                                ),
+                              );
+                              return;
+                            }
+                            _showSwapDialog(context, ref, p, gameState as GameState);
+                          },
+                          backgroundColor: AppColors.win95TitleNavy,
+                          textColor: AppColors.neonCyan,
+                          child: const Text('TAKAS ET', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                         ),
-                      );
-                    },
-                    backgroundColor: (gameState.clock.isTransferWindowOpen as bool) ? AppColors.neonLime : AppColors.win95DarkGrey,
-                    textColor: (gameState.clock.isTransferWindowOpen as bool) ? Colors.black : Colors.white70,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        RetroPixelIcon(
-                          type: (gameState.clock.isTransferWindowOpen as bool) ? RetroPixelIconType.handshake : RetroPixelIconType.lock,
-                          size: 12,
-                          color: (gameState.clock.isTransferWindowOpen as bool) ? Colors.black : Colors.white70,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          (gameState.clock.isTransferWindowOpen as bool) ? 'PAZARLIK YAP' : 'PENCERE KAPALI',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
-                        ),
+                        const SizedBox(width: 6),
                       ],
-                    ),
+                      RetroButton(
+                        onPressed: () {
+                          final isOpen = (gameState.clock.isTransferWindowOpen as bool);
+                          if (!isOpen) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: AppColors.signalRed,
+                                content: Text('[TESCİL KAPALI] ${TransferWindowRules.getWindowStatusLabel(gameState.clock.phase)}. Resmi imza atılamaz!'),
+                              ),
+                            );
+                            return;
+                          }
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => TransferNegotiationScreen(player: p),
+                            ),
+                          );
+                        },
+                        backgroundColor: (gameState.clock.isTransferWindowOpen as bool) ? AppColors.neonLime : AppColors.win95DarkGrey,
+                        textColor: (gameState.clock.isTransferWindowOpen as bool) ? Colors.black : Colors.white70,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            RetroPixelIcon(
+                              type: (gameState.clock.isTransferWindowOpen as bool) ? RetroPixelIconType.handshake : RetroPixelIconType.lock,
+                              size: 12,
+                              color: (gameState.clock.isTransferWindowOpen as bool) ? Colors.black : Colors.white70,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              (gameState.clock.isTransferWindowOpen as bool) ? 'PAZARLIK YAP' : 'PENCERE KAPALI',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -797,6 +824,123 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showSwapDialog(BuildContext context, WidgetRef ref, Player targetPlayer, GameState gameState) {
+    final squad = gameState.userClub.squad.where((p) => !p.isCaptain).toList();
+    if (squad.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('[TAKAS] Takas edilebilecek uygun kadro oyuncusu yok!')),
+      );
+      return;
+    }
+
+    Player selectedSquadPlayer = squad.first;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final extraCash = (targetPlayer.marketValue - selectedSquadPlayer.marketValue).clamp(0, 999999999);
+          final canAfford = gameState.userClub.meters.cash >= extraCash;
+
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+            child: RetroWindow(
+              title: '[TRANSFER] OYUNCU TAKAS MASASI',
+              icon: '[TRANSFER]',
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Hedef Oyuncu: ${targetPlayer.fullName} (₣${targetPlayer.marketValue})', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11.5)),
+                    const SizedBox(height: 8),
+                    const Text('Takasta Verilecek Oyuncunuz:', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      color: Colors.black,
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        dropdownColor: Colors.black,
+                        value: selectedSquadPlayer.id,
+                        underline: const SizedBox(),
+                        items: squad.map((sp) {
+                          return DropdownMenuItem(
+                            value: sp.id,
+                            child: Text(
+                              '${sp.fullName} (${sp.position.code} • ₣${sp.marketValue})',
+                              style: const TextStyle(color: AppColors.neonLime, fontSize: 11),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() {
+                              selectedSquadPlayer = squad.firstWhere((p) => p.id == val);
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      color: AppColors.neoInnerBg,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Gerekli Ek Nakit:', style: TextStyle(color: Colors.white70, fontSize: 10.5)),
+                          Text('₣$extraCash', style: AppTypography.monoNumber(color: canAfford ? AppColors.neonLime : AppColors.signalRed).copyWith(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        RetroButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          backgroundColor: AppColors.win95DarkGrey,
+                          textColor: Colors.black,
+                          child: const Text('İPTAL', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                        ),
+                        const SizedBox(width: 8),
+                        RetroButton(
+                          onPressed: canAfford
+                              ? () async {
+                                  Navigator.of(ctx).pop();
+                                  final ok = await ref.read(gameStateProvider.notifier).swapPlayerTransfer(selectedSquadPlayer, targetPlayer, extraCash);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: ok ? AppColors.primaryDeep : AppColors.signalRed,
+                                        content: Text(
+                                          ok ? '[TRANSFER] Takas anlaşması tamamlandı!' : '[TRANSFER] Takas gerçekleştirilemedi!',
+                                          style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
+                          backgroundColor: canAfford ? AppColors.neonLime : Colors.grey,
+                          textColor: Colors.black,
+                          child: const Text('TAKASI ONAYLA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

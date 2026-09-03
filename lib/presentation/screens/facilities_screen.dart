@@ -102,17 +102,26 @@ class _FacilitiesScreenState extends ConsumerState<FacilitiesScreen> {
                               context,
                               facilityType: FacilityType.stadium,
                               baseCost: 50000,
-                              onSelected: (cost, weeks, name) {
-                                ref.read(gameStateProvider.notifier).adjustCash(-cost);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: AppColors.primaryDeep,
-                                    content: Text(
-                                      '[TESİS] $name ile $weeks haftalık ihale sözleşmesi imzalandı (-₣$cost)!',
-                                      style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                              onSelected: (cost, weeks, name) async {
+                                final success = await ref.read(gameStateProvider.notifier).startContractedUpgrade(
+                                      type: FacilityType.stadium,
+                                      cost: cost,
+                                      durationWeeks: weeks,
+                                      contractorName: name,
+                                    );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: success ? AppColors.primaryDeep : Colors.red[900],
+                                      content: Text(
+                                        success
+                                            ? '[TESİS] $name ile $weeks haftalık ihale sözleşmesi imzalandı (-₣$cost)!'
+                                            : '[TESİS] İhale başlatılamadı (Yetersiz bütçe veya aktif inşaat var)!',
+                                        style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                }
                               },
                             );
                           },

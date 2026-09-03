@@ -32,6 +32,12 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
         final cup = gameState.cupTournament;
         final userClub = gameState.userClub;
 
+        if (gameState.continentalCup == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(gameStateProvider.notifier).ensureContinentalCup();
+          });
+        }
+
         final continentalCup = gameState.continentalCup ??
             ContinentalCup.generateTournament(
               userClubName: userClub.name,
@@ -52,8 +58,8 @@ class _CupTournamentScreenState extends ConsumerState<CupTournamentScreen> {
                 labelColor: AppColors.neonLime,
                 unselectedLabelColor: AppColors.win95White,
                 tabs: [
-                  Tab(text: ' TÜRKİYE KUPASI'),
-                  Tab(text: ' AVRUPA KITA KUPASI'),
+                  Tab(text: 'TÜRKİYE KUPASI'),
+                  Tab(text: 'AVRUPA KITA KUPASI'),
                 ],
               ),
             ),

@@ -444,7 +444,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Text(' BAŞKAN:', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10)),
+                    const Text('[YÖNETİM] BAŞKAN:', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: SingleChildScrollView(
@@ -454,7 +454,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             ActionChip(
                               backgroundColor: AppColors.neoInnerBg,
                               side: const BorderSide(color: AppColors.comicRed, width: 1.5),
-                              label: const Text('BOLT HAKEM ODASI BASKINI', style: TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold)),
+                              label: const Text('[HUKUK] HAKEM ODASI BASKINI', style: TextStyle(color: AppColors.comicRed, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
                                 RefTunnelConfrontationDialog.show(context, (outcome) {
                                   setState(() {
@@ -473,7 +473,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                               side: const BorderSide(color: AppColors.accentGold, width: 1.5),
                               label: const Text('[KASA] PRİM VADET (-₣10K)', style: TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
-                                ref.read(gameStateProvider.notifier).claimSponsorReward(-10000);
+                                ref.read(gameStateProvider.notifier).adjustCash(-10000);
+                                ref.read(gameStateProvider.notifier).adjustLockerRoom(4);
                                 setState(() {
                                   visibleEvents.add(MatchEvent(
                                     minute: currentMinute,
@@ -490,7 +491,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                               side: const BorderSide(color: AppColors.neonPink, width: 1.5),
                               label: const Text('[FORM] DEV DERBİ PRİMİ (-₣25K)', style: TextStyle(color: AppColors.neonPink, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
-                                ref.read(gameStateProvider.notifier).claimSponsorReward(-25000);
+                                ref.read(gameStateProvider.notifier).adjustCash(-25000);
+                                ref.read(gameStateProvider.notifier).adjustLockerRoom(8);
                                 setState(() {
                                   visibleEvents.add(MatchEvent(
                                     minute: currentMinute,
@@ -505,13 +507,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             ActionChip(
                               backgroundColor: AppColors.neoInnerBg,
                               side: const BorderSide(color: AppColors.neonCyan, width: 1.5),
-                              label: const Text(' MEŞALE & PANKART ŞOVU', style: TextStyle(color: AppColors.neonCyan, fontSize: 10, fontWeight: FontWeight.bold)),
+                              label: const Text('[TRİBÜN] MEŞALE & PANKART ŞOVU', style: TextStyle(color: AppColors.neonCyan, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
+                                ref.read(gameStateProvider.notifier).adjustFans(3);
                                 setState(() {
                                   visibleEvents.add(MatchEvent(
                                     minute: currentMinute,
                                     type: MatchEventType.keyMoment,
-                                    description: ' TRİBÜNLER: Dev Pankart ve Meşale Şovu Başladı! Stat Alev Alev!',
+                                    description: '[TRİBÜN] TRİBÜNLER: Dev Pankart ve Meşale Şovu Başladı! Stat Alev Alev!',
                                   ));
                                 });
                               },
@@ -520,13 +523,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             ActionChip(
                               backgroundColor: AppColors.neoInnerBg,
                               side: const BorderSide(color: AppColors.neonLime, width: 1.5),
-                              label: const Text('BOLT HOCAYA: HÜCUM ET', style: TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold)),
+                              label: const Text('[TAKTİK] HOCAYA TALİMAT: HÜCUM ET', style: TextStyle(color: AppColors.neonLime, fontSize: 10, fontWeight: FontWeight.bold)),
                               onPressed: () {
+                                ref.read(gameStateProvider.notifier).adjustLockerRoom(2);
                                 setState(() {
                                   visibleEvents.add(MatchEvent(
                                     minute: currentMinute,
                                     type: MatchEventType.keyMoment,
-                                    description: 'BOLT BAŞKAN TALİMATI: Hoca Takımı Tüm Hatlarıyla Hücuma Sürdü!',
+                                    description: '[TAKTİK] BAŞKAN TALİMATI: Hoca Takımı Tüm Hatlarıyla Hücuma Sürdü!',
                                   ));
                                 });
                               },

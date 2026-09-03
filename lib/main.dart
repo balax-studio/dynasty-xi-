@@ -194,8 +194,8 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
       (icon: '[KASA]', label: 'FİNANS'),
       (icon: '[TESİS]', label: 'TESİS'),
       (icon: '[KUPA]', label: 'LİG'),
-      (icon: '', label: 'MENAJER'),
-      (icon: 'DIAMOND', label: 'MAĞAZA'),
+      (icon: '[YÖNETİM]', label: 'MENAJER'),
+      (icon: '[ELMAS]', label: 'MAĞAZA'),
     ];
 
     return Container(

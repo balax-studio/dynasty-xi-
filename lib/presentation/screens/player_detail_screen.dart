@@ -92,7 +92,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
             backgroundColor: AppColors.win95TitleNavy,
             elevation: 0,
             leading: IconButton(
-              icon: const Text('◀', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              icon: const Text('<', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Row(
@@ -428,6 +428,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                                           newWeeklyWage: offeredWage,
                                           additionalSeasons: seasons,
                                           signingBonus: bonus,
+                                          squadRole: role,
                                         );
                                   },
                                 ),
@@ -435,7 +436,7 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                             },
                             backgroundColor: AppColors.neonLime,
                             textColor: Colors.black,
-                            child: const Text(' SÖZLEŞME YENİLE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                            child: const Text('SÖZLEŞME YENİLE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -480,6 +481,46 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
                             backgroundColor: const Color(0xFF334155),
                             textColor: AppColors.comicRed,
                             child: const Text('[RED] SERBEST BIRAK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RetroButton(
+                            onPressed: () async {
+                              await ref.read(gameStateProvider.notifier).setPlayerCaptain(p.id);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppColors.primaryDeep,
+                                    content: Text('[KAPTAN] ${p.fullName} takım kaptanı olarak atandı!', style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold)),
+                                  ),
+                                );
+                              }
+                            },
+                            backgroundColor: p.isCaptain ? AppColors.accentGold : AppColors.win95DarkGrey,
+                            textColor: p.isCaptain ? Colors.black : Colors.white,
+                            child: Text(
+                              p.isCaptain ? '[KAPTAN] KAPTAN' : '[KAPTAN] KAPTAN ATA',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: RetroButton(
+                            onPressed: () {
+                              _showTrainingIntensityModal(context, ref, p);
+                            },
+                            backgroundColor: AppColors.win95TitleNavy,
+                            textColor: AppColors.neonCyan,
+                            child: Text(
+                              '[ANTRENMAN] ${p.trainingIntensity.label.toUpperCase()}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                            ),
                           ),
                         ),
                       ],
@@ -769,6 +810,80 @@ class _PlayerDetailScreenState extends ConsumerState<PlayerDetailScreen> {
         border: Border.all(color: color, width: 1.0),
       ),
       child: Text(text, style: TextStyle(color: color, fontSize: 8.5, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  void _showTrainingIntensityModal(BuildContext context, WidgetRef ref, Player p) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: RetroWindow(
+          title: '[ANTRENMAN] ŞİDDETİ BELİRLE',
+          icon: '[ANTRENMAN]',
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${p.fullName} İçin Antrenman Yükü:',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+                const SizedBox(height: 10),
+                ...TrainingIntensity.values.map((intensity) {
+                  final isSelected = p.trainingIntensity == intensity;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.win95TitleNavy : Colors.black,
+                      border: Border.all(
+                        color: isSelected ? AppColors.neonLime : AppColors.neutral700,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: ListTile(
+                      dense: true,
+                      title: Text(
+                        intensity.label.toUpperCase(),
+                        style: TextStyle(
+                          color: isSelected ? AppColors.neonLime : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
+                      subtitle: Text(
+                        intensity.description,
+                        style: const TextStyle(color: Colors.white70, fontSize: 10),
+                      ),
+                      trailing: isSelected
+                          ? const Text('[SEÇİLİ]', style: TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold, fontSize: 10))
+                          : null,
+                      onTap: () async {
+                        Navigator.of(ctx).pop();
+                        await ref.read(gameStateProvider.notifier).setPlayerTraining(p.id, intensity);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: AppColors.primaryDeep,
+                              content: Text(
+                                '[ANTRENMAN] ${p.fullName} antrenman seviyesi: ${intensity.label}',
+                                style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

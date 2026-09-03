@@ -12,12 +12,18 @@ import '../../domain/progression/daily_quest.dart';
 import '../../core/time/game_clock.dart';
 import '../widgets/club_emblem_widget.dart';
 import '../widgets/decision_card_widget.dart';
+import '../../domain/entities/club.dart';
+import '../../domain/entities/facility.dart';
+import '../../domain/sim/match_engine.dart';
+import '../../domain/tactics/opposition_scout.dart';
 import '../widgets/match_reward_dialog.dart';
 import '../widgets/meters_bar_widget.dart';
 import '../widgets/newspaper_headline_widget.dart';
+import '../widgets/opposition_report_dialog.dart';
 import '../widgets/retro_pixel_icon.dart';
 import '../widgets/retro_window.dart';
 import '../widgets/urgent_phone_call_modal.dart';
+import '../widgets/win_back_dialog.dart';
 import '../widgets/midseason_camp_modal.dart';
 import 'match_screen.dart';
 import 'sacked_screen.dart';
@@ -314,13 +320,26 @@ class OfficeScreen extends ConsumerWidget {
             ),
           ),
           RetroButton(
-            onPressed: () async {
-              final claimed = await ref.read(gameStateProvider.notifier).claimIdleCash();
-              if (context.mounted && claimed > 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('[KASA] ₣$claimed kasa hesabına aktarıldı!')),
-                );
-              }
+            onPressed: () {
+              final daysAway = (amount / 4000).ceil().clamp(1, 14);
+              final bonusXp = daysAway * 35;
+              showDialog(
+                context: context,
+                builder: (ctx) => WinBackDialog(
+                  daysAway: daysAway,
+                  welcomeBonusCash: amount,
+                  welcomeBonusXp: bonusXp,
+                  onClaim: () async {
+                    await ref.read(gameStateProvider.notifier).claimWinBackRewards(amount, bonusXp);
+                    await ref.read(gameStateProvider.notifier).claimIdleCash();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('[KASA] ₣$amount ve +$bonusXp XP kulüp hesabına aktarıldı!')),
+                      );
+                    }
+                  },
+                ),
+              );
             },
             backgroundColor: AppColors.neonLime,
             textColor: Colors.black,
@@ -717,17 +736,78 @@ class OfficeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
 
+          // Rakip Scout Analizi Butonu (§13.4, §11.2)
+          SizedBox(
+            width: double.infinity,
+            child: RetroButton(
+              onPressed: () {
+                final oppClub = Club(
+                  id: oppId,
+                  name: oppName,
+                  city: 'Anadolu',
+                  leagueTier: state.userClub.leagueTier,
+                  badgeIcon: oppBadge,
+                  squad: state.userClub.squad,
+                  starting11Ids: state.userClub.starting11Ids,
+                );
+                showDialog(
+                  context: context,
+                  builder: (_) => OppositionReportDialog(
+                    report: OppositionScoutReport.generate(
+                      opponent: oppClub,
+                      scoutFacilityLevel: state.userClub.facilities[FacilityType.scoutCenter]?.level ?? 1,
+                      seed: state.clock.seasonNumber * 100 + state.clock.matchday,
+                    ),
+                  ),
+                );
+              },
+              backgroundColor: AppColors.win95TitleNavy,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('[ANALİZ]', style: TextStyle(color: AppColors.neonCyan, fontWeight: FontWeight.bold, fontSize: 10)),
+                  SizedBox(width: 6),
+                  Text('RAKİP SCOUT ANALİZİ & TAKTİK BRİFİNG', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.5)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
           // 3D Beveled Butonlar
           Row(
             children: [
               Expanded(
                 child: RetroButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
+                  onPressed: () async {
+                    final res = await Navigator.of(context).push<MatchResult>(
                       MaterialPageRoute(
                         builder: (_) => const MatchScreen(isLiveMode: true),
                       ),
                     );
+                    if (res != null && context.mounted) {
+                      final userGoals = isUserHome ? res.homeGoals : res.awayGoals;
+                      final oppGoals = isUserHome ? res.awayGoals : res.homeGoals;
+                      final isWin = userGoals > oppGoals;
+                      
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (ctx) => MatchRewardDialog(
+                          userScore: userGoals,
+                          oppScore: oppGoals,
+                          oppName: oppName.isNotEmpty ? oppName : 'Rakip Kulüp',
+                          cashEarned: isWin ? 25000 : 5000,
+                          managerXpEarned: isWin ? 80 : 30,
+                          fanDelta: isWin ? 4 : -3,
+                          motmPlayerName: state.userClub.squad.isNotEmpty ? state.userClub.squad.first.fullName : 'Yıldız Oyuncu',
+                          motmPlayerRating: 8,
+                          motmSeed: 42,
+                          topPerformers: const [],
+                          onContinue: () => Navigator.of(ctx).pop(),
+                        ),
+                      );
+                    }
                   },
                   backgroundColor: AppColors.accentGold,
                   child: const Row(

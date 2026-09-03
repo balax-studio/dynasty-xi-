@@ -130,6 +130,6 @@ void main() {
     expect(find.textContaining('CANLI MAÇ'), findsOneWidget);
     expect(find.textContaining('FLAME 2D RADAR'), findsOneWidget);
     expect(find.textContaining('KADIKÖY SK'), findsWidgets);
-    expect(find.text('BOLT HAKEM ODASI BASKINI'), findsOneWidget);
+    expect(find.text('[HUKUK] HAKEM ODASI BASKINI'), findsOneWidget);
   });
 }

@@ -62,7 +62,7 @@ class WinBackDialog extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('STAR Motivasyon XP Desteği:', style: TextStyle(color: Colors.white, fontSize: 11)),
+                      const Text('[MOTİVASYON] XP Desteği:', style: TextStyle(color: Colors.white, fontSize: 11)),
                       Text('+$welcomeBonusXp XP', style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),

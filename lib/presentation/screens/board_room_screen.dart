@@ -352,6 +352,7 @@ class BoardRoomScreen extends ConsumerWidget {
 
   Widget _buildBankLoanWidget(BuildContext context, WidgetRef ref, BankLoan? activeLoan, int cash) {
     if (activeLoan != null) {
+      final canRepay = cash >= activeLoan.remainingDebt;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -377,6 +378,34 @@ class BoardRoomScreen extends ConsumerWidget {
               minHeight: 6,
             ),
           ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: RetroButton(
+              onPressed: canRepay
+                  ? () async {
+                      final ok = await ref.read(gameStateProvider.notifier).repayLoanEarly();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: ok ? AppColors.primaryDeep : AppColors.signalRed,
+                            content: Text(
+                              ok ? '[BORÇ KAPANDI] Banka kredisi kapatıldı! Yönetim güveni arttı.' : '[HATA] Kasada yeterli bakiye yok!',
+                              style: const TextStyle(color: AppColors.neonLime, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  : null,
+              backgroundColor: canRepay ? AppColors.neonLime : AppColors.win95DarkGrey,
+              textColor: canRepay ? Colors.black : Colors.white70,
+              child: Text(
+                'BORCU ERKEN KAPAT (₣${activeLoan.remainingDebt})',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+              ),
+            ),
+          ),
         ],
       );
     }
@@ -393,11 +422,13 @@ class BoardRoomScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: RetroButton(
-                onPressed: () {
-                  ref.read(gameStateProvider.notifier).takeBankLoan(25000);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text(' ₣25,000 banka kredisi kasaya eklendi!')),
-                  );
+                onPressed: () async {
+                  final ok = await ref.read(gameStateProvider.notifier).takeBankLoan(25000);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(ok ? '[KASA] ₣25,000 banka kredisi kasaya eklendi!' : '[UYARI] Kredi onaylanmadı!')),
+                    );
+                  }
                 },
                 backgroundColor: AppColors.neonCyan,
                 textColor: Colors.black,
@@ -407,11 +438,13 @@ class BoardRoomScreen extends ConsumerWidget {
             const SizedBox(width: 6),
             Expanded(
               child: RetroButton(
-                onPressed: () {
-                  ref.read(gameStateProvider.notifier).takeBankLoan(50000);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text(' ₣50,000 banka kredisi kasaya eklendi!')),
-                  );
+                onPressed: () async {
+                  final ok = await ref.read(gameStateProvider.notifier).takeBankLoan(50000);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(ok ? '[KASA] ₣50,000 banka kredisi kasaya eklendi!' : '[UYARI] Kredi onaylanmadı!')),
+                    );
+                  }
                 },
                 backgroundColor: AppColors.neonLime,
                 textColor: Colors.black,
@@ -421,11 +454,13 @@ class BoardRoomScreen extends ConsumerWidget {
             const SizedBox(width: 6),
             Expanded(
               child: RetroButton(
-                onPressed: () {
-                  ref.read(gameStateProvider.notifier).takeBankLoan(100000);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text(' ₣100,000 banka kredisi kasaya eklendi!')),
-                  );
+                onPressed: () async {
+                  final ok = await ref.read(gameStateProvider.notifier).takeBankLoan(100000);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(ok ? '[KASA] ₣100,000 banka kredisi kasaya eklendi!' : '[UYARI] Kredi onaylanmadı!')),
+                    );
+                  }
                 },
                 backgroundColor: AppColors.accentGold,
                 textColor: Colors.black,

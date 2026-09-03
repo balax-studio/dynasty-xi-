@@ -943,6 +943,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     required int newWeeklyWage,
     required int additionalSeasons,
     int signingBonus = 0,
+    SquadRole? squadRole,
   }) async {
     final current = currentState;
     if (current == null) return false;
@@ -959,6 +960,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     final updatedPlayer = targetPlayer.copyWith(
       weeklyWage: newWeeklyWage,
       contractSeasonsLeft: targetPlayer.contractSeasonsLeft + additionalSeasons,
+      squadRole: squadRole ?? targetPlayer.squadRole,
       morale: (targetPlayer.morale + 15).clamp(0, 100),
       loyalty: (targetPlayer.loyalty + 10).clamp(0, 100),
     );
@@ -977,7 +979,7 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
         meters: updatedMeters,
       ),
       notificationLog: [
-        ' Sözleşme Yenilendi: ${targetPlayer.fullName} ile +$additionalSeasons sezonluk yeni sözleşme imzalandı.',
+        '[SÖZLEŞME] Sözleşme Yenilendi: ${targetPlayer.fullName} ile +$additionalSeasons sezonluk yeni sözleşme imzalandı.',
         ...current.notificationLog,
       ],
     );
@@ -1458,6 +1460,66 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     await _saveRepository.save(updated);
   }
 
+  /// Başkanlık Kararnamesi Tebliği (§A.1 / Presidential Directives)
+  Future<void> formalizePresidentialDirectives({
+    String? bannedPlayerId,
+    String? captainId,
+  }) async {
+    final current = currentState;
+    if (current == null) return;
+
+    final List<String> directiveLogs = [];
+    int deltaLocker = 0;
+    int deltaBoard = 0;
+
+    final updatedSquad = current.userClub.squad.map((p) {
+      var mod = p;
+      if (bannedPlayerId != null && p.id == bannedPlayerId) {
+        mod = mod.copyWith(
+          isBannedFromSquad: true,
+          isCaptain: false,
+          morale: (mod.morale - 25).clamp(0, 100),
+        );
+        directiveLogs.add('[YÖNETİM] Kadro Dışı Kararı: ${mod.fullName} A Takım kadrosundan çıkarıldı.');
+        deltaLocker -= 5;
+        deltaBoard += 4;
+      }
+      if (captainId != null) {
+        if (p.id == captainId) {
+          mod = mod.copyWith(
+            isCaptain: true,
+            isBannedFromSquad: false,
+            morale: (mod.morale + 10).clamp(0, 100),
+          );
+          directiveLogs.add('[KAPTAN] Yeni Takım Kaptanı: ${mod.fullName} kaptan tayin edildi.');
+          deltaLocker += 3;
+        } else if (p.isCaptain) {
+          mod = mod.copyWith(isCaptain: false);
+        }
+      }
+      return mod;
+    }).toList();
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaLockerRoom: deltaLocker,
+      deltaBoardTrust: deltaBoard,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        squad: updatedSquad,
+        meters: updatedMeters,
+      ),
+      notificationLog: [
+        if (directiveLogs.isNotEmpty) ...directiveLogs else '[YÖNETİM] Başkanlık Kararnamesi tebliğ edildi.',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
   /// Transfer Listesine Koy / Çıkar
   Future<void> toggleTransferList(String playerId) async {
     final current = currentState;
@@ -1830,7 +1892,34 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       userClub: current.userClub.copyWith(meters: updatedMeters),
       activeLoan: newLoan,
       notificationLog: [
-        ' ${package.name} Onaylandı: Kasaya +₣${package.principalAmount} aktarıldı (Haftalık ödeme: ₣${newLoan.weeklyPayment}).',
+        '[KREDİ] ${package.name} Onaylandı: Kasaya +₣${package.principalAmount} aktarıldı (Haftalık ödeme: ₣${newLoan.weeklyPayment}).',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Kredi Borcunu Erken Kapat (§15.4)
+  Future<bool> repayLoanEarly() async {
+    final current = currentState;
+    if (current == null || current.activeLoan == null) return false;
+
+    final debt = current.activeLoan!.remainingDebt;
+    if (current.userClub.meters.cash < debt) return false;
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -debt,
+      deltaBoardTrust: 4,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      activeLoan: null,
+      notificationLog: [
+        '[BORÇ KAPANDI] Banka Kredisi Erken Kapatıldı: Toplam ₣$debt ödendi ve borç sıfırlandı.',
         ...current.notificationLog,
       ],
     );
@@ -2149,13 +2238,71 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
       deltaBoardTrust: 4,
     );
 
+    final updatedDailyQuests = DailyQuestManager.advanceQuest(
+      current.dailyQuests,
+      QuestTrigger.facilityUpgrade,
+    );
+
     final updated = current.copyWith(
       userClub: current.userClub.copyWith(
         facilities: updatedFacMap,
         meters: updatedMeters,
       ),
+      dailyQuests: updatedDailyQuests,
       notificationLog: [
-        'Tesis İnşaatı Başladı: ${type.label} (${facility.upgradeDurationMinutes} dk sürecek).',
+        '[TESİS] Tesis İnşaatı Başladı: ${type.label} (${facility.upgradeDurationMinutes} dk sürecek).',
+        ...current.notificationLog,
+      ],
+    );
+
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
+  /// Müteahhit İhalesi ile Tesis Yükseltme
+  Future<bool> startContractedUpgrade({
+    required FacilityType type,
+    required int cost,
+    required int durationWeeks,
+    required String contractorName,
+  }) async {
+    final current = currentState;
+    if (current == null) return false;
+
+    final facility = current.userClub.facilities[type] ?? Facility(type: type, level: 0);
+    if (facility.isMaxLevel || facility.isUpgrading) return false;
+    if (current.userClub.meters.cash < cost) return false;
+
+    // Hafta bazlı süreyi mobil oyun akışı için dakika cinsine çevir (her hafta = 1.5 dk)
+    final durationMinutes = (durationWeeks * 1.5).ceil().clamp(2, 20);
+    final durationMs = durationMinutes * 60 * 1000;
+    final finishMs = DateTime.now().millisecondsSinceEpoch + durationMs;
+
+    final updatedFacMap = Map<FacilityType, Facility>.from(current.userClub.facilities);
+    updatedFacMap[type] = facility.copyWith(
+      isUpgrading: true,
+      upgradeFinishEpochMs: finishMs,
+    );
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -cost,
+      deltaBoardTrust: 5,
+    );
+
+    final updatedDailyQuests = DailyQuestManager.advanceQuest(
+      current.dailyQuests,
+      QuestTrigger.facilityUpgrade,
+    );
+
+    final updated = current.copyWith(
+      userClub: current.userClub.copyWith(
+        facilities: updatedFacMap,
+        meters: updatedMeters,
+      ),
+      dailyQuests: updatedDailyQuests,
+      notificationLog: [
+        '[TESİS] İhale Sözleşmesi İmzalandı: $contractorName ile ${type.label} inşaatı başladı ($durationWeeks hafta / $durationMinutes dk).',
         ...current.notificationLog,
       ],
     );
@@ -3125,6 +3272,49 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     return true;
   }
 
+  /// Divan Kurulu Karar Tasarısı Onaylama & Yürürlüğe Koyma
+  Future<bool> passBoardroomMotion(BoardroomMotion motion) async {
+    final current = currentState;
+    if (current == null) return false;
+    if (current.votedSummitAgendaIds.contains(motion.id)) return false;
+    if (current.userClub.meters.cash < motion.requiredCost) return false;
+
+    int deltaFans = 0;
+    int deltaBoard = 6;
+    if (motion.id == 'motion_stadium_expansion') {
+      deltaFans = 6;
+      deltaBoard = 8;
+    } else if (motion.id == 'motion_youth_scholarship') {
+      deltaFans = 3;
+      deltaBoard = 6;
+    } else if (motion.id == 'motion_club_channel') {
+      deltaFans = 8;
+      deltaBoard = 5;
+    }
+
+    final updatedMeters = current.userClub.meters.applyDeltas(
+      deltaCash: -motion.requiredCost,
+      deltaFans: deltaFans,
+      deltaBoardTrust: deltaBoard,
+    );
+
+    final updatedAgendas = [...current.votedSummitAgendaIds, motion.id];
+
+    var updated = current.copyWith(
+      userClub: current.userClub.copyWith(meters: updatedMeters),
+      votedSummitAgendaIds: updatedAgendas,
+      notificationLog: [
+        '[HUKUK] Divan Kurulu Önergesi Kabul Edildi: ${motion.title} yürürlüğe girdi (-₣${motion.requiredCost}).',
+        ...current.notificationLog,
+      ],
+    );
+
+    updated = _checkAndAwardAchievements(updated);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+    return true;
+  }
+
   /// Gece Yarısı TV Canlı Yayın Tartışmasına Katılım
   Future<void> participateInDebate(
     String debateId, {
@@ -3191,12 +3381,32 @@ class GameStateNotifier extends StateNotifier<AsyncValue<GameState>> {
     await _saveRepository.save(updated);
   }
 
+  /// Kıta Kupasını Başlat (Eğer Yoksa)
+  Future<void> ensureContinentalCup() async {
+    final current = currentState;
+    if (current == null || current.continentalCup != null) return;
+
+    final cup = ContinentalCup.generateTournament(
+      userClubName: current.userClub.name,
+      userBadge: current.userClub.badgeIcon,
+      season: current.clock.seasonNumber,
+    );
+    final updated = current.copyWith(continentalCup: cup);
+    state = AsyncValue.data(updated);
+    await _saveRepository.save(updated);
+  }
+
   /// Avrupa Kupası Maçı Simülasyonu & Tur Atlama
   Future<void> playContinentalCupMatch(String matchId) async {
     final current = currentState;
-    if (current == null || current.continentalCup == null) return;
+    if (current == null) return;
 
-    final cup = current.continentalCup!;
+    final cup = current.continentalCup ??
+        ContinentalCup.generateTournament(
+          userClubName: current.userClub.name,
+          userBadge: current.userClub.badgeIcon,
+          season: current.clock.seasonNumber,
+        );
     final match = cup.fixtures.firstWhere((m) => m.id == matchId);
     if (match.isPlayed) return;
 
